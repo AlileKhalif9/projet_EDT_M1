@@ -1,14 +1,14 @@
 package projet.M1.model.planning;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public class Horaire {
     private LocalDate jour;
-    private LocalDateTime heureDebut;
-    private LocalDateTime heureFin;
+    private LocalTime heureDebut;
+    private LocalTime heureFin;
 
-    public Horaire(LocalDate jour, LocalDateTime heureDebut, LocalDateTime heureFin) {
+    public Horaire(LocalDate jour, LocalTime heureDebut, LocalTime heureFin) {
         this.jour = jour;
         this.heureDebut = heureDebut;
         this.heureFin = heureFin;
@@ -22,19 +22,19 @@ public class Horaire {
         this.jour = jour;
     }
 
-    public LocalDateTime getHeureDebut() {
+    public LocalTime getHeureDebut() {
         return heureDebut;
     }
 
-    public void setHeureDebut(LocalDateTime heureDebut) {
+    public void setHeureDebut(LocalTime heureDebut) {
         this.heureDebut = heureDebut;
     }
 
-    public LocalDateTime getHeureFin() {
+    public LocalTime getHeureFin() {
         return heureFin;
     }
 
-    public void setHeureFin(LocalDateTime heureFin) {
+    public void setHeureFin(LocalTime heureFin) {
         this.heureFin = heureFin;
     }
 }
