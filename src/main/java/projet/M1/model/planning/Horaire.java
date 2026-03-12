@@ -1,4 +1,4 @@
-package projet.M1.planning;
+package projet.M1.model.planning;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

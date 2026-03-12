@@ -1,4 +1,4 @@
-package projet.M1.academique;
+package projet.M1.model.academique;
 
 public class Note {
     // Vérifier que ça soit bien unsigned float

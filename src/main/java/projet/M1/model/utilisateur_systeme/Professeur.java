@@ -1,6 +1,6 @@
-package projet.M1.utilisateur_systeme;
+package projet.M1.model.utilisateur_systeme;
 
-import projet.M1.academique.Promotion;
+import projet.M1.model.academique.Promotion;
 
 import java.util.List;
 

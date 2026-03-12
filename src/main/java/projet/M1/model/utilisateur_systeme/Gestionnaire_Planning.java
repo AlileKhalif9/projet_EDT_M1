@@ -1,4 +1,4 @@
-package projet.M1.utilisateur_systeme;
+package projet.M1.model.utilisateur_systeme;
 
 public class Gestionnaire_Planning extends Utilisateur{
     public Gestionnaire_Planning(String nom, String prenom, int age) {

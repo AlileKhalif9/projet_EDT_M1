@@ -1,4 +1,4 @@
-package projet.M1.utilisateur_systeme;
+package projet.M1.model.utilisateur_systeme;
 
 public class Invite extends Utilisateur{
 

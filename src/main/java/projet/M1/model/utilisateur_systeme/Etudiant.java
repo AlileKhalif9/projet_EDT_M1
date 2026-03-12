@@ -1,9 +1,9 @@
-package projet.M1.utilisateur_systeme;
+package projet.M1.model.utilisateur_systeme;
 
-import projet.M1.academique.Groupe_Etudiant;
-import projet.M1.academique.Module;
-import projet.M1.academique.Note;
-import projet.M1.academique.Promotion;
+import projet.M1.model.academique.Groupe_Etudiant;
+import projet.M1.model.academique.Module;
+import projet.M1.model.academique.Note;
+import projet.M1.model.academique.Promotion;
 
 import java.util.List;
 

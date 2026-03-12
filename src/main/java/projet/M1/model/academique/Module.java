@@ -1,8 +1,8 @@
-package projet.M1.academique;
+package projet.M1.model.academique;
 
-import projet.M1.planning.Cours;
-import projet.M1.utilisateur_systeme.Etudiant;
-import projet.M1.utilisateur_systeme.Professeur;
+import projet.M1.model.planning.Cours;
+import projet.M1.model.utilisateur_systeme.Etudiant;
+import projet.M1.model.utilisateur_systeme.Professeur;
 
 import java.util.List;
 
