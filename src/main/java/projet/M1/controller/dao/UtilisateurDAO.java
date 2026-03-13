@@ -7,4 +7,6 @@ public interface UtilisateurDAO {
 
     Optional<Utilisateur> findByLogin(String login, String motDePasse);
 
+    boolean loginExiste(String login);                                  // pas de corps
+    void sauvegarderUtilisateur(Utilisateur utilisateur);
 }

@@ -6,25 +6,25 @@ import projet.M1.model.utilisateur_systeme.Professeur;
 import java.util.List;
 
 public class Cours {
-    private Horaire creneau;
+    private Horaire horaire;
     private Salle salle;
 
     private List<Etudiant> list_etudiant;
     private List<Professeur> list_professeur;
 
     public Cours(Horaire creneau, Salle salle, List<Etudiant> list_etudiant, List<Professeur> list_professeur) {
-        this.creneau = creneau;
+        this.horaire = creneau;
         this.salle = salle;
         this.list_etudiant = list_etudiant;
         this.list_professeur = list_professeur;
     }
 
-    public Horaire getCreneau() {
-        return creneau;
+    public Horaire getHoraire() {
+        return horaire;
     }
 
-    public void setCreneau(Horaire creneau) {
-        this.creneau = creneau;
+    public void setHoraire(Horaire horaire) {
+        this.horaire = horaire;
     }
 
     public Salle getSalle() {
