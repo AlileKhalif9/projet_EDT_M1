@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="projet.M1.ui.MainLayoutController"
+            prefWidth="1280" prefHeight="768">
+
+    <!-- ================================================================
+         SIDEBAR GAUCHE
+    ================================================================ -->
+    <left>
+        <VBox styleClass="sidebar">
+
+            <!-- Logo -->
+            <VBox styleClass="sidebar-logo-section" spacing="2">
+                <Label text="🎓" styleClass="sidebar-logo-icon"/>
+                <Label text="Hyperplanning"   styleClass="sidebar-logo-title"/>
+                <Label text="Université de Toulon" styleClass="sidebar-logo-sub"/>
+            </VBox>
+
+            <!-- Navigation principale -->
+            <VBox fx:id="sidebarNav" styleClass="sidebar-nav-section" VBox.vgrow="ALWAYS">
+
+                <Label text="NAVIGATION" styleClass="sidebar-section-label"/>
+
+                <Button fx:id="btnDashboard"
+                        text="🏠  Tableau de bord"
+                        styleClass="sidebar-nav-item"
+                        onAction="#onDashboard"/>
+
+                <Button fx:id="btnTimetable"
+                        text="📅  Emploi du temps"
+                        styleClass="sidebar-nav-item"
+                        onAction="#onTimetable"/>
+
+                <Button fx:id="btnRoomSelection"
+                        text="✏️  Demande de modification"
+                        styleClass="sidebar-nav-item"
+                        onAction="#onRoomSelection"
+                        visible="false" managed="false"/>
+
+            </VBox>
+
+            <!-- Section utilisateur (en bas) -->
+            <VBox styleClass="sidebar-user-section" spacing="8">
+
+                <!-- Avatar + infos -->
+                <HBox spacing="12" alignment="CENTER_LEFT">
+                    <StackPane>
+                        <Circle fx:id="avatarCircle" radius="20" styleClass="avatar-circle"/>
+                        <Label fx:id="labelAvatarInitials" styleClass="avatar-initials"/>
+                    </StackPane>
+                    <VBox spacing="2">
+                        <Label fx:id="labelUserName" styleClass="user-name" text="—"/>
+                        <Label fx:id="labelUserRole"  styleClass="user-role"  text="—"/>
+                    </VBox>
+                </HBox>
+
+                <!-- Déconnexion -->
+                <Button fx:id="btnLogout"
+                        text="↩  Se déconnecter"
+                        styleClass="btn-logout"
+                        onAction="#onLogout"/>
+
+            </VBox>
+
+        </VBox>
+    </left>
+
+    <!-- ================================================================
+         ZONE DE CONTENU CENTRALE
+    ================================================================ -->
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-area"/>
+    </center>
+
+</BorderPane>
