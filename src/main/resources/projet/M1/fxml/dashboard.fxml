@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true"
+            fitToHeight="false"
+            styleClass="content-area"
+            style="-fx-background-color: #F8FAFC; -fx-border-color: transparent;"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="projet.M1.ui.DashboardController">
+
+    <VBox styleClass="page-container" spacing="28">
+
+        <!-- En-tête -->
+        <VBox spacing="4">
+            <Label fx:id="labelWelcome" styleClass="page-title" text="Planning 2025-2026 -"/>
+            <Label fx:id="labelDate"    styleClass="page-subtitle" text="Aujourd'hui"/>
+        </VBox>
+
+        <!-- Stats -->
+        <HBox spacing="16">
+            <VBox styleClass="card" spacing="6" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="COURS AUJOURD'HUI" styleClass="card-title"/>
+                <Label fx:id="labelCoursAujourdHui" text="0" styleClass="stat-value"/>
+            </VBox>
+            <VBox styleClass="card" spacing="6" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="COURS CETTE SEMAINE" styleClass="card-title"/>
+                <Label fx:id="labelCoursSemaine" text="0" styleClass="stat-value"/>
+            </VBox>
+            <VBox styleClass="card" spacing="6" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="NOTIFICATIONS" styleClass="card-title"/>
+                <Label text="3" styleClass="stat-value"/>
+            </VBox>
+        </HBox>
+
+        <!-- Accès rapides -->
+        <VBox spacing="12">
+            <Label text="Accès rapides" styleClass="section-title"/>
+            <HBox spacing="16">
+
+                <!-- Voir mon EDT -->
+                <VBox styleClass="quick-action-card" spacing="14"
+                      HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                      onMouseClicked="#goToTimetable">
+                    <HBox alignment="TOP_LEFT">
+                        <StackPane styleClass="quick-action-icon quick-action-icon-blue">
+                            <Label text="EDT" styleClass="quick-action-icon-text"/>
+                        </StackPane>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="›" styleClass="quick-action-chevron"/>
+                    </HBox>
+                    <Label text="Consulter mon emploi du temps" styleClass="quick-action-title" wrapText="true"/>
+                    <Label text="Visualisez votre planning hebdomadaire et vos cours" styleClass="quick-action-desc" wrapText="true"/>
+                </VBox>
+
+                <!-- Demande de modif (prof/gestionnaire seulement) -->
+                <VBox fx:id="cardDemandeModif"
+                      styleClass="quick-action-card" spacing="14"
+                      HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                      onMouseClicked="#goToRoomSelection"
+                      visible="false" managed="false">
+                    <HBox alignment="TOP_LEFT">
+                        <StackPane styleClass="quick-action-icon quick-action-icon-red">
+                            <Label text="REQ" styleClass="quick-action-icon-text"/>
+                        </StackPane>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="›" styleClass="quick-action-chevron"/>
+                    </HBox>
+                    <Label text="Demandes de modification" styleClass="quick-action-title" wrapText="true"/>
+                    <Label text="Demandez ou approuvez des changements d'EDT" styleClass="quick-action-desc" wrapText="true"/>
+                </VBox>
+
+                <!-- Notes -->
+                <VBox styleClass="quick-action-card" spacing="14"
+                      HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                    <HBox alignment="TOP_LEFT">
+                        <StackPane styleClass="quick-action-icon quick-action-icon-green">
+                            <Label text="A+" styleClass="quick-action-icon-text"/>
+                        </StackPane>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="›" styleClass="quick-action-chevron"/>
+                    </HBox>
+                    <Label text="Consulter mes notes" styleClass="quick-action-title" wrapText="true"/>
+                    <Label text="Consultez vos résultats et votre moyenne générale" styleClass="quick-action-desc" wrapText="true"/>
+                </VBox>
+
+            </HBox>
+        </VBox>
+
+        <!-- Cours du jour -->
+        <VBox styleClass="card" spacing="12">
+            <Label text="Cours du jour" styleClass="section-title"/>
+            <VBox fx:id="todayCoursContainer" spacing="8"/>
+        </VBox>
+
+    </VBox>
+
+</ScrollPane>
