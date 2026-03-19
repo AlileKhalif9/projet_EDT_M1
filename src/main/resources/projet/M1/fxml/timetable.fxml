@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="projet.M1.ui.TimetableController"
+      styleClass="timetable-container"
+      spacing="16">
+
+    <!-- ============================================================
+         En-tête : titre + navigation semaine
+    ============================================================ -->
+    <HBox styleClass="timetable-header" spacing="12" alignment="CENTER_LEFT">
+
+        <VBox spacing="2" HBox.hgrow="ALWAYS">
+            <Label text="Emploi du temps" styleClass="page-title"/>
+            <Label text="Visualisez et naviguez dans votre planning" styleClass="page-subtitle"/>
+        </VBox>
+
+        <!-- Navigation semaine -->
+        <Button fx:id="btnPrecedent" text="◀" styleClass="btn-icon" onAction="#onPrecedent"/>
+        <Label fx:id="labelSemaine" text="Semaine du …"
+               style="-fx-font-size: 13px; -fx-text-fill: #374151; -fx-font-weight: bold;"/>
+        <Button fx:id="btnSuivant"  text="▶" styleClass="btn-icon" onAction="#onSuivant"/>
+        <Button fx:id="btnAujourdHui" text="Aujourd'hui" styleClass="btn-secondary"
+                onAction="#onAujourdHui"/>
+
+    </HBox>
+
+    <!-- ============================================================
+         Sélection de vue (onglets)
+    ============================================================ -->
+    <HBox spacing="16" alignment="CENTER_LEFT">
+
+        <!-- Onglets -->
+        <HBox styleClass="tab-bar" spacing="0">
+            <ToggleButton fx:id="tabMonEDT"  text="Mon EDT"    styleClass="tab-toggle" onAction="#onTabMonEDT"/>
+            <ToggleButton fx:id="tabTiers"   text="EDT d'un tiers" styleClass="tab-toggle" onAction="#onTabTiers"/>
+            <ToggleButton fx:id="tabSalle"   text="EDT d'une salle" styleClass="tab-toggle" onAction="#onTabSalle"/>
+        </HBox>
+
+    </HBox>
+
+    <!-- ============================================================
+         Barre de sélection (tiers / salle) – masquée par défaut
+    ============================================================ -->
+    <HBox fx:id="selectorBar" styleClass="selector-bar" spacing="12"
+          visible="false" managed="false">
+        <Label text="Sélectionner :" styleClass="selector-label"/>
+        <ComboBox fx:id="comboSelector"
+                  promptText="Choisir…"
+                  onAction="#onSelectorChanged"
+                  prefWidth="280"/>
+    </HBox>
+
+    <!-- ============================================================
+         Légende
+    ============================================================ -->
+    <HBox styleClass="legend-bar" spacing="16">
+        <HBox styleClass="legend-item" spacing="6" alignment="CENTER_LEFT">
+            <Region styleClass="legend-dot legend-dot-cm" prefWidth="12" prefHeight="12"/>
+            <Label text="CM" styleClass="legend-text"/>
+        </HBox>
+        <HBox styleClass="legend-item" spacing="6" alignment="CENTER_LEFT">
+            <Region styleClass="legend-dot legend-dot-td" prefWidth="12" prefHeight="12"/>
+            <Label text="TD" styleClass="legend-text"/>
+        </HBox>
+        <HBox styleClass="legend-item" spacing="6" alignment="CENTER_LEFT">
+            <Region styleClass="legend-dot legend-dot-tp" prefWidth="12" prefHeight="12"/>
+            <Label text="TP" styleClass="legend-text"/>
+        </HBox>
+        <HBox styleClass="legend-item" spacing="6" alignment="CENTER_LEFT">
+            <Region styleClass="legend-dot legend-dot-exam" prefWidth="12" prefHeight="12"/>
+            <Label text="Examen" styleClass="legend-text"/>
+        </HBox>
+        <HBox styleClass="legend-item" spacing="6" alignment="CENTER_LEFT">
+            <Region styleClass="legend-dot legend-dot-annule" prefWidth="12" prefHeight="12"/>
+            <Label text="Annulé" styleClass="legend-text"/>
+        </HBox>
+    </HBox>
+
+    <!-- ============================================================
+         Grille de l'emploi du temps
+    ============================================================ -->
+    <ScrollPane fx:id="scrollPane"
+                fitToWidth="true"
+                fitToHeight="false"
+                styleClass="timetable-grid-scroll"
+                VBox.vgrow="ALWAYS"
+                style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: #E5E7EB; -fx-border-radius: 10; -fx-background-radius: 10;">
+
+        <!-- gridContainer est rempli dynamiquement par TimetableController -->
+        <HBox fx:id="gridContainer"
+              spacing="0"
+              style="-fx-background-color: white; -fx-background-radius: 10;"/>
+
+    </ScrollPane>
+
+</VBox>
