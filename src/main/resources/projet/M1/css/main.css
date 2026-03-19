@@ -1,0 +1,627 @@
+/* =============================================================================
+   HYPERPLANNING – Feuille de styles globale
+   Palette : primary #1E3A5F · secondary #3B82F6 · accent #10B981
+============================================================================= */
+
+/* ---- Réinitialisation de base ------------------------------------------- */
+.root {
+    -fx-font-family: "System";
+    -fx-font-size: 14px;
+    -fx-background-color: #F8FAFC;
+}
+
+/* =============================================================================
+   PAGE DE CONNEXION
+============================================================================= */
+
+.login-root {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #1E3A5F, #10B981);
+}
+
+.login-card {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 32, 0, 0, 8);
+    -fx-padding: 44 48 44 48;
+    -fx-pref-width: 440;
+    -fx-max-width: 440;
+    -fx-spacing: 28;
+}
+
+.login-logo {
+    -fx-font-size: 48px;
+}
+
+.login-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F2937;
+}
+
+.login-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6B7280;
+}
+
+.field-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+}
+
+.login-field {
+    -fx-background-color: #F9FAFB;
+    -fx-border-color: #D1D5DB;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10 14 10 14;
+    -fx-pref-height: 42;
+    -fx-font-size: 14;
+}
+
+.login-field:focused {
+    -fx-border-color: #3B82F6;
+    -fx-border-width: 2;
+    -fx-background-color: white;
+}
+
+.error-label {
+    -fx-text-fill: #EF4444;
+    -fx-font-size: 13px;
+    -fx-background-color: #FEF2F2;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: #FECACA;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+}
+
+.demo-box {
+    -fx-background-color: #F3F4F6;
+    -fx-background-radius: 8;
+    -fx-padding: 14 16 14 16;
+}
+
+.demo-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6B7280;
+}
+
+.demo-item {
+    -fx-font-size: 12px;
+    -fx-text-fill: #374151;
+    -fx-font-family: "Monospaced";
+}
+
+/* =============================================================================
+   LAYOUT PRINCIPAL
+============================================================================= */
+
+.sidebar {
+    -fx-background-color: #1E3A5F;
+    -fx-min-width: 220px;
+    -fx-max-width: 220px;
+    -fx-padding: 0;
+}
+
+.sidebar-logo-section {
+    -fx-padding: 24 20 20 20;
+    -fx-spacing: 4;
+    -fx-border-color: rgba(255,255,255,0.1);
+    -fx-border-width: 0 0 1 0;
+}
+
+.sidebar-logo-icon {
+    -fx-font-size: 28px;
+}
+
+.sidebar-logo-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.sidebar-logo-sub {
+    -fx-font-size: 11px;
+    -fx-text-fill: rgba(255,255,255,0.5);
+}
+
+.sidebar-nav-section {
+    -fx-padding: 16 12 16 12;
+    -fx-spacing: 4;
+}
+
+.sidebar-section-label {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgba(255,255,255,0.4);
+    -fx-padding: 8 8 4 8;
+}
+
+.sidebar-nav-item {
+    -fx-background-color: transparent;
+    -fx-text-fill: rgba(255,255,255,0.75);
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 10 16 10 16;
+    -fx-background-radius: 8;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-pref-width: 196px;
+    -fx-max-width: 196px;
+    -fx-border-color: transparent;
+}
+
+.sidebar-nav-item:hover {
+    -fx-background-color: rgba(255,255,255,0.1);
+    -fx-text-fill: white;
+}
+
+.sidebar-nav-item-active {
+    -fx-background-color: rgba(59,130,246,0.25);
+    -fx-text-fill: white;
+    -fx-border-color: rgba(59,130,246,0.6);
+    -fx-border-width: 0 0 0 3;
+    -fx-border-radius: 0 8 8 0;
+}
+
+.sidebar-user-section {
+    -fx-padding: 16 16 20 16;
+    -fx-spacing: 10;
+    -fx-border-color: rgba(255,255,255,0.1);
+    -fx-border-width: 1 0 0 0;
+}
+
+.avatar-circle {
+    -fx-fill: #3B82F6;
+}
+
+.avatar-initials {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.user-name {
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.user-role {
+    -fx-font-size: 11px;
+    -fx-background-radius: 10;
+    -fx-padding: 2 8 2 8;
+}
+
+.badge-role-etudiant { -fx-background-color: #3B82F6; -fx-text-fill: white; }
+.badge-role-prof     { -fx-background-color: #10B981; -fx-text-fill: white; }
+.badge-role-gest     { -fx-background-color: #1E3A5F; -fx-text-fill: white;
+                       -fx-border-color: rgba(255,255,255,0.4); -fx-border-width: 1; }
+.badge-role-invite   { -fx-background-color: #9CA3AF; -fx-text-fill: white; }
+
+.btn-logout {
+    -fx-background-color: transparent;
+    -fx-text-fill: rgba(255,255,255,0.6);
+    -fx-border-color: rgba(255,255,255,0.25);
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-padding: 6 12 6 12;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
+    -fx-pref-width: 188px;
+}
+
+.btn-logout:hover {
+    -fx-background-color: rgba(239,68,68,0.15);
+    -fx-text-fill: #FCA5A5;
+    -fx-border-color: rgba(239,68,68,0.4);
+}
+
+.content-area {
+    -fx-background-color: #F8FAFC;
+}
+
+/* =============================================================================
+   BOUTONS GÉNÉRAUX
+============================================================================= */
+
+.btn-primary {
+    -fx-background-color: #1E3A5F;
+    -fx-text-fill: white;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 10 20 10 20;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover   { -fx-background-color: #2d5180; }
+.btn-primary:pressed { -fx-background-color: #16304d; }
+.btn-primary:disabled { -fx-background-color: #9CA3AF; -fx-text-fill: #E5E7EB; }
+
+.btn-secondary {
+    -fx-background-color: white;
+    -fx-text-fill: #374151;
+    -fx-border-color: #D1D5DB;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10 20 10 20;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+.btn-secondary:hover { -fx-background-color: #F9FAFB; }
+
+.btn-icon {
+    -fx-background-color: white;
+    -fx-text-fill: #374151;
+    -fx-border-color: #D1D5DB;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8 14 8 14;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+}
+
+.btn-icon:hover { -fx-background-color: #F3F4F6; }
+
+/* =============================================================================
+   TABLEAU DE BORD
+============================================================================= */
+
+.page-container {
+    -fx-padding: 32 36 32 36;
+    -fx-spacing: 24;
+    -fx-background-color: #F8FAFC;
+}
+
+.page-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.page-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #6B7280;
+}
+
+.card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 10, 0, 0, 2);
+    -fx-padding: 20;
+}
+
+.card-title {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6B7280;
+    -fx-font-weight: bold;
+}
+
+.stat-value {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.quick-action-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-padding: 20;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 8, 0, 0, 2);
+}
+
+.quick-action-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 16, 0, 0, 4);
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
+}
+
+.quick-action-icon {
+    -fx-background-radius: 14;
+    -fx-min-width: 52;  -fx-pref-width: 52;  -fx-max-width: 52;
+    -fx-min-height: 52; -fx-pref-height: 52; -fx-max-height: 52;
+}
+
+.quick-action-icon-blue  { -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #3B82F6, #2563EB); }
+.quick-action-icon-red   { -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #EF4444, #DC2626); }
+.quick-action-icon-green { -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #10B981, #059669); }
+
+.quick-action-icon-text {
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.quick-action-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.quick-action-desc {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6B7280;
+}
+
+.quick-action-chevron {
+    -fx-text-fill: #9CA3AF;
+    -fx-font-size: 20px;
+}
+
+.cours-mini-card {
+    -fx-background-color: white;
+    -fx-background-radius: 6;
+    -fx-padding: 10 12 10 12;
+    -fx-border-width: 0 0 0 4;
+}
+
+.cours-mini-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.cours-mini-details {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6B7280;
+}
+
+.section-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F2937;
+}
+
+.text-muted {
+    -fx-text-fill: #9CA3AF;
+    -fx-font-size: 13px;
+}
+
+/* =============================================================================
+   EMPLOI DU TEMPS
+============================================================================= */
+
+.timetable-container {
+    -fx-background-color: #F8FAFC;
+    -fx-padding: 24 28 24 28;
+    -fx-spacing: 16;
+}
+
+.timetable-header {
+    -fx-spacing: 12;
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* Onglets */
+.tab-bar {
+    -fx-background-color: #E5E7EB;
+    -fx-background-radius: 10;
+    -fx-padding: 4;
+    -fx-spacing: 2;
+}
+
+.tab-toggle {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6B7280;
+    -fx-background-radius: 7;
+    -fx-border-color: transparent;
+    -fx-padding: 6 18 6 18;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+.tab-toggle:hover { -fx-background-color: rgba(255,255,255,0.6); -fx-text-fill: #374151; }
+
+.tab-toggle:selected {
+    -fx-background-color: white;
+    -fx-text-fill: #1E3A5F;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0, 0, 1);
+}
+
+/* Barre de sélection (tiers / salle) */
+.selector-bar {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-padding: 10 16 10 16;
+    -fx-spacing: 12;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.selector-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+}
+
+/* Légende */
+.legend-bar {
+    -fx-spacing: 16;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 0 4 0;
+}
+
+.legend-item { -fx-spacing: 6; -fx-alignment: CENTER_LEFT; }
+
+.legend-dot {
+    -fx-pref-width: 12;
+    -fx-pref-height: 12;
+    -fx-background-radius: 50;
+}
+
+.legend-dot-cm     { -fx-background-color: #3B82F6; }
+.legend-dot-td     { -fx-background-color: #10B981; }
+.legend-dot-tp     { -fx-background-color: #8B5CF6; }
+.legend-dot-exam   { -fx-background-color: #F59E0B; }
+.legend-dot-annule { -fx-background-color: #9CA3AF; }
+
+.legend-text { -fx-font-size: 12px; -fx-text-fill: #6B7280; }
+
+/* Grille */
+.timetable-grid-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-color: transparent;
+}
+
+.time-column {
+    -fx-background-color: #F8FAFC;
+    -fx-border-color: transparent #E5E7EB transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+.time-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #9CA3AF;
+    -fx-alignment: TOP_RIGHT;
+    -fx-padding: 4 8 0 0;
+}
+
+.day-column {
+    -fx-border-color: transparent #E5E7EB transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+.day-header {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+    -fx-border-color: transparent transparent #E5E7EB transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 0 0 0;
+    -fx-background-color: white;
+}
+
+.day-header-today {
+    -fx-text-fill: #3B82F6;
+    -fx-background-color: #EFF6FF;
+}
+
+.day-body {
+    -fx-background-color: white;
+}
+
+.grid-row-even { -fx-background-color: white; }
+.grid-row-odd  { -fx-background-color: #FAFAFA; }
+
+.cours-block {
+    -fx-cursor: hand;
+}
+
+.cours-block:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 2);
+}
+
+.cours-block-nom {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F2937;
+    -fx-wrap-text: true;
+}
+
+.cours-block-detail {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6B7280;
+}
+
+/* =============================================================================
+   SÉLECTION DE SALLE
+============================================================================= */
+
+.room-selection-container {
+    -fx-background-color: #F8FAFC;
+    -fx-padding: 28 32 28 32;
+    -fx-spacing: 20;
+}
+
+.search-field {
+    -fx-background-color: white;
+    -fx-border-color: #D1D5DB;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10 14 10 14;
+    -fx-pref-height: 40;
+    -fx-font-size: 14;
+    -fx-pref-width: 320;
+}
+
+.search-field:focused {
+    -fx-border-color: #3B82F6;
+    -fx-border-width: 2;
+}
+
+.room-grid {
+    -fx-hgap: 16;
+    -fx-vgap: 16;
+    -fx-padding: 4;
+}
+
+.room-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 8, 0, 0, 2);
+    -fx-padding: 18;
+    -fx-cursor: hand;
+}
+
+.room-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.13), 12, 0, 0, 3);
+    -fx-scale-x: 1.01;
+    -fx-scale-y: 1.01;
+}
+
+.room-card-selected {
+    -fx-border-color: #3B82F6;
+    -fx-border-width: 2;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.25), 12, 0, 0, 3);
+}
+
+.room-card-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.room-card-capacity {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6B7280;
+}
+
+.equipment-tag {
+    -fx-background-color: #EFF6FF;
+    -fx-text-fill: #3B82F6;
+    -fx-background-radius: 10;
+    -fx-padding: 2 8 2 8;
+    -fx-font-size: 11px;
+}
+
+.selection-bar {
+    -fx-background-color: white;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 14 20 14 20;
+    -fx-spacing: 16;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.selection-info {
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+}
