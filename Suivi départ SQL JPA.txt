@@ -1,0 +1,110 @@
+Suivi départ SQL JPA : 
+
+Début Vendredi 13 Mars 15h
+
+MySQL → stocke les données
+
+JPA → traduit les objets Java en tables SQL
+
+Hibernate → implémentation de JPA
+
+Code Java → manipule des objets
+
+----------------------------------------------------------------------------
+Création packages :
+
+App (main)
+   ↓
+Service (logique métier)
+   ↓
+Repository (accès base de données)
+   ↓
+Entity (objets liés aux tables)
+   ↓
+Base de données MySQL
+
+--------------------------------------------------------------------------------------------------
+---- entity contient les classes JPA, chaque classe = une table SQL
+
+
+---- repository sert à intéragir avec la bdd
+
+on y met insert select update delete ect ect
+
+----- service contient la logique de l'appli
+
+Exemple dans le projet :
+
+vérifier si un prof peut déplacer un cours
+
+accepter/refuser une demande
+
+récupérer l’emploi du temps d’un élève
+
+---- config contient la config de l'app
+
+- connexion base de données
+
+- configuration JPA
+
+- configuration Hibernate
+
+app.java fichier principal
+
+
+
+Architecture que j'estime bonne pour l'instant :
+
+src/main/java/com/timetable
+
+App.java
+
+entity
+ ├ User.java
+ ├ Course.java
+ ├ Subject.java
+ ├ ClassRoom.java
+ └ CourseModificationRequest.java
+
+repository
+ ├ UserRepository.java
+ ├ CourseRepository.java
+ └ RequestRepository.java
+
+service
+ ├ ScheduleService.java
+ └ RequestService.java
+
+config
+ └ JpaConfig.java
+
+
+dossier				rôle
+- entity			- structure des données
+- repository			- accès base de données
+- service			- logique métier
+- config			- configuration
+- App				- point d'entrée
+
+
+pom.xml dependencies :
+
+Hibernate
+Jakarta Persistence
+MySQL Connector
+
+persistence.xml 
+
+localhost:3306 mdp : user
+
+
+
+
+
+
+
+
+
+
+
+
