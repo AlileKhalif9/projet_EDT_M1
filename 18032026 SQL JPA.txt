@@ -1,0 +1,45 @@
+Début 18 Mars 17h
+
+J'ai voulu pull sur git mais j'évite pas la même structure/base de départ
+-> Création d'une nouvelle branche
+
+- Orga du projet Java
+
+com.timetable
+  ├ App.java
+  ├ config/
+  ├ entity/
+  ├ repository/
+  └ service/
+
+
+- Config JPA + Hibernate + MySQL
+
+Correction de la structure src/main/resources pour que persistence.xml soit bien détecté.
+
+J'ai testé App.java avec EntityManager : création de User, Subject, ClassRoom, Course, Horaire, CourseModificationRequest.
+
+Les données se sont bien insérées dans MySQL -> test réussi.
+
+- Repositories et Spring
+
+J'ai vu CourseRepository qui étendait JpaRepository.
+
+Problème : org.springframework.data.jpa.repository does not exist
+
+Cause : Spring Boot / Spring Data JPA n’était pas correctement ajouté dans le pom.xml.
+
+Correction : enlever le double <dependencies> et ajouter Spring Boot si je veux l’utiliser.
+
+Décision : pour l’instant, je reste en JPA pur, donc EntityManager suffit et les repositories Spring ne sont pas nécessaires.
+
+
+État actuel :
+
+Projet Java avec JPA/Hibernate connecté à MySQL
+
+Structure de packages propre (entity, repository, service, config, App.java)
+
+App.java testé, insertion de données OK
+
+GitHub ready, mais branche locale pour pousser pas encore créée (et identity Git à configurer)
