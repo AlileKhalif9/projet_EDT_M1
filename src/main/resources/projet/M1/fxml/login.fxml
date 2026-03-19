@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="projet.M1.ui.LoginController"
+           styleClass="login-root"
+           prefWidth="900" prefHeight="600">
+
+    <VBox alignment="CENTER" spacing="0">
+
+        <!-- Carte de connexion -->
+        <VBox styleClass="login-card" spacing="0">
+
+            <!-- Logo + Titre -->
+            <VBox alignment="CENTER" spacing="6">
+                <Label text="🎓" styleClass="login-logo"/>
+                <Label text="Hyperplanning" styleClass="login-title"/>
+                <Label text="Connectez-vous à votre compte" styleClass="login-subtitle"/>
+                <VBox.margin><Insets bottom="8"/></VBox.margin>
+            </VBox>
+
+            <!-- Formulaire -->
+            <VBox spacing="16">
+                <VBox.margin><Insets top="8"/></VBox.margin>
+
+                <VBox spacing="6">
+                    <Label text="Identifiant" styleClass="field-label"/>
+                    <TextField fx:id="loginField"
+                               promptText="Votre identifiant"
+                               styleClass="login-field"
+                               maxWidth="Infinity"/>
+                </VBox>
+
+                <VBox spacing="6">
+                    <Label text="Mot de passe" styleClass="field-label"/>
+                    <PasswordField fx:id="passwordField"
+                                  promptText="••••••••"
+                                  styleClass="login-field"
+                                  maxWidth="Infinity"/>
+                </VBox>
+
+                <!-- Message d'erreur (masqué par défaut) -->
+                <Label fx:id="errorLabel"
+                       styleClass="error-label"
+                       wrapText="true"
+                       maxWidth="Infinity"
+                       visible="false"
+                       managed="false"/>
+
+                <!-- Bouton connexion -->
+                <Button fx:id="loginButton"
+                        text="Se connecter"
+                        styleClass="btn-primary"
+                        maxWidth="Infinity"
+                        onAction="#handleLogin">
+                    <VBox.margin><Insets top="4"/></VBox.margin>
+                </Button>
+            </VBox>
+
+            <!-- Comptes de démo -->
+            <VBox styleClass="demo-box" spacing="6">
+                <VBox.margin><Insets top="20"/></VBox.margin>
+                <Label text="Comptes de démonstration" styleClass="demo-title"/>
+                <Label text="Étudiant    →  etudiant / 1234"   styleClass="demo-item"/>
+                <Label text="Professeur  →  professeur / 1234" styleClass="demo-item"/>
+                <Label text="Gestionnaire→  gestionnaire / 1234" styleClass="demo-item"/>
+            </VBox>
+
+        </VBox>
+    </VBox>
+
+</StackPane>
