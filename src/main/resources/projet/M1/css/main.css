@@ -625,3 +625,169 @@
     -fx-font-size: 13px;
     -fx-text-fill: #374151;
 }
+
+/* =============================================================================
+   DEMANDES DE MODIFICATION
+============================================================================= */
+
+.mod-form-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-padding: 24;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 10, 0, 0, 2);
+}
+
+.mod-form-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.mod-form-desc {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6B7280;
+}
+
+/* Étape numérotée dans le formulaire */
+.form-step {
+    -fx-spacing: 12;
+}
+
+.form-step-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E3A5F;
+    -fx-background-color: #EFF6FF;
+    -fx-background-radius: 6;
+    -fx-padding: 6 12 6 12;
+    -fx-border-color: #BFDBFE;
+    -fx-border-width: 0 0 0 3;
+    -fx-border-radius: 0 6 6 0;
+}
+
+.form-separator {
+    -fx-opacity: 0.4;
+}
+
+.form-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+}
+
+.form-field-disabled {
+    -fx-background-color: #F3F4F6;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 9 14 9 14;
+    -fx-pref-height: 38;
+    -fx-text-fill: #6B7280;
+    -fx-font-size: 13px;
+}
+
+.request-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);
+}
+
+.request-card-header {
+    -fx-padding: 16 20 16 20;
+    -fx-border-color: #F3F4F6;
+    -fx-border-width: 0 0 1 0;
+    -fx-alignment: CENTER_LEFT;
+    -fx-spacing: 12;
+}
+
+.request-card-body {
+    -fx-padding: 20;
+    -fx-spacing: 16;
+}
+
+.request-card-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.request-card-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #9CA3AF;
+}
+
+.status-badge {
+    -fx-background-radius: 20;
+    -fx-padding: 4 12 4 12;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.status-attente  { -fx-background-color: #FEF3C7; -fx-text-fill: #B45309; }
+.status-approuvee{ -fx-background-color: #D1FAE5; -fx-text-fill: #065F46; }
+.status-rejetee  { -fx-background-color: #FEE2E2; -fx-text-fill: #B91C1C; }
+
+.schedule-panel-current {
+    -fx-background-color: #F9FAFB;
+    -fx-background-radius: 8;
+    -fx-border-color: #F3F4F6;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 14;
+    -fx-spacing: 8;
+}
+
+.schedule-panel-requested {
+    -fx-background-color: #EFF6FF;
+    -fx-background-radius: 8;
+    -fx-border-color: #BFDBFE;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 14;
+    -fx-spacing: 8;
+}
+
+.schedule-panel-label      { -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #9CA3AF; }
+.schedule-panel-label-blue { -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #3B82F6; }
+
+.schedule-info      { -fx-font-size: 13px; -fx-text-fill: #374151; }
+.schedule-info-blue { -fx-font-size: 13px; -fx-text-fill: #1E3A5F; -fx-font-weight: bold; }
+
+.reason-label { -fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #374151; }
+.reason-text  { -fx-font-size: 13px; -fx-text-fill: #6B7280; -fx-wrap-text: true; }
+
+.btn-approve {
+    -fx-background-color: #10B981;
+    -fx-text-fill: white;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 8 16 8 16;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+.btn-approve:hover { -fx-background-color: #059669; }
+
+.btn-reject {
+    -fx-background-color: white;
+    -fx-text-fill: #374151;
+    -fx-border-color: #D1D5DB;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8 16 8 16;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+.btn-reject:hover {
+    -fx-background-color: #FEE2E2;
+    -fx-border-color: #FCA5A5;
+    -fx-text-fill: #B91C1C;
+}
