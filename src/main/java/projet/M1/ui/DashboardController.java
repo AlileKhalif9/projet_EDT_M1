@@ -112,6 +112,6 @@ public class DashboardController {
     }
 
     @FXML private void goToRoomSelection() {
-        SceneManager.getInstance().getMainLayoutController().navigateTo(View.ROOM_SELECTION);
+        SceneManager.getInstance().getMainLayoutController().navigateTo(View.MODIFICATION_REQUEST);
     }
 }
