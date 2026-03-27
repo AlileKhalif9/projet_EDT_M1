@@ -12,17 +12,17 @@ import java.util.Optional;
 /**
  * TEMPORAIRE — remplace la vraie BDD le temps qu'elle soit prête.
  *
- * J'implémente votre interface UtilisateurDAO sans la modifier.
+ *
  * Les utilisateurs sont stockés en mémoire avec 3 comptes de test :
  *   etudiant / 1234
  *   professeur / 1234
  *   gestionnaire / 1234
  *
- * Quand votre vrai DAO sera prêt, dans LoginController.java remplacez juste :
+ * Quand la vrai DAO sera prêt, dans LoginController.java on remplace juste :
  *   new AuthController(new MockUtilisateurDAO())
  * par :
  *   new AuthController(new VotreVraiDAO())
- * Le reste du front n'a pas besoin de changer.
+ *
  */
 public class MockUtilisateurDAO implements UtilisateurDAO {
 

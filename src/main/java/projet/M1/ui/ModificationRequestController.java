@@ -12,28 +12,13 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Page "Demandes de modification" — une seule page pour le prof ET le gestionnaire.
- * Fichier FXML : modification-request.fxml
- *
- * PROF (US6 à US9) :
- *   Bouton "+ Nouvelle demande" → ouvre un formulaire en 3 étapes :
- *     1. Date + salle souhaitée          (US6 — sélection salle équipée)
- *     2. Créneau à changer + nouveau     (US7 — créneau libre)
- *     3. Raison                          (US8 — validation)
- *   Bouton "Annuler" = US9
- *
- * GESTIONNAIRE (US10 à US12) :
- *   Pas de formulaire, juste la liste des demandes en attente.
- *   Boutons "Approuver" / "Rejeter" sur chaque demande (US12).
+ * Page "Demandes de modification"
  *
  * Les listes déroulantes + les demandes sont hardcodées ici (front only).
  * Le back-end remplacera ces données par de vrais appels DAO.
  */
 public class ModificationRequestController {
 
-    // -------------------------------------------------------------------------
-    //  Listes prédéfinies — à remplacer par des appels back-end
-    // -------------------------------------------------------------------------
 
     private static final List<String> SALLES = List.of(
             "Salle 305 — Bâtiment A, 50 places",
@@ -76,13 +61,13 @@ public class ModificationRequestController {
     //  Composants FXML
     // -------------------------------------------------------------------------
 
-    @FXML private Label  labelTitle;
-    @FXML private Label  labelSubtitle;
+    @FXML private Label labelTitle;
+    @FXML private Label labelSubtitle;
     @FXML private Button btnNouvellesDemande;
-    @FXML private VBox   formPanel;
-    @FXML private VBox   requestsContainer;
+    @FXML private VBox formPanel;
+    @FXML private VBox requestsContainer;
 
-    @FXML private DatePicker       datePicker;
+    @FXML private DatePicker datePicker;
     @FXML private ComboBox<String> comboSalle;
     @FXML private ComboBox<String> comboCreneauActuel;
     @FXML private ComboBox<String> comboNouveauCreneau;
@@ -152,7 +137,6 @@ public class ModificationRequestController {
         onAnnulerForm();
     }
 
-    /** US9 — annule sans soumettre. */
     @FXML
     private void onAnnulerForm() {
         formPanel.setVisible(false);
@@ -186,8 +170,6 @@ public class ModificationRequestController {
 
     /**
      * Carte d'une demande.
-     * d[] = { cours, demandéPar, créneauActuel, nouveauCréneau,
-     *         salleActuelle, nouvelleSalle, raison, statut, date }
      */
     private VBox buildCard(String[] d, boolean isGestionnaire) {
         VBox card = new VBox();
@@ -277,8 +259,8 @@ public class ModificationRequestController {
         badge.getStyleClass().add("status-badge");
         badge.getStyleClass().add(switch (status) {
             case "approuvée" -> "status-approuvee";
-            case "rejetée"   -> "status-rejetee";
-            default          -> "status-attente";
+            case "rejetée" -> "status-rejetee";
+            default -> "status-attente";
         });
         return badge;
     }
