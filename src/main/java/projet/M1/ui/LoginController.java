@@ -13,22 +13,17 @@ import projet.M1.session.SessionManager;
 import java.util.Optional;
 
 /**
- * Controller de la page de connexion (US1) — fichier FXML : login.fxml
- *
- * J'utilise votre AuthController tel quel, je l'ai pas modifié.
- * Seul MockUtilisateurDAO est temporaire (voir ce fichier pour les comptes de test).
- *
- * Quand la BDD sera prête, dans ce fichier remplacez juste :
+ * Quand la BDD sera prête, dans ce fichier on remplace juste :
  *   new AuthController(new MockUtilisateurDAO())
  * par :
  *   new AuthController(new VotreVraiDAO())
  */
 public class LoginController {
 
-    @FXML private TextField     loginField;
+    @FXML private TextField loginField;
     @FXML private PasswordField passwordField;
-    @FXML private Label         errorLabel;
-    @FXML private Button        loginButton;
+    @FXML private Label errorLabel;
+    @FXML private Button loginButton;
 
     private final AuthController authController =
             new AuthController(new MockUtilisateurDAO());
@@ -42,7 +37,7 @@ public class LoginController {
 
     @FXML
     private void handleLogin() {
-        String login    = loginField.getText().trim();
+        String login = loginField.getText().trim();
         String password = passwordField.getText();
 
         if (login.isEmpty() || password.isEmpty()) {

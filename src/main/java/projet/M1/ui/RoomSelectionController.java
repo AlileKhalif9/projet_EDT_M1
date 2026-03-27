@@ -10,30 +10,23 @@ import projet.M1.service.MockDataService;
 import java.util.List;
 
 /**
- * Controller de la page sélection de salle (US6) — fichier FXML : room-selection.fxml
+ * Controller de la page sélection de salle
  *
  * C'est la page où un prof choisit une salle pour sa demande de modif d'EDT.
- * La suite du flux (US7 créneau, US8 validation) sera faite au Sprint 2.
  *
- * Ce que ça fait :
- *   - Affiche les 6 salles fictives sous forme de cartes (MockDataService)
- *   - Recherche en temps réel par nom ou équipement
- *   - Clic sur une carte → elle se surligne en bleu + bouton Confirmer s'active
- *   - Confirmer → dialogue provisoire (à remplacer par la nav vers US7 au Sprint 2)
- *
- * La salle choisie est stockée dans this.selectedSalle — à passer au prochain controller.
+ * La salle choisie est stockée dans this.selectedSalle
  * Les données viennent de MockDataService, la classe Salle est celle du projet (non modifiée).
  */
 public class RoomSelectionController {
 
-    @FXML private TextField searchField;       // Barre de recherche
-    @FXML private FlowPane  roomGrid;          // Grille de cartes de salles
-    @FXML private Button    btnConfirm;        // Bouton "Confirmer" (désactivé au départ)
-    @FXML private Label     labelSelected;     // Affiche le nom de la salle choisie
+    @FXML private TextField searchField;        // Barre de recherche
+    @FXML private FlowPane roomGrid;          // Grille de cartes de salles
+    @FXML private Button btnConfirm;        // Bouton "Confirmer" (désactivé au départ)
+    @FXML private Label labelSelected;     // Affiche le nom de la salle choisie
 
     private List<Salle> allSalles;     // Toutes les salles (chargées au démarrage)
-    private Salle       selectedSalle; // La salle actuellement sélectionnée (null par défaut)
-    private VBox        selectedCard;  // La carte visuellement surlignée
+    private Salle selectedSalle; // La salle actuellement sélectionnée (null par défaut)
+    private VBox selectedCard;  // La carte visuellement surlignée
 
     /** Appelé automatiquement par JavaFX après le chargement du FXML. */
     @FXML
@@ -59,7 +52,6 @@ public class RoomSelectionController {
     /**
      * Filtre les salles affichées selon le texte saisi.
      * La recherche porte sur le nom de la salle ET sur ses équipements.
-     * Ex: taper "Ordinateurs" n'affiche que les salles avec des ordinateurs.
      */
     private void filterRooms(String query) {
         String q = query == null ? "" : query.trim().toLowerCase();
@@ -156,8 +148,6 @@ public class RoomSelectionController {
 
     /**
      * Confirme la salle sélectionnée.
-     * SPRINT 2 : remplacer ce dialogue par la navigation vers le choix du créneau (US7).
-     * La salle choisie est accessible via this.selectedSalle.
      */
     @FXML
     private void onConfirm() {

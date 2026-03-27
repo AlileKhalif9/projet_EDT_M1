@@ -16,13 +16,8 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Controller du tableau de bord — fichier FXML : dashboard.fxml
- *
  * Affiche : message de bienvenue, stats de la semaine, raccourcis rapides,
  * et la liste des cours du jour en bas.
- *
- * Les données viennent de MockDataService (temporaire).
- * La carte "Demande de modification" est masquée pour les Étudiants.
  */
 public class DashboardController {
 
@@ -30,8 +25,8 @@ public class DashboardController {
     @FXML private Label labelDate;
     @FXML private Label labelCoursAujourdHui;
     @FXML private Label labelCoursSemaine;
-    @FXML private VBox  cardDemandeModif;
-    @FXML private VBox  todayCoursContainer;
+    @FXML private VBox cardDemandeModif;
+    @FXML private VBox todayCoursContainer;
 
     @FXML
     public void initialize() {
@@ -76,13 +71,13 @@ public class DashboardController {
         }
     }
 
-    // Petite carte colorée pour un cours (couleur = type CM/TD/TP…)
+    // Petite carte colorée pour un cours
     private VBox buildCoursMini(CoursDisplay c) {
         VBox card = new VBox(4);
         String type  = c.typeCours() != null ? c.typeCours().getLibelle() : "?";
         String heure = c.heureDebut() + " – " + c.heureFin();
 
-        Label titre   = new Label(c.nom() != null ? c.nom() : "Cours");
+        Label titre = new Label(c.nom() != null ? c.nom() : "Cours");
         titre.getStyleClass().add("cours-mini-title");
 
         Label details = new Label("[" + type + "]  " + heure
