@@ -40,10 +40,10 @@ public class TimetableController {
     //  Constantes de mise en page de la grille
     // -------------------------------------------------------------------------
 
-    private static final int    HEURE_DEBUT    = 8;   // 8h00
-    private static final int    HEURE_FIN      = 19;  // 19h00
-    private static final int    NB_HEURES      = HEURE_FIN - HEURE_DEBUT; // 11 lignes
-    private static final double PX_PAR_HEURE   = 80.0; // hauteur d'une heure en pixels
+    private static final int HEURE_DEBUT = 8;   // 8h00
+    private static final int HEURE_FIN = 19;  // 19h00
+    private static final int NB_HEURES = HEURE_FIN - HEURE_DEBUT; // 11 lignes
+    private static final double PX_PAR_HEURE = 80.0; // hauteur d'une heure en pixels
     private static final double HAUTEUR_HEADER = 44.0; // hauteur de l'en-tête jour
     private static final double LARGEUR_HEURE  = 64.0; // largeur de la colonne d'heures
 
@@ -104,9 +104,8 @@ public class TimetableController {
         tabMonEDT.setSelected(true);
         hideSelectorBar(); // La barre de sélection est masquée par défaut (US2)
 
-        // US5 : pour un professeur, l'onglet "tiers" s'appelle "EDT classe"
-        Utilisateur u = SessionManager.getInstance().getUtilisateurConnecte();
-        if (u instanceof Professeur) tabTiers.setText("EDT classe");
+        // Tous les utilisateurs peuvent voir l'EDT d'une promo
+        tabTiers.setText("EDT classe");
     }
 
     // -------------------------------------------------------------------------
@@ -158,21 +157,13 @@ public class TimetableController {
      */
     @FXML private void onTabTiers() {
         currentTab = TabMode.TIERS;
-        List<String> choices;
-        Utilisateur u = SessionManager.getInstance().getUtilisateurConnecte();
 
-        if (u instanceof Professeur) {
-            // US5 : le professeur voit ses groupes/classes
-            choices = MockDataService.getInstance().getAllGroupes()
-                    .stream().map(Groupe_Etudiant::getNom).toList();
-            comboSelector.setPromptText("Choisir une classe…");
-        } else {
-            // US3 : les autres utilisateurs voient les autres personnes
-            choices = List.of("M. Martin (Professeur)", "Alice Dupont (Étudiant)");
-            comboSelector.setPromptText("Choisir un utilisateur…");
-        }
-
+        // Tous les rôles voient la liste des promotions
+        List<String> choices = MockDataService.getInstance().getAllGroupes()
+                .stream().map(Groupe_Etudiant::getNom).toList();
+        comboSelector.setPromptText("Choisir une classe…");
         comboSelector.getItems().setAll(choices);
+
         showSelectorBar();
         loadCours();
     }
@@ -323,12 +314,9 @@ public class TimetableController {
             case MON_EDT -> MockDataService.getInstance().getCoursEtudiant(currentMonday);
             case TIERS -> {
                 String sel = comboSelector.getValue();
-                if (sel == null) yield List.of(); // Rien à afficher si rien de sélectionné
-                Utilisateur u = SessionManager.getInstance().getUtilisateurConnecte();
-                // US5 : si c'est un prof, affiche l'EDT du groupe ; sinon, d'un utilisateur
-                yield (u instanceof Professeur)
-                        ? MockDataService.getInstance().getCoursGroupe(sel, currentMonday)
-                        : MockDataService.getInstance().getCoursProfesseur(sel, currentMonday);
+                if (sel == null) yield List.of();
+                // Tous les rôles consultent l'EDT par classe/promotion
+                yield MockDataService.getInstance().getCoursGroupe(sel, currentMonday);
             }
             case SALLE -> {
                 String salle = comboSelector.getValue();

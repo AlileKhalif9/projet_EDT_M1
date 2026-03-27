@@ -1,20 +1,21 @@
-package projet.M1.controller;
+package projet.M1.BDD.service;
 
-import projet.M1.controller.dao.UtilisateurDAO;
-import projet.M1.model.utilisateur_systeme.Utilisateur;
+import projet.M1.BDD.entity.UserEntity;
+import projet.M1.BDD.repository.UserRepository;
 
 import java.util.Random;
 
-public class Service_Inscription {
+public class InscriptionService {
 
-    private final UtilisateurDAO utilisateurDAO;
+    private final UserRepository userRepository;
     private final Random random = new Random();
 
-    public Service_Inscription(UtilisateurDAO utilisateurDAO) {
-        this.utilisateurDAO = utilisateurDAO;
+    public InscriptionService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
-    public void inscrireUtilisateur(Utilisateur utilisateur) {
+    // Generation login mdp, pour un nouvel utilisateur
+    public void inscrireUtilisateur(UserEntity utilisateur) {
         boolean aLogin = utilisateur.getLogin() != null && !utilisateur.getLogin().isEmpty();
         boolean aMotDePasse = utilisateur.getMotDePasse() != null && !utilisateur.getMotDePasse().isEmpty();
 
@@ -23,7 +24,7 @@ public class Service_Inscription {
         }
 
         if (aLogin || aMotDePasse) {
-            throw new IllegalStateException("État incohérent : l'utilisateur a un login sans mot de passe ou inversement.");
+            throw new IllegalStateException("État incohérent : login ou mot de passe manquant.");
         }
 
         String login = genererLoginUnique(utilisateur);
@@ -32,10 +33,10 @@ public class Service_Inscription {
         String motDePasse = genererMotDePasse();
         utilisateur.setMotDePasse(motDePasse);
 
-        utilisateurDAO.sauvegarderUtilisateur(utilisateur);
+        userRepository.save(utilisateur);
     }
 
-    private String genererLoginUnique(Utilisateur utilisateur) {
+    private String genererLoginUnique(UserEntity utilisateur) {
         String prenom = utilisateur.getPrenom().toLowerCase();
         String nom = utilisateur.getNom().toLowerCase();
         String base = String.valueOf(prenom.charAt(0)) + nom;
@@ -44,7 +45,7 @@ public class Service_Inscription {
         do {
             int deuxChiffres = random.nextInt(90) + 10;
             login = base + deuxChiffres;
-        } while (utilisateurDAO.loginExiste(login));
+        } while (userRepository.existsByLogin(login));
 
         return login;
     }

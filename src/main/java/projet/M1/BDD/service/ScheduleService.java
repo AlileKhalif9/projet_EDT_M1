@@ -1,52 +1,32 @@
 package projet.M1.BDD.service;
 
-import com.timetable.entity.Course;
-import com.timetable.entity.User;
-import com.timetable.repository.CourseRepository;
+import projet.M1.BDD.entity.CoursEntity;
+import projet.M1.BDD.entity.UserEntity;
+import projet.M1.BDD.repository.CoursRepository;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Service pour gérer les cours et les inscriptions.
- */
 public class ScheduleService {
 
-    private final CourseRepository courseRepository;
+    private final CoursRepository coursRepository;
 
-    public ScheduleService(CourseRepository courseRepository) {
-        this.courseRepository = courseRepository;
+    public ScheduleService(CoursRepository coursRepository) {
+        this.coursRepository = coursRepository;
     }
 
-    /**
-     * Récupère tous les cours d'un utilisateur (étudiant ou professeur)
-     * @param user l'utilisateur
-     * @return liste de cours
-     */
-    public List<Course> getUserCourses(User user) {
-        if ("prof".equals(user.getRole())) {
-            return courseRepository.findByProfessor(user);
-        } else {
-            return courseRepository.findByStudentsContaining(user);
-        }
+    // Retourne les cours d'un etudiant
+    public List<CoursEntity> getEmploiDuTempsEtudiant(UserEntity etudiant, LocalDate semaine) {
+        LocalDate lundi   = semaine.with(DayOfWeek.MONDAY);
+        LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
+        return coursRepository.findByEtudiantAndSemaine(etudiant, lundi, vendredi);
     }
 
-    /**
-     * Inscrit un étudiant à un cours
-     * @param user étudiant
-     * @param course cours
-     */
-    public void enrollStudent(User user, Course course) {
-        course.getStudents().add(user);
-        courseRepository.save(course);
-    }
-
-    /**
-     * Supprime un étudiant d'un cours
-     * @param user étudiant
-     * @param course cours
-     */
-    public void removeStudent(User user, Course course) {
-        course.getStudents().remove(user);
-        courseRepository.save(course);
+    // Retourne les cours d'un prof
+    public List<CoursEntity> getEmploiDuTempsProfesseur(UserEntity professeur, LocalDate semaine) {
+        LocalDate lundi    = semaine.with(DayOfWeek.MONDAY);
+        LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
+        return coursRepository.findByProfesseurAndSemaine(professeur, lundi, vendredi);
     }
 }

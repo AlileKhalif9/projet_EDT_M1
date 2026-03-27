@@ -9,11 +9,6 @@ import java.io.IOException;
 
 /**
  * Gère la navigation entre les pages. C'est le seul endroit où on change de scène.
- *
- * Depuis n'importe quel controller, pour naviguer :
- *   SceneManager.getInstance().getMainLayoutController().navigateTo(View.TIMETABLE)
- *
- * Le CSS est appliqué automatiquement à chaque page chargée.
  */
 public class SceneManager {
 
