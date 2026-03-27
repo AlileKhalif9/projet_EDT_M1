@@ -3,6 +3,21 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
+<!--
+    Page "Demandes de modification" — une seule page, deux vues selon le rôle :
+
+    PROFESSEUR (US6 à US9) :
+      Bouton "+ Nouvelle demande" qui ouvre un formulaire en 3 étapes :
+        1. Salle souhaitée (liste déroulante des salles disponibles)
+        2. Créneau à modifier + nouveau créneau souhaité
+        3. Raison (liste pré-remplie)
+      En bas : historique des demandes du prof (rempli par le back-end)
+
+    GESTIONNAIRE (US10 à US12) :
+      Directement la liste de toutes les demandes en attente,
+      avec boutons "Approuver" et "Rejeter" sur chacune.
+      Pas de bouton "Nouvelle demande".
+-->
 <ScrollPane fitToWidth="true" fitToHeight="false"
             style="-fx-background-color: #F8FAFC; -fx-background: #F8FAFC; -fx-border-color: transparent;"
             xmlns:fx="http://javafx.com/fxml"
@@ -10,15 +25,14 @@
 
     <VBox styleClass="page-container" spacing="24">
 
-        <!-- ================================================================
-             En-tête
-        ================================================================ -->
+        <!-- En-tête -->
         <HBox alignment="CENTER_LEFT" spacing="16">
             <VBox HBox.hgrow="ALWAYS" spacing="4">
                 <Label fx:id="labelTitle"    text="Mes demandes"    styleClass="page-title"/>
                 <Label fx:id="labelSubtitle" text="Demandez des changements à votre emploi du temps"
                        styleClass="page-subtitle"/>
             </VBox>
+            <!-- Visible uniquement pour le prof -->
             <Button fx:id="btnNouvellesDemande"
                     text="+ Nouvelle demande"
                     styleClass="btn-primary"
@@ -26,44 +40,52 @@
         </HBox>
 
         <!-- ================================================================
-             Formulaire (masqué par défaut)
+             FORMULAIRE PROF (US6–9) — masqué par défaut
         ================================================================ -->
         <VBox fx:id="formPanel" visible="false" managed="false"
               styleClass="mod-form-card" spacing="24">
 
             <VBox spacing="4">
-                <Label text="Demander une modification de cours" styleClass="mod-form-title"/>
-                <Label text="Remplissez les étapes ci-dessous pour soumettre votre demande"
+                <Label text="Nouvelle demande de modification" styleClass="mod-form-title"/>
+                <Label text="Tout est en liste déroulante — rien à saisir manuellement"
                        styleClass="mod-form-desc"/>
             </VBox>
 
             <Separator/>
 
-            <!-- Étape 1 : Quelle date ? -->
+            <!-- Étape 1 : Quelle date et quelle salle ? (US6) -->
             <VBox spacing="12" styleClass="form-step">
-                <Label text="Étape 1 — Quelle date ?" styleClass="form-step-title"/>
-                <VBox spacing="6">
-                    <Label text="Date souhaitée" styleClass="form-label"/>
-                    <DatePicker fx:id="datePicker" maxWidth="Infinity"/>
-                </VBox>
+                <Label text="Étape 1 — Quelle date et quelle salle ?" styleClass="form-step-title"/>
+                <HBox spacing="16">
+                    <VBox spacing="6" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                        <Label text="Date souhaitée" styleClass="form-label"/>
+                        <DatePicker fx:id="datePicker" maxWidth="Infinity"/>
+                    </VBox>
+                    <VBox spacing="6" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                        <Label text="Salle souhaitée" styleClass="form-label"/>
+                        <ComboBox fx:id="comboSalle"
+                                  promptText="Choisir une salle disponible..."
+                                  maxWidth="Infinity"/>
+                    </VBox>
+                </HBox>
             </VBox>
 
             <Separator styleClass="form-separator"/>
 
-            <!-- Étape 2 : Quel horaire changer ? -->
+            <!-- Étape 2 : Quel créneau changer ? (US7) -->
             <VBox spacing="12" styleClass="form-step">
-                <Label text="Étape 2 — Quel horaire souhaitez-vous modifier ?" styleClass="form-step-title"/>
+                <Label text="Étape 2 — Quel créneau souhaitez-vous modifier ?" styleClass="form-step-title"/>
                 <HBox spacing="16">
                     <VBox spacing="6" HBox.hgrow="ALWAYS" maxWidth="Infinity">
-                        <Label text="Créneau à modifier" styleClass="form-label"/>
+                        <Label text="Créneau actuel à modifier" styleClass="form-label"/>
                         <ComboBox fx:id="comboCreneauActuel"
-                                  promptText="Ex : 9h00 – 11h00"
+                                  promptText="Ex : Lundi 8h00 – 10h00"
                                   maxWidth="Infinity"/>
                     </VBox>
                     <VBox spacing="6" HBox.hgrow="ALWAYS" maxWidth="Infinity">
-                        <Label text="Salle actuelle" styleClass="form-label"/>
-                        <ComboBox fx:id="comboSalleActuelle"
-                                  promptText="Salle concernée..."
+                        <Label text="Nouveau créneau souhaité" styleClass="form-label"/>
+                        <ComboBox fx:id="comboNouveauCreneau"
+                                  promptText="Choisir un créneau libre..."
                                   maxWidth="Infinity"/>
                     </VBox>
                 </HBox>
@@ -71,47 +93,28 @@
 
             <Separator styleClass="form-separator"/>
 
-            <!-- Étape 3 : Par quoi remplacer ? -->
+            <!-- Étape 3 : Raison (US8) -->
             <VBox spacing="12" styleClass="form-step">
-                <Label text="Étape 3 — Par quoi souhaitez-vous le remplacer ?" styleClass="form-step-title"/>
-                <HBox spacing="16">
-                    <VBox spacing="6" HBox.hgrow="ALWAYS" maxWidth="Infinity">
-                        <Label text="Nouvel horaire souhaité" styleClass="form-label"/>
-                        <ComboBox fx:id="comboNouvelHoraire"
-                                  promptText="Choisir un créneau..."
-                                  maxWidth="Infinity"/>
-                    </VBox>
-                    <VBox spacing="6" HBox.hgrow="ALWAYS" maxWidth="Infinity">
-                        <Label text="Nouvelle salle (optionnel)" styleClass="form-label"/>
-                        <ComboBox fx:id="comboNouvelleSalle"
-                                  promptText="Garder la même ou en choisir une..."
-                                  maxWidth="Infinity"/>
-                    </VBox>
-                </HBox>
-                <VBox spacing="6">
-                    <Label text="Raison de la modification" styleClass="form-label"/>
-                    <ComboBox fx:id="comboRaison"
-                              promptText="Sélectionner une raison..."
-                              maxWidth="Infinity"/>
-                </VBox>
+                <Label text="Étape 3 — Raison de la modification" styleClass="form-step-title"/>
+                <ComboBox fx:id="comboRaison"
+                          promptText="Sélectionner une raison..."
+                          maxWidth="Infinity"/>
             </VBox>
 
             <Separator/>
 
-            <!-- Boutons -->
+            <!-- Boutons US8 / US9 -->
             <HBox spacing="12">
-                <Button text="Soumettre la demande"
-                        styleClass="btn-primary"
-                        onAction="#onSubmit"/>
-                <Button text="Annuler"
-                        styleClass="btn-secondary"
-                        onAction="#onAnnulerForm"/>
+                <Button text="Soumettre la demande" styleClass="btn-primary"  onAction="#onSubmit"/>
+                <Button text="Annuler"              styleClass="btn-secondary" onAction="#onAnnulerForm"/>
             </HBox>
 
         </VBox>
 
         <!-- ================================================================
-             Liste des demandes (remplie par le back-end plus tard)
+             LISTE DES DEMANDES (remplie dynamiquement par le controller)
+             Prof → ses demandes passées
+             Gestionnaire → toutes les demandes en attente avec Approuver/Rejeter
         ================================================================ -->
         <VBox fx:id="requestsContainer" spacing="16"/>
 

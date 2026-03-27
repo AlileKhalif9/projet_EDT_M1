@@ -1,6 +1,7 @@
 package projet.M1.ui;
 
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import projet.M1.model.utilisateur_systeme.Gestionnaire_Planning;
@@ -10,31 +11,43 @@ import projet.M1.session.SessionManager;
 import java.time.LocalDate;
 import java.util.List;
 
-/** Controller de la page "Demandes de modification" — fichier FXML : modification-request.fxml
- * Formulaire en 3 étapes pour qu'un prof demande une modification de son EDT :
- *   Étape 1 → Quelle date ?
- *   Étape 2 → Quel horaire/salle veut-on changer ?
- *   Étape 3 → Par quoi veut-on le remplacer ?
+/**
+ * Page "Demandes de modification" — une seule page pour le prof ET le gestionnaire.
+ * Fichier FXML : modification-request.fxml
  *
- * Les listes déroulantes sont définies ici directement (front seulement).
- * Le back-end devra les brancher sur les vraies données quand la BDD sera prête.
- * La liste des demandes existantes (requestsContainer) est laissée vide :
- * c'est au back-end de la remplir. */
+ * PROF (US6 à US9) :
+ *   Bouton "+ Nouvelle demande" → ouvre un formulaire en 3 étapes :
+ *     1. Date + salle souhaitée          (US6 — sélection salle équipée)
+ *     2. Créneau à changer + nouveau     (US7 — créneau libre)
+ *     3. Raison                          (US8 — validation)
+ *   Bouton "Annuler" = US9
+ *
+ * GESTIONNAIRE (US10 à US12) :
+ *   Pas de formulaire, juste la liste des demandes en attente.
+ *   Boutons "Approuver" / "Rejeter" sur chaque demande (US12).
+ *
+ * Les listes déroulantes + les demandes sont hardcodées ici (front only).
+ * Le back-end remplacera ces données par de vrais appels DAO.
+ */
 public class ModificationRequestController {
 
-
-    //  Listes des choix prédéfinis à remplacer par des appels back-end
-
-
-    private static final List<String> CRENEAUX = List.of(
-            "8h00 – 10h00", "9h00 – 11h00", "10h00 – 12h00",
-            "11h00 – 13h00", "13h00 – 15h00", "14h00 – 16h00",
-            "15h00 – 17h00", "16h00 – 18h00"
-    );
+    // -------------------------------------------------------------------------
+    //  Listes prédéfinies — à remplacer par des appels back-end
+    // -------------------------------------------------------------------------
 
     private static final List<String> SALLES = List.of(
-            "Salle 101", "Salle 102", "Salle 305",
-            "Amphi A", "Salle TP1", "Salle TP2"
+            "Salle 305 — Bâtiment A, 50 places",
+            "Lab 102 — Bâtiment A, 25 places",
+            "Salle 401 — Bâtiment B, 60 places",
+            "Salle 302 — Bâtiment A, 40 places"
+    );
+
+    private static final List<String> CRENEAUX = List.of(
+            "Lundi 8h00 – 10h00",   "Lundi 10h00 – 12h00",  "Lundi 14h00 – 16h00",
+            "Mardi 8h00 – 10h00",   "Mardi 10h00 – 12h00",  "Mardi 14h00 – 16h00",
+            "Mercredi 8h00 – 10h00","Mercredi 14h00 – 16h00",
+            "Jeudi 8h00 – 10h00",   "Jeudi 14h00 – 16h00",
+            "Vendredi 10h00 – 12h00","Vendredi 14h00 – 16h00"
     );
 
     private static final List<String> RAISONS = List.of(
@@ -48,9 +61,20 @@ public class ModificationRequestController {
             "Autre raison"
     );
 
+    // Demandes fictives pour la liste (gestionnaire + historique prof)
+    // Format : { cours, demandéPar, créneauActuel, nouveauCréneau, salleActuelle, nouvelleSalle, raison, statut, date }
+    private static final String[][] DEMANDES_MOCK = {
+            {"Algorithmique",  "M. Martin", "Lundi 9h00 – 11h00",    "Lundi 14h00 – 16h00",
+             "Salle 305",      "Salle 305", "Conflit avec une réunion",      "en attente", "Il y a 2 jours"},
+            {"Base de données","M. Dupont",  "Mercredi 14h00 – 16h00","Mercredi 14h00 – 16h00",
+             "Salle 201",      "Lab 102",   "Besoin d'équipement",           "approuvée",  "Il y a 5 jours"},
+            {"Réseaux",        "M. Bernard","Vendredi 10h00 – 12h00","Vendredi 15h00 – 17h00",
+             "Salle TP2",      "Salle TP2", "Préférence du groupe",          "rejetée",    "Il y a 1 semaine"}
+    };
 
+    // -------------------------------------------------------------------------
     //  Composants FXML
-
+    // -------------------------------------------------------------------------
 
     @FXML private Label  labelTitle;
     @FXML private Label  labelSubtitle;
@@ -58,20 +82,15 @@ public class ModificationRequestController {
     @FXML private VBox   formPanel;
     @FXML private VBox   requestsContainer;
 
-
-    @FXML private DatePicker datePicker;
-
-
+    @FXML private DatePicker       datePicker;
+    @FXML private ComboBox<String> comboSalle;
     @FXML private ComboBox<String> comboCreneauActuel;
-    @FXML private ComboBox<String> comboSalleActuelle;
-
-
-    @FXML private ComboBox<String> comboNouvelHoraire;
-    @FXML private ComboBox<String> comboNouvelleSalle;
+    @FXML private ComboBox<String> comboNouveauCreneau;
     @FXML private ComboBox<String> comboRaison;
 
+    // -------------------------------------------------------------------------
     //  Initialisation
-
+    // -------------------------------------------------------------------------
 
     @FXML
     public void initialize() {
@@ -79,47 +98,46 @@ public class ModificationRequestController {
         boolean isGestionnaire = u instanceof Gestionnaire_Planning;
 
         if (isGestionnaire) {
+            // Vue gestionnaire : titre différent, pas de bouton "Nouvelle demande"
             labelTitle.setText("Demandes de modification");
             labelSubtitle.setText("Examinez et approuvez les demandes en attente");
             btnNouvellesDemande.setVisible(false);
             btnNouvellesDemande.setManaged(false);
         }
 
-        // Remplir les listes
+        // Remplir les listes du formulaire (prof uniquement mais on charge quand même)
+        comboSalle.getItems().setAll(SALLES);
         comboCreneauActuel.getItems().setAll(CRENEAUX);
-        comboSalleActuelle.getItems().setAll(SALLES);
-        comboNouvelHoraire.getItems().setAll(CRENEAUX);
-        comboNouvelleSalle.getItems().setAll(SALLES);
+        comboNouveauCreneau.getItems().setAll(CRENEAUX);
         comboRaison.getItems().setAll(RAISONS);
         datePicker.setValue(LocalDate.now());
 
-        // La liste des demandes sera branchée par le back-end
-        // requestsContainer reste vide pour l'instant
+        // Construire la liste des demandes
+        buildRequestCards(isGestionnaire);
     }
 
+    // -------------------------------------------------------------------------
+    //  Formulaire (prof)
+    // -------------------------------------------------------------------------
 
-    //  Actions
-
-
-    /** Affiche ou masque le formulaire. */
     @FXML
     private void onToggleForm() {
-        boolean estVisible = formPanel.isVisible();
-        formPanel.setVisible(!estVisible);
-        formPanel.setManaged(!estVisible);
-        btnNouvellesDemande.setText(estVisible ? "+ Nouvelle demande" : "Voir les demandes");
+        boolean visible = formPanel.isVisible();
+        formPanel.setVisible(!visible);
+        formPanel.setManaged(!visible);
+        btnNouvellesDemande.setText(visible ? "+ Nouvelle demande" : "Voir les demandes");
     }
 
-    /** Valide et soumet la demande. */
     @FXML
     private void onSubmit() {
-        if (comboCreneauActuel.getValue() == null
-                || comboNouvelHoraire.getValue() == null
+        if (comboSalle.getValue() == null
+                || comboCreneauActuel.getValue() == null
+                || comboNouveauCreneau.getValue() == null
                 || comboRaison.getValue() == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Champs manquants");
             alert.setHeaderText(null);
-            alert.setContentText("Veuillez renseigner au minimum le créneau actuel, le nouvel horaire et la raison.");
+            alert.setContentText("Veuillez renseigner tous les champs avant de soumettre.");
             alert.showAndWait();
             return;
         }
@@ -134,7 +152,7 @@ public class ModificationRequestController {
         onAnnulerForm();
     }
 
-    /** Masque le formulaire sans soumettre. */
+    /** US9 — annule sans soumettre. */
     @FXML
     private void onAnnulerForm() {
         formPanel.setVisible(false);
@@ -142,16 +160,149 @@ public class ModificationRequestController {
         btnNouvellesDemande.setText("+ Nouvelle demande");
     }
 
-
-    //  Helpers
-
-
     private void resetForm() {
         datePicker.setValue(LocalDate.now());
+        comboSalle.getSelectionModel().clearSelection();
         comboCreneauActuel.getSelectionModel().clearSelection();
-        comboSalleActuelle.getSelectionModel().clearSelection();
-        comboNouvelHoraire.getSelectionModel().clearSelection();
-        comboNouvelleSalle.getSelectionModel().clearSelection();
+        comboNouveauCreneau.getSelectionModel().clearSelection();
         comboRaison.getSelectionModel().clearSelection();
+    }
+
+    // -------------------------------------------------------------------------
+    //  Liste des demandes
+    // -------------------------------------------------------------------------
+
+    /**
+     * Construit une carte par demande.
+     * Le gestionnaire voit les boutons Approuver/Rejeter sur les demandes "en attente".
+     * Le prof voit juste ses demandes avec leur statut.
+     */
+    private void buildRequestCards(boolean isGestionnaire) {
+        requestsContainer.getChildren().clear();
+        for (String[] d : DEMANDES_MOCK) {
+            requestsContainer.getChildren().add(buildCard(d, isGestionnaire));
+        }
+    }
+
+    /**
+     * Carte d'une demande.
+     * d[] = { cours, demandéPar, créneauActuel, nouveauCréneau,
+     *         salleActuelle, nouvelleSalle, raison, statut, date }
+     */
+    private VBox buildCard(String[] d, boolean isGestionnaire) {
+        VBox card = new VBox();
+        card.getStyleClass().add("request-card");
+
+        // -- Header --
+        HBox header = new HBox(12);
+        header.getStyleClass().add("request-card-header");
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        VBox titles = new VBox(4);
+        HBox.setHgrow(titles, Priority.ALWAYS);
+        Label coursLbl = new Label(d[0]);
+        coursLbl.getStyleClass().add("request-card-title");
+        Label subLbl = new Label("Demandé par " + d[1] + " · " + d[8]);
+        subLbl.getStyleClass().add("request-card-subtitle");
+        titles.getChildren().addAll(coursLbl, subLbl);
+
+        Label badge = buildStatusBadge(d[7]);
+        header.getChildren().addAll(titles, badge);
+
+        // -- Corps --
+        VBox body = new VBox(16);
+        body.getStyleClass().add("request-card-body");
+
+        // Deux panneaux : actuel (gris) / demandé (bleu)
+        HBox schedules = new HBox(12);
+        schedules.getChildren().addAll(
+                buildSchedulePanel(false, d[2], d[4]),
+                buildSchedulePanel(true,  d[3], d[5])
+        );
+
+        // Raison
+        HBox reasonRow = new HBox(4);
+        Label rKey = new Label("Raison : ");
+        rKey.getStyleClass().add("reason-label");
+        Label rVal = new Label(d[6]);
+        rVal.getStyleClass().add("reason-text");
+        rVal.setWrapText(true);
+        reasonRow.getChildren().addAll(rKey, rVal);
+
+        body.getChildren().addAll(schedules, reasonRow);
+
+        // Boutons gestionnaire (US12) — uniquement sur les demandes "en attente"
+        if (isGestionnaire && "en attente".equals(d[7])) {
+            Separator sep = new Separator();
+            HBox actions = new HBox(10);
+            actions.setAlignment(Pos.CENTER_LEFT);
+
+            Button btnApprove = new Button("Approuver");
+            btnApprove.getStyleClass().add("btn-approve");
+            btnApprove.setOnAction(e -> onApprouver(d[0], card));
+
+            Button btnReject = new Button("Rejeter");
+            btnReject.getStyleClass().add("btn-reject");
+            btnReject.setOnAction(e -> onRejeter(d[0], card));
+
+            actions.getChildren().addAll(btnApprove, btnReject);
+            body.getChildren().addAll(sep, actions);
+        }
+
+        card.getChildren().addAll(header, body);
+        return card;
+    }
+
+    private VBox buildSchedulePanel(boolean isNew, String horaire, String salle) {
+        VBox panel = new VBox(8);
+        panel.getStyleClass().add(isNew ? "schedule-panel-requested" : "schedule-panel-current");
+        HBox.setHgrow(panel, Priority.ALWAYS);
+        panel.setMaxWidth(Double.MAX_VALUE);
+
+        Label title = new Label(isNew ? "CRÉNEAU DEMANDÉ" : "CRÉNEAU ACTUEL");
+        title.getStyleClass().add(isNew ? "schedule-panel-label-blue" : "schedule-panel-label");
+
+        Label horaireLbl = new Label("  " + horaire);
+        horaireLbl.getStyleClass().add(isNew ? "schedule-info-blue" : "schedule-info");
+
+        Label salleLbl = new Label("  " + salle);
+        salleLbl.getStyleClass().add(isNew ? "schedule-info-blue" : "schedule-info");
+
+        panel.getChildren().addAll(title, horaireLbl, salleLbl);
+        return panel;
+    }
+
+    private Label buildStatusBadge(String status) {
+        Label badge = new Label(capitalize(status));
+        badge.getStyleClass().add("status-badge");
+        badge.getStyleClass().add(switch (status) {
+            case "approuvée" -> "status-approuvee";
+            case "rejetée"   -> "status-rejetee";
+            default          -> "status-attente";
+        });
+        return badge;
+    }
+
+    private void onApprouver(String cours, VBox card) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Demande approuvée");
+        alert.setHeaderText(null);
+        alert.setContentText("La demande pour \"" + cours + "\" a été approuvée.\nLe professeur et le groupe ont été notifiés.");
+        alert.showAndWait();
+        requestsContainer.getChildren().remove(card);
+    }
+
+    private void onRejeter(String cours, VBox card) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Demande rejetée");
+        alert.setHeaderText(null);
+        alert.setContentText("La demande pour \"" + cours + "\" a été rejetée.\nLe professeur a été notifié.");
+        alert.showAndWait();
+        requestsContainer.getChildren().remove(card);
+    }
+
+    private String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return s.substring(0, 1).toUpperCase() + s.substring(1);
     }
 }
