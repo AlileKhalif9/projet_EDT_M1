@@ -9,7 +9,7 @@ public enum View {
     DASHBOARD            ("dashboard"),
     TIMETABLE            ("timetable"),
     ROOM_SELECTION       ("room-selection"),
-    MODIFICATION_REQUEST ("modification-request");
+    MODIFICATION_REQUEST ("modification-request"); // US6–12
 
     private final String fxmlName;
 
