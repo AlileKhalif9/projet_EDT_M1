@@ -17,7 +17,7 @@ import projet.M1.session.SessionManager;
 import java.io.IOException;
 
 /**
- * Controller du layout principal — fichier FXML : main-layout.fxml
+ * Controller du layout principal
  *
  * C'est lui qui gère la sidebar (navigation + profil) et la zone centrale
  * où les pages s'affichent. La sidebar reste fixe, seul le centre change.

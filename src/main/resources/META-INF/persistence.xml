@@ -6,17 +6,29 @@
              version="3.0">
 
     <persistence-unit name="timetablePU">
-        <class>com.timetable.entity.User</class>
+
+        <!-- Toutes les entités BDD -->
+        <class>projet.M1.BDD.entity.UserEntity</class>
+        <class>projet.M1.BDD.entity.PromotionEntity</class>
+        <class>projet.M1.BDD.entity.GroupeEtudiantEntity</class>
+        <class>projet.M1.BDD.entity.ModuleEntity</class>
+        <class>projet.M1.BDD.entity.NoteEntity</class>
+        <class>projet.M1.BDD.entity.CoursEntity</class>
+        <class>projet.M1.BDD.entity.HoraireEntity</class>
+        <class>projet.M1.BDD.entity.SalleEntity</class>
+        <class>projet.M1.BDD.entity.CoursModificationRequestEntity</class>
 
         <properties>
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/timetable"/>
-            <property name="jakarta.persistence.jdbc.user" value="root"/>
-            <property name="jakarta.persistence.jdbc.password" value="user"/>
-            <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
+            <!-- PostgreSQL -->
+            <property name="jakarta.persistence.jdbc.url"      value="jdbc:postgresql://localhost:5432/timetable"/>
+            <property name="jakarta.persistence.jdbc.user"     value="postgres"/>
+            <property name="jakarta.persistence.jdbc.password" value="password"/>
+            <property name="jakarta.persistence.jdbc.driver"   value="org.postgresql.Driver"/>
 
-            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
-            <property name="hibernate.hbm2ddl.auto" value="update"/>
-            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.dialect"       value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto"  value="update"/>
+            <property name="hibernate.show_sql"      value="true"/>
         </properties>
+
     </persistence-unit>
 </persistence>
