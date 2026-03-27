@@ -6,9 +6,10 @@ package projet.M1.ui;
  * Pour ajouter une page : ajouter une valeur ici + créer le FXML + le controller.
  */
 public enum View {
-    DASHBOARD      ("dashboard"),
-    TIMETABLE      ("timetable"),
-    ROOM_SELECTION ("room-selection");
+    DASHBOARD            ("dashboard"),
+    TIMETABLE            ("timetable"),
+    ROOM_SELECTION       ("room-selection"),
+    MODIFICATION_REQUEST ("modification-request"); // US6–12
 
     private final String fxmlName;
 

@@ -83,7 +83,7 @@ public class MainLayoutController {
 
     @FXML private void onDashboard()     { navigateTo(View.DASHBOARD); }
     @FXML private void onTimetable()     { navigateTo(View.TIMETABLE); }
-    @FXML private void onRoomSelection() { navigateTo(View.ROOM_SELECTION); }
+    @FXML private void onRoomSelection() { navigateTo(View.MODIFICATION_REQUEST); }
 
     @FXML
     private void onLogout() {
@@ -96,9 +96,10 @@ public class MainLayoutController {
         btnTimetable.getStyleClass().remove("sidebar-nav-item-active");
         btnRoomSelection.getStyleClass().remove("sidebar-nav-item-active");
         switch (view) {
-            case DASHBOARD      -> btnDashboard.getStyleClass().add("sidebar-nav-item-active");
-            case TIMETABLE      -> btnTimetable.getStyleClass().add("sidebar-nav-item-active");
-            case ROOM_SELECTION -> btnRoomSelection.getStyleClass().add("sidebar-nav-item-active");
+            case DASHBOARD            -> btnDashboard.getStyleClass().add("sidebar-nav-item-active");
+            case TIMETABLE            -> btnTimetable.getStyleClass().add("sidebar-nav-item-active");
+            case ROOM_SELECTION,
+                 MODIFICATION_REQUEST -> btnRoomSelection.getStyleClass().add("sidebar-nav-item-active");
         }
     }
 
