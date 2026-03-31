@@ -8,24 +8,19 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
-import projet.M1.model.utilisateur_systeme.Etudiant;
-import projet.M1.model.utilisateur_systeme.Gestionnaire_Planning;
-import projet.M1.model.utilisateur_systeme.Professeur;
-import projet.M1.model.utilisateur_systeme.Utilisateur;
+import projet.M1.BDD.entity.Role;
+import projet.M1.BDD.entity.UserEntity;
 import projet.M1.session.SessionManager;
 
 import java.io.IOException;
 
 /**
- * Controller du layout principal
+ * Controller du layout principal (sidebar + zone centrale).
  *
- * C'est lui qui gère la sidebar (navigation + profil) et la zone centrale
- * où les pages s'affichent. La sidebar reste fixe, seul le centre change.
+ * La sidebar reste fixe, seule la zone centrale change à chaque navigation.
  *
- * Pour naviguer depuis un autre controller :
- *   SceneManager.getInstance().getMainLayoutController().navigateTo(View.TIMETABLE)
- *
- * Le bouton "Demande de modification" est masqué automatiquement pour les Étudiants.
+ * Intégration BDD : utilise UserEntity (via SessionManager) au lieu du modèle Utilisateur.
+ * Les vérifications de rôle passent par UserEntity.getRole() (enum Role).
  */
 public class MainLayoutController {
 
@@ -38,7 +33,7 @@ public class MainLayoutController {
     @FXML private Label     labelUserName;
     @FXML private Label     labelUserRole;
     @FXML private Button    btnLogout;
-    @FXML private StackPane contentArea; // zone centrale où les pages se chargent
+    @FXML private StackPane contentArea;
 
     private View activeView;
 
@@ -50,8 +45,9 @@ public class MainLayoutController {
     }
 
     private void populateUserInfo() {
-        Utilisateur u = SessionManager.getInstance().getUtilisateurConnecte();
+        UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
         if (u == null) return;
+
         labelAvatarInitials.setText(initiales(u));
         labelUserName.setText(u.getPrenom() + " " + u.getNom());
         labelUserRole.setText(roleLabel(u));
@@ -59,14 +55,16 @@ public class MainLayoutController {
     }
 
     private void applyRoleVisibility() {
-        Utilisateur u = SessionManager.getInstance().getUtilisateurConnecte();
-        // Demande de modif accessible seulement pour les profs et gestionnaires
-        boolean canRequest = (u instanceof Professeur) || (u instanceof Gestionnaire_Planning);
+        UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
+        if (u == null) return;
+        // Le bouton "Demande de modif" est accessible uniquement aux profs et gestionnaires
+        boolean canRequest = u.getRole() == Role.PROFESSEUR
+                          || u.getRole() == Role.GESTIONNAIRE_PLANNING;
         btnRoomSelection.setVisible(canRequest);
         btnRoomSelection.setManaged(canRequest);
     }
 
-    // Charge une page dans la zone centrale (remplace le contenu précédent)
+    /** Charge une page dans la zone centrale (remplace le contenu précédent). */
     public void navigateTo(View view) {
         if (view == activeView) return;
         try {
@@ -104,22 +102,28 @@ public class MainLayoutController {
     }
 
     // "Jean Martin" → "JM"
-    private String initiales(Utilisateur u) {
-        return (u.getPrenom().isEmpty() ? "" : String.valueOf(u.getPrenom().charAt(0)).toUpperCase())
-             + (u.getNom().isEmpty()    ? "" : String.valueOf(u.getNom().charAt(0)).toUpperCase());
+    private String initiales(UserEntity u) {
+        String p = u.getPrenom() != null ? u.getPrenom() : "";
+        String n = u.getNom()    != null ? u.getNom()    : "";
+        return (p.isEmpty() ? "" : String.valueOf(p.charAt(0)).toUpperCase())
+             + (n.isEmpty() ? "" : String.valueOf(n.charAt(0)).toUpperCase());
     }
 
-    private String roleLabel(Utilisateur u) {
-        if (u instanceof Etudiant)              return "Étudiant";
-        if (u instanceof Professeur)            return "Professeur";
-        if (u instanceof Gestionnaire_Planning) return "Gestionnaire";
-        return "Invité";
+    private String roleLabel(UserEntity u) {
+        return switch (u.getRole()) {
+            case ETUDIANT              -> "Étudiant";
+            case PROFESSEUR            -> "Professeur";
+            case GESTIONNAIRE_PLANNING -> "Gestionnaire";
+            case INVITE                -> "Invité";
+        };
     }
 
-    private String roleStyleClass(Utilisateur u) {
-        if (u instanceof Etudiant)              return "badge-role-etudiant";
-        if (u instanceof Professeur)            return "badge-role-prof";
-        if (u instanceof Gestionnaire_Planning) return "badge-role-gest";
-        return "badge-role-invite";
+    private String roleStyleClass(UserEntity u) {
+        return switch (u.getRole()) {
+            case ETUDIANT              -> "badge-role-etudiant";
+            case PROFESSEUR            -> "badge-role-prof";
+            case GESTIONNAIRE_PLANNING -> "badge-role-gest";
+            case INVITE                -> "badge-role-invite";
+        };
     }
 }

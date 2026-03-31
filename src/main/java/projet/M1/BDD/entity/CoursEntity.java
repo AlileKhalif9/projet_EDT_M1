@@ -11,6 +11,14 @@ public class CoursEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Nom du cours (ex: "Algorithmique", "Base de données")
+    // Ajouté lors de l'intégration front-back pour affichage dans la grille EDT
+    private String nom;
+
+    // Type du cours : "CM", "TD", "TP", "EXAMEN", "ANNULE"
+    // Ajouté lors de l'intégration pour la coloration dans la grille EDT
+    private String typeCours;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "horaire_id")
     private HoraireEntity horaire;
@@ -37,6 +45,12 @@ public class CoursEntity {
 
     // Getters et Setters
     public Long getId() { return id; }
+
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
+
+    public String getTypeCours() { return typeCours; }
+    public void setTypeCours(String typeCours) { this.typeCours = typeCours; }
 
     public HoraireEntity getHoraire() { return horaire; }
     public void setHoraire(HoraireEntity horaire) { this.horaire = horaire; }

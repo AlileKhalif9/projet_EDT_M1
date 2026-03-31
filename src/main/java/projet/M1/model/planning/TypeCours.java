@@ -28,4 +28,19 @@ public enum TypeCours {
     public String getLibelle()        { return libelle; }
     public String getCouleurBordure() { return couleurBordure; }
     public String getCouleurFond()    { return couleurFond; }
+
+    /**
+     * Convertit la chaîne stockée en BDD ("CM", "TD", "TP", "EXAMEN", "ANNULE")
+     * en valeur d'enum. Retourne CM par défaut si la valeur est inconnue ou null.
+     */
+    public static TypeCours fromString(String s) {
+        if (s == null) return CM;
+        return switch (s.toUpperCase()) {
+            case "TD"     -> TD;
+            case "TP"     -> TP;
+            case "EXAMEN" -> EXAMEN;
+            case "ANNULE" -> ANNULE;
+            default       -> CM;
+        };
+    }
 }
