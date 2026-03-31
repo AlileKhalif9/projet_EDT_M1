@@ -11,6 +11,14 @@ public class CoursEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Nom du cours (ex: "Algorithmique", "Base de données")
+    // Ajouté lors de l'intégration front-back pour affichage dans la grille EDT
+    private String nom;
+
+    // Type du cours : "CM", "TD", "TP", "EXAMEN", "ANNULE"
+    // Ajouté lors de l'intégration pour la coloration dans la grille EDT
+    private String typeCours;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "horaire_id")
     private HoraireEntity horaire;
@@ -19,7 +27,9 @@ public class CoursEntity {
     @JoinColumn(name = "salle_id")
     private SalleEntity salle;
 
-    @ManyToMany
+    // EAGER : les listes sont chargées immédiatement avec le cours.
+    // Nécessaire pour accéder aux étudiants/profs après fermeture de l'EntityManager (CoursDisplay.fromEntity).
+    @ManyToMany(fetch = jakarta.persistence.FetchType.EAGER)
     @JoinTable(
             name = "etudiant_cours",
             joinColumns = @JoinColumn(name = "cours_id"),
@@ -27,7 +37,7 @@ public class CoursEntity {
     )
     private List<UserEntity> list_etudiant;
 
-    @ManyToMany
+    @ManyToMany(fetch = jakarta.persistence.FetchType.EAGER)
     @JoinTable(
             name = "professeur_cours",
             joinColumns = @JoinColumn(name = "cours_id"),
@@ -37,6 +47,12 @@ public class CoursEntity {
 
     // Getters et Setters
     public Long getId() { return id; }
+
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
+
+    public String getTypeCours() { return typeCours; }
+    public void setTypeCours(String typeCours) { this.typeCours = typeCours; }
 
     public HoraireEntity getHoraire() { return horaire; }
     public void setHoraire(HoraireEntity horaire) { this.horaire = horaire; }

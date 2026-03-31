@@ -13,9 +13,13 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        SceneManager.getInstance().init(primaryStage);
-        // On commence toujours par la page de connexion
-        SceneManager.getInstance().showLogin();
+        try {
+            SceneManager.getInstance().init(primaryStage);
+            SceneManager.getInstance().showLogin();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     public static void main(String[] args) {
