@@ -27,7 +27,9 @@ public class CoursEntity {
     @JoinColumn(name = "salle_id")
     private SalleEntity salle;
 
-    @ManyToMany
+    // EAGER : les listes sont chargées immédiatement avec le cours.
+    // Nécessaire pour accéder aux étudiants/profs après fermeture de l'EntityManager (CoursDisplay.fromEntity).
+    @ManyToMany(fetch = jakarta.persistence.FetchType.EAGER)
     @JoinTable(
             name = "etudiant_cours",
             joinColumns = @JoinColumn(name = "cours_id"),
@@ -35,7 +37,7 @@ public class CoursEntity {
     )
     private List<UserEntity> list_etudiant;
 
-    @ManyToMany
+    @ManyToMany(fetch = jakarta.persistence.FetchType.EAGER)
     @JoinTable(
             name = "professeur_cours",
             joinColumns = @JoinColumn(name = "cours_id"),

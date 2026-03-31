@@ -1,5 +1,6 @@
 package projet.M1.ui;
 
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -70,6 +71,11 @@ public class SceneManager {
             primaryStage.setTitle("Hyperplanning – Connexion");
             primaryStage.setResizable(false);
             primaryStage.show();
+            // Fix rendu blanc macOS : force un repaint après affichage
+            Platform.runLater(() -> {
+                primaryStage.setOpacity(0.99);
+                primaryStage.setOpacity(1.0);
+            });
         } catch (IOException e) {
             throw new RuntimeException("Impossible de charger la scène : " + fxmlName, e);
         }
