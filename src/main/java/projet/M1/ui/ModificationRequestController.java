@@ -4,36 +4,33 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import projet.M1.model.utilisateur_systeme.Gestionnaire_Planning;
-import projet.M1.model.utilisateur_systeme.Utilisateur;
+import javafx.util.StringConverter;
+import projet.M1.BDD.dao.CoursDAO;
+import projet.M1.BDD.dao.DemandeDAO;
+import projet.M1.BDD.dao.HoraireDAO;
+import projet.M1.BDD.dao.SalleDAO;
+import projet.M1.BDD.entity.*;
 import projet.M1.session.SessionManager;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Stream;
 
 /**
- * Page "Demandes de modification"
+ * Page "Demandes de modification" — FXML : modification-request.fxml
  *
- * Les listes déroulantes + les demandes sont hardcodées ici (front only).
- * Le back-end remplacera ces données par de vrais appels DAO.
+ * Mode PROFESSEUR  → formulaire en 3 étapes :
+ *   1. Identifier le cours via date + heure (feedback immédiat si introuvable)
+ *   2. Nouveau créneau (date, heure début, heure fin, salle optionnelle)
+ *   3. Raison
+ *
+ * Mode GESTIONNAIRE → liste des demandes PENDING avec Approuver / Rejeter.
  */
 public class ModificationRequestController {
-
-
-    private static final List<String> SALLES = List.of(
-            "Salle 305 — Bâtiment A, 50 places",
-            "Lab 102 — Bâtiment A, 25 places",
-            "Salle 401 — Bâtiment B, 60 places",
-            "Salle 302 — Bâtiment A, 40 places"
-    );
-
-    private static final List<String> CRENEAUX = List.of(
-            "Lundi 8h00 – 10h00",   "Lundi 10h00 – 12h00",  "Lundi 14h00 – 16h00",
-            "Mardi 8h00 – 10h00",   "Mardi 10h00 – 12h00",  "Mardi 14h00 – 16h00",
-            "Mercredi 8h00 – 10h00","Mercredi 14h00 – 16h00",
-            "Jeudi 8h00 – 10h00",   "Jeudi 14h00 – 16h00",
-            "Vendredi 10h00 – 12h00","Vendredi 14h00 – 16h00"
-    );
 
     private static final List<String> RAISONS = List.of(
             "Conflit avec une réunion de département",
@@ -46,32 +43,51 @@ public class ModificationRequestController {
             "Autre raison"
     );
 
-    // Demandes fictives pour la liste (gestionnaire + historique prof)
-    // Format : { cours, demandéPar, créneauActuel, nouveauCréneau, salleActuelle, nouvelleSalle, raison, statut, date }
-    private static final String[][] DEMANDES_MOCK = {
-            {"Algorithmique",  "M. Martin", "Lundi 9h00 – 11h00",    "Lundi 14h00 – 16h00",
-             "Salle 305",      "Salle 305", "Conflit avec une réunion",      "en attente", "Il y a 2 jours"},
-            {"Base de données","M. Dupont",  "Mercredi 14h00 – 16h00","Mercredi 14h00 – 16h00",
-             "Salle 201",      "Lab 102",   "Besoin d'équipement",           "approuvée",  "Il y a 5 jours"},
-            {"Réseaux",        "M. Bernard","Vendredi 10h00 – 12h00","Vendredi 15h00 – 17h00",
-             "Salle TP2",      "Salle TP2", "Préférence du groupe",          "rejetée",    "Il y a 1 semaine"}
-    };
+    /** Créneaux disponibles toutes les 30 min de 07:30 à 19:00. */
+    private static final List<String> TIME_SLOTS = Stream
+            .iterate(LocalTime.of(7, 30), t -> !t.isAfter(LocalTime.of(19, 0)), t -> t.plusMinutes(30))
+            .map(t -> t.format(DateTimeFormatter.ofPattern("HH:mm")))
+            .toList();
+
+    private static final DateTimeFormatter FMT_DATE = DateTimeFormatter.ofPattern("EEEE d MMM", Locale.FRENCH);
+    private static final DateTimeFormatter FMT_TIME = DateTimeFormatter.ofPattern("HH'h'mm");
+    private static final DateTimeFormatter FMT_PARSE = DateTimeFormatter.ofPattern("HH:mm");
 
     // -------------------------------------------------------------------------
     //  Composants FXML
     // -------------------------------------------------------------------------
 
-    @FXML private Label labelTitle;
-    @FXML private Label labelSubtitle;
+    @FXML private Label  labelTitle;
+    @FXML private Label  labelSubtitle;
     @FXML private Button btnNouvellesDemande;
-    @FXML private VBox formPanel;
-    @FXML private VBox requestsContainer;
+    @FXML private VBox   formPanel;
+    @FXML private VBox   requestsContainer;
 
-    @FXML private DatePicker datePicker;
-    @FXML private ComboBox<String> comboSalle;
-    @FXML private ComboBox<String> comboCreneauActuel;
-    @FXML private ComboBox<String> comboNouveauCreneau;
+    // Étape 1 — identifier le cours
+    @FXML private DatePicker       datePickerActuel;
+    @FXML private ComboBox<String> comboHeureActuelle;
+    @FXML private Label            labelCoursFound;
+
+    // Étape 2 — nouveau créneau
+    @FXML private DatePicker           datePickerNouveau;
+    @FXML private ComboBox<String>     comboHeureDebutNouveau;
+    @FXML private ComboBox<String>     comboHeureFinNouveau;
+    @FXML private ComboBox<SalleEntity> comboSalle;
+
+    // Étape 3 — raison
     @FXML private ComboBox<String> comboRaison;
+
+    // -------------------------------------------------------------------------
+    //  DAOs + état
+    // -------------------------------------------------------------------------
+
+    private final CoursDAO   coursDAO   = new CoursDAO();
+    private final SalleDAO   salleDAO   = new SalleDAO();
+    private final HoraireDAO horaireDAO = new HoraireDAO();
+    private final DemandeDAO demandeDAO = new DemandeDAO();
+
+    /** Cours identifié à l'étape 1 — null si introuvable. */
+    private CoursEntity coursSelectionne = null;
 
     // -------------------------------------------------------------------------
     //  Initialisation
@@ -79,26 +95,109 @@ public class ModificationRequestController {
 
     @FXML
     public void initialize() {
-        Utilisateur u = SessionManager.getInstance().getUtilisateurConnecte();
-        boolean isGestionnaire = u instanceof Gestionnaire_Planning;
+        UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
+        boolean isGestionnaire = u != null && u.getRole() == Role.GESTIONNAIRE_PLANNING;
 
         if (isGestionnaire) {
-            // Vue gestionnaire : titre différent, pas de bouton "Nouvelle demande"
             labelTitle.setText("Demandes de modification");
             labelSubtitle.setText("Examinez et approuvez les demandes en attente");
             btnNouvellesDemande.setVisible(false);
             btnNouvellesDemande.setManaged(false);
         }
 
-        // Remplir les listes du formulaire (prof uniquement mais on charge quand même)
-        comboSalle.getItems().setAll(SALLES);
-        comboCreneauActuel.getItems().setAll(CRENEAUX);
-        comboNouveauCreneau.getItems().setAll(CRENEAUX);
-        comboRaison.getItems().setAll(RAISONS);
-        datePicker.setValue(LocalDate.now());
+        setupFormCombos(u);
+        buildRequestCards(isGestionnaire, u);
+    }
 
-        // Construire la liste des demandes
-        buildRequestCards(isGestionnaire);
+    private void setupFormCombos(UserEntity u) {
+        // Créneaux horaires (identiques pour les 3 combos)
+        comboHeureActuelle.getItems().setAll(TIME_SLOTS);
+        comboHeureDebutNouveau.getItems().setAll(TIME_SLOTS);
+        comboHeureFinNouveau.getItems().setAll(TIME_SLOTS);
+
+        // Étape 1 : chercher le cours dès que la date ou l'heure change
+        datePickerActuel.setOnAction(e -> searchCours(u));
+        comboHeureActuelle.setOnAction(e -> searchCours(u));
+
+        // Salles
+        comboSalle.setConverter(new StringConverter<>() {
+            public String toString(SalleEntity s) {
+                if (s == null) return "";
+                return s.getNom() + "  (" + s.getPlace() + " places)";
+            }
+            public SalleEntity fromString(String s) { return null; }
+        });
+        try {
+            comboSalle.getItems().setAll(salleDAO.findAll());
+        } catch (Exception e) {
+            comboSalle.getItems().clear();
+        }
+
+        comboRaison.getItems().setAll(RAISONS);
+    }
+
+    // -------------------------------------------------------------------------
+    //  Étape 1 — recherche du cours
+    // -------------------------------------------------------------------------
+
+    /**
+     * Cherche le cours du prof correspondant à la date + heure sélectionnées.
+     * Met à jour labelCoursFound en temps réel avec le résultat.
+     */
+    private void searchCours(UserEntity u) {
+        coursSelectionne = null;
+        LocalDate date = datePickerActuel.getValue();
+        String heureStr = comboHeureActuelle.getValue();
+
+        if (date == null || heureStr == null) {
+            setCoursLabel("idle", "Choisissez une date et une heure pour identifier le cours");
+            return;
+        }
+
+        LocalTime heure = LocalTime.parse(heureStr, FMT_PARSE);
+
+        try {
+            LocalDate lundi = date.with(DayOfWeek.MONDAY);
+            List<CoursEntity> semaine = (u.getRole() == Role.PROFESSEUR)
+                    ? coursDAO.findByProfesseurAndSemaine(u, lundi)
+                    : List.of();
+
+            coursSelectionne = semaine.stream()
+                    .filter(c -> c.getHoraire() != null
+                            && date.equals(c.getHoraire().getJour())
+                            && !heure.isBefore(c.getHoraire().getHeureDebut())
+                            && heure.isBefore(c.getHoraire().getHeureFin()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (coursSelectionne != null) {
+                HoraireEntity h = coursSelectionne.getHoraire();
+                String salle = coursSelectionne.getSalle() != null
+                        ? coursSelectionne.getSalle().getNom() : "salle inconnue";
+                setCoursLabel("ok",
+                        "Cours trouvé : " + coursSelectionne.getNom()
+                        + " (" + coursSelectionne.getTypeCours() + ")"
+                        + "  ·  " + h.getHeureDebut().format(FMT_TIME)
+                        + " – " + h.getHeureFin().format(FMT_TIME)
+                        + "  ·  " + salle);
+            } else {
+                setCoursLabel("error",
+                        "Aucun cours à ce créneau — vérifiez la date et l'heure");
+            }
+        } catch (Exception e) {
+            setCoursLabel("error", "Impossible de vérifier (base de données inaccessible)");
+        }
+    }
+
+    private void setCoursLabel(String state, String text) {
+        labelCoursFound.setText(text);
+        labelCoursFound.getStyleClass().setAll(
+                switch (state) {
+                    case "ok"    -> "cours-found-ok";
+                    case "error" -> "cours-found-error";
+                    default      -> "cours-found-idle";
+                }
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -115,26 +214,57 @@ public class ModificationRequestController {
 
     @FXML
     private void onSubmit() {
-        if (comboSalle.getValue() == null
-                || comboCreneauActuel.getValue() == null
-                || comboNouveauCreneau.getValue() == null
-                || comboRaison.getValue() == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Champs manquants");
-            alert.setHeaderText(null);
-            alert.setContentText("Veuillez renseigner tous les champs avant de soumettre.");
-            alert.showAndWait();
+        if (coursSelectionne == null) {
+            showAlert(Alert.AlertType.WARNING, "Cours non identifié",
+                    "Aucun cours n'a été trouvé au créneau sélectionné.\n"
+                    + "Corrigez la date ou l'heure à l'étape 1.");
             return;
         }
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Demande soumise");
-        alert.setHeaderText(null);
-        alert.setContentText("Votre demande a été soumise avec succès.\nElle sera traitée par le gestionnaire.");
-        alert.showAndWait();
+        if (datePickerNouveau.getValue() == null
+                || comboHeureDebutNouveau.getValue() == null
+                || comboHeureFinNouveau.getValue() == null
+                || comboRaison.getValue() == null) {
+            showAlert(Alert.AlertType.WARNING, "Champs manquants",
+                    "Veuillez renseigner le nouveau créneau (date, heure début, heure fin) et la raison.");
+            return;
+        }
 
-        resetForm();
-        onAnnulerForm();
+        LocalDate nouvelleDate = datePickerNouveau.getValue();
+        LocalTime heureDebut   = LocalTime.parse(comboHeureDebutNouveau.getValue(), FMT_PARSE);
+        LocalTime heureFin     = LocalTime.parse(comboHeureFinNouveau.getValue(),   FMT_PARSE);
+
+        if (!heureFin.isAfter(heureDebut)) {
+            showAlert(Alert.AlertType.WARNING, "Horaire invalide",
+                    "L'heure de fin doit être strictement après l'heure de début.");
+            return;
+        }
+
+        UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
+
+        try {
+            HoraireEntity nouvelHoraire = horaireDAO.findOrCreate(nouvelleDate, heureDebut, heureFin);
+
+            CoursModificationRequestEntity demande = new CoursModificationRequestEntity();
+            demande.setCours(coursSelectionne);
+            demande.setDemandeur(u);
+            demande.setNouveauCreneau(nouvelHoraire);
+            demande.setNouvelleSalle(comboSalle.getValue()); // null = garder la même salle
+            demande.setRaison(comboRaison.getValue());
+            demande.setStatut(StatutDemande.PENDING);
+
+            demandeDAO.save(demande);
+
+            showAlert(Alert.AlertType.INFORMATION, "Demande soumise",
+                    "Votre demande a été soumise avec succès.\nElle sera traitée par le gestionnaire.");
+            resetForm();
+            onAnnulerForm();
+            buildRequestCards(false, u);
+
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur",
+                    "Impossible de soumettre la demande. Vérifiez la connexion à la base de données.");
+        }
     }
 
     @FXML
@@ -145,87 +275,115 @@ public class ModificationRequestController {
     }
 
     private void resetForm() {
-        datePicker.setValue(LocalDate.now());
+        datePickerActuel.setValue(null);
+        comboHeureActuelle.getSelectionModel().clearSelection();
+        setCoursLabel("idle", "Choisissez une date et une heure pour identifier le cours");
+        coursSelectionne = null;
+        datePickerNouveau.setValue(null);
+        comboHeureDebutNouveau.getSelectionModel().clearSelection();
+        comboHeureFinNouveau.getSelectionModel().clearSelection();
         comboSalle.getSelectionModel().clearSelection();
-        comboCreneauActuel.getSelectionModel().clearSelection();
-        comboNouveauCreneau.getSelectionModel().clearSelection();
         comboRaison.getSelectionModel().clearSelection();
     }
 
     // -------------------------------------------------------------------------
-    //  Liste des demandes
+    //  Liste des demandes (US10 gestionnaire / historique prof)
     // -------------------------------------------------------------------------
 
-    /**
-     * Construit une carte par demande.
-     * Le gestionnaire voit les boutons Approuver/Rejeter sur les demandes "en attente".
-     * Le prof voit juste ses demandes avec leur statut.
-     */
-    private void buildRequestCards(boolean isGestionnaire) {
+    private void buildRequestCards(boolean isGestionnaire, UserEntity u) {
         requestsContainer.getChildren().clear();
-        for (String[] d : DEMANDES_MOCK) {
-            requestsContainer.getChildren().add(buildCard(d, isGestionnaire));
+        try {
+            List<CoursModificationRequestEntity> demandes = isGestionnaire
+                    ? demandeDAO.findByStatut(StatutDemande.PENDING)
+                    : demandeDAO.findByDemandeur(u);
+
+            if (demandes.isEmpty()) {
+                Label empty = new Label(isGestionnaire
+                        ? "Aucune demande en attente."
+                        : "Vous n'avez soumis aucune demande.");
+                empty.getStyleClass().add("text-muted");
+                requestsContainer.getChildren().add(empty);
+                return;
+            }
+
+            for (CoursModificationRequestEntity d : demandes) {
+                requestsContainer.getChildren().add(buildCard(d, isGestionnaire));
+            }
+        } catch (Exception e) {
+            Label err = new Label("Impossible de charger les demandes (BDD inaccessible).");
+            err.getStyleClass().add("text-muted");
+            requestsContainer.getChildren().add(err);
         }
     }
 
-    /**
-     * Carte d'une demande.
-     */
-    private VBox buildCard(String[] d, boolean isGestionnaire) {
+    private VBox buildCard(CoursModificationRequestEntity d, boolean isGestionnaire) {
         VBox card = new VBox();
         card.getStyleClass().add("request-card");
 
-        // -- Header --
+        // Header
         HBox header = new HBox(12);
         header.getStyleClass().add("request-card-header");
         header.setAlignment(Pos.CENTER_LEFT);
 
         VBox titles = new VBox(4);
         HBox.setHgrow(titles, Priority.ALWAYS);
-        Label coursLbl = new Label(d[0]);
+
+        String nomCours = d.getCours() != null && d.getCours().getNom() != null
+                ? d.getCours().getNom() : "Cours inconnu";
+        Label coursLbl = new Label(nomCours);
         coursLbl.getStyleClass().add("request-card-title");
-        Label subLbl = new Label("Demandé par " + d[1] + " · " + d[8]);
+
+        String demandeur = d.getDemandeur() != null
+                ? d.getDemandeur().getPrenom() + " " + d.getDemandeur().getNom()
+                : "Inconnu";
+        Label subLbl = new Label("Demandé par " + demandeur);
         subLbl.getStyleClass().add("request-card-subtitle");
         titles.getChildren().addAll(coursLbl, subLbl);
 
-        Label badge = buildStatusBadge(d[7]);
+        Label badge = buildStatusBadge(d.getStatut());
         header.getChildren().addAll(titles, badge);
 
-        // -- Corps --
+        // Corps
         VBox body = new VBox(16);
         body.getStyleClass().add("request-card-body");
 
-        // Deux panneaux : actuel (gris) / demandé (bleu)
+        String creneauActuel = formatCreneau(
+                d.getCours() != null ? d.getCours().getHoraire() : null,
+                d.getCours() != null && d.getCours().getSalle() != null
+                        ? d.getCours().getSalle().getNom() : null);
+
+        String creneauNouveau = formatCreneau(d.getNouveauCreneau(),
+                d.getNouvelleSalle() != null ? d.getNouvelleSalle().getNom() : null);
+
         HBox schedules = new HBox(12);
         schedules.getChildren().addAll(
-                buildSchedulePanel(false, d[2], d[4]),
-                buildSchedulePanel(true,  d[3], d[5])
+                buildSchedulePanel(false, creneauActuel),
+                buildSchedulePanel(true,  creneauNouveau)
         );
 
-        // Raison
         HBox reasonRow = new HBox(4);
         Label rKey = new Label("Raison : ");
         rKey.getStyleClass().add("reason-label");
-        Label rVal = new Label(d[6]);
+        Label rVal = new Label(d.getRaison() != null ? d.getRaison() : "—");
         rVal.getStyleClass().add("reason-text");
         rVal.setWrapText(true);
         reasonRow.getChildren().addAll(rKey, rVal);
 
         body.getChildren().addAll(schedules, reasonRow);
 
-        // Boutons gestionnaire (US12) — uniquement sur les demandes "en attente"
-        if (isGestionnaire && "en attente".equals(d[7])) {
+        // Boutons gestionnaire (US12) — uniquement sur les demandes PENDING
+        if (isGestionnaire && d.getStatut() == StatutDemande.PENDING) {
             Separator sep = new Separator();
             HBox actions = new HBox(10);
             actions.setAlignment(Pos.CENTER_LEFT);
 
             Button btnApprove = new Button("Approuver");
             btnApprove.getStyleClass().add("btn-approve");
-            btnApprove.setOnAction(e -> onApprouver(d[0], card));
+            btnApprove.setOnAction(e -> onApprouver(d.getId(), nomCours, card));
 
             Button btnReject = new Button("Rejeter");
             btnReject.getStyleClass().add("btn-reject");
-            btnReject.setOnAction(e -> onRejeter(d[0], card));
+            btnReject.setOnAction(e -> onRejeter(d.getId(), nomCours, card));
 
             actions.getChildren().addAll(btnApprove, btnReject);
             body.getChildren().addAll(sep, actions);
@@ -235,7 +393,15 @@ public class ModificationRequestController {
         return card;
     }
 
-    private VBox buildSchedulePanel(boolean isNew, String horaire, String salle) {
+    private String formatCreneau(HoraireEntity h, String nomSalle) {
+        if (h == null) return "Non défini";
+        String horaire = h.getJour().format(FMT_DATE)
+                + "  " + h.getHeureDebut().format(FMT_TIME)
+                + " – " + h.getHeureFin().format(FMT_TIME);
+        return horaire + (nomSalle != null ? "\n" + nomSalle : "");
+    }
+
+    private VBox buildSchedulePanel(boolean isNew, String texte) {
         VBox panel = new VBox(8);
         panel.getStyleClass().add(isNew ? "schedule-panel-requested" : "schedule-panel-current");
         HBox.setHgrow(panel, Priority.ALWAYS);
@@ -244,47 +410,75 @@ public class ModificationRequestController {
         Label title = new Label(isNew ? "CRÉNEAU DEMANDÉ" : "CRÉNEAU ACTUEL");
         title.getStyleClass().add(isNew ? "schedule-panel-label-blue" : "schedule-panel-label");
 
-        Label horaireLbl = new Label("  " + horaire);
-        horaireLbl.getStyleClass().add(isNew ? "schedule-info-blue" : "schedule-info");
+        Label info = new Label("  " + texte);
+        info.getStyleClass().add(isNew ? "schedule-info-blue" : "schedule-info");
+        info.setWrapText(true);
 
-        Label salleLbl = new Label("  " + salle);
-        salleLbl.getStyleClass().add(isNew ? "schedule-info-blue" : "schedule-info");
-
-        panel.getChildren().addAll(title, horaireLbl, salleLbl);
+        panel.getChildren().addAll(title, info);
         return panel;
     }
 
-    private Label buildStatusBadge(String status) {
-        Label badge = new Label(capitalize(status));
-        badge.getStyleClass().add("status-badge");
-        badge.getStyleClass().add(switch (status) {
-            case "approuvée" -> "status-approuvee";
-            case "rejetée" -> "status-rejetee";
-            default -> "status-attente";
-        });
+    private Label buildStatusBadge(StatutDemande statut) {
+        String texte = switch (statut) {
+            case PENDING  -> "En attente";
+            case ACCEPTED -> "Approuvée";
+            case REFUSED  -> "Rejetée";
+        };
+        String styleClass = switch (statut) {
+            case ACCEPTED -> "status-approuvee";
+            case REFUSED  -> "status-rejetee";
+            default       -> "status-attente";
+        };
+        Label badge = new Label(texte);
+        badge.getStyleClass().addAll("status-badge", styleClass);
         return badge;
     }
 
-    private void onApprouver(String cours, VBox card) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Demande approuvée");
-        alert.setHeaderText(null);
-        alert.setContentText("La demande pour \"" + cours + "\" a été approuvée.\nLe professeur et le groupe ont été notifiés.");
-        alert.showAndWait();
-        requestsContainer.getChildren().remove(card);
+    // -------------------------------------------------------------------------
+    //  Actions gestionnaire (US12)
+    // -------------------------------------------------------------------------
+
+    private void onApprouver(Long id, String nomCours, VBox card) {
+        try {
+            // Applique le déplacement sur le CoursEntity avant de valider le statut
+            demandeDAO.findById(id).ifPresent(d -> {
+                if (d.getCours() != null
+                        && (d.getNouveauCreneau() != null || d.getNouvelleSalle() != null)) {
+                    coursDAO.applyModification(
+                            d.getCours().getId(),
+                            d.getNouveauCreneau(),
+                            d.getNouvelleSalle());
+                }
+            });
+            demandeDAO.updateStatut(id, StatutDemande.ACCEPTED);
+            showAlert(Alert.AlertType.INFORMATION, "Demande approuvée",
+                    "La demande pour \"" + nomCours + "\" a été approuvée et le cours a été déplacé.");
+            requestsContainer.getChildren().remove(card);
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'approuver la demande.");
+        }
     }
 
-    private void onRejeter(String cours, VBox card) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Demande rejetée");
-        alert.setHeaderText(null);
-        alert.setContentText("La demande pour \"" + cours + "\" a été rejetée.\nLe professeur a été notifié.");
-        alert.showAndWait();
-        requestsContainer.getChildren().remove(card);
+    private void onRejeter(Long id, String nomCours, VBox card) {
+        try {
+            demandeDAO.updateStatut(id, StatutDemande.REFUSED);
+            showAlert(Alert.AlertType.INFORMATION, "Demande rejetée",
+                    "La demande pour \"" + nomCours + "\" a été rejetée.");
+            requestsContainer.getChildren().remove(card);
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de rejeter la demande.");
+        }
     }
 
-    private String capitalize(String s) {
-        if (s == null || s.isEmpty()) return s;
-        return s.substring(0, 1).toUpperCase() + s.substring(1);
+    // -------------------------------------------------------------------------
+    //  Helper
+    // -------------------------------------------------------------------------
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }
