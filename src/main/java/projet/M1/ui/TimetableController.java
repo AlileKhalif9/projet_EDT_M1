@@ -4,11 +4,13 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import projet.M1.model.academique.Groupe_Etudiant;
+import projet.M1.BDD.dao.CoursDAO;
+import projet.M1.BDD.dao.GroupeDAO;
+import projet.M1.BDD.dao.SalleDAO;
+import projet.M1.BDD.entity.CoursEntity;
+import projet.M1.BDD.entity.SalleEntity;
+import projet.M1.BDD.entity.UserEntity;
 import projet.M1.model.planning.TypeCours;
-import projet.M1.model.utilisateur_systeme.Professeur;
-import projet.M1.model.utilisateur_systeme.Utilisateur;
-import projet.M1.service.MockDataService;
 import projet.M1.session.SessionManager;
 
 import java.time.DayOfWeek;
@@ -17,117 +19,111 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Controller de la page EDT — fichier FXML : timetable.fxml
  *
- * C'est la page principale de l'appli, elle couvre US2 à US5 :
- *   US2 – Mon EDT (onglet par défaut)
- *   US3 – EDT d'un autre utilisateur (onglet "Tiers")
- *   US4 – EDT d'une salle (onglet "Salle")
- *   US5 – Pour les profs : l'onglet "Tiers" s'appelle "EDT classe"
+ * US2 – Mon EDT (onglet par défaut)
+ * US3 – EDT d'un groupe/classe (onglet "EDT classe")
+ * US4 – EDT d'une salle (onglet "Salle")
+ * US5 – Pour les profs : même vue que US2 mais avec les cours qu'ils enseignent
  *
- * La grille est construite entièrement en Java (dans buildGrid/buildDayColumn)
- * parce que son contenu change selon la semaine et l'onglet.
+ * Intégration BDD : les cours viennent maintenant de CoursDAO (PostgreSQL).
+ * Les listes salles/groupes viennent de SalleDAO / GroupeDAO.
+ *
+ * La grille est construite en Java (buildGrid/buildDayColumn).
  * Chaque cours est positionné via layoutY = (heureDebut - 8h) × 80px.
- *
- * Les données viennent de MockDataService (fictives pour l'instant).
- * Pour brancher la vraie BDD, remplacer les appels MockDataService dans loadCours().
  */
 public class TimetableController {
 
     // -------------------------------------------------------------------------
-    //  Constantes de mise en page de la grille
+    //  Constantes de mise en page
     // -------------------------------------------------------------------------
 
-    private static final int HEURE_DEBUT = 8;   // 8h00
-    private static final int HEURE_FIN = 19;  // 19h00
-    private static final int NB_HEURES = HEURE_FIN - HEURE_DEBUT; // 11 lignes
-    private static final double PX_PAR_HEURE = 80.0; // hauteur d'une heure en pixels
-    private static final double HAUTEUR_HEADER = 44.0; // hauteur de l'en-tête jour
-    private static final double LARGEUR_HEURE  = 64.0; // largeur de la colonne d'heures
+    private static final int    HEURE_DEBUT     = 8;
+    private static final int    HEURE_FIN       = 19;
+    private static final int    NB_HEURES       = HEURE_FIN - HEURE_DEBUT;
+    private static final double PX_PAR_HEURE    = 80.0;
+    private static final double HAUTEUR_HEADER  = 44.0;
+    private static final double LARGEUR_HEURE   = 64.0;
 
-    private static final String[] JOURS = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"};
+    private static final String[] JOURS    = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"};
     private static final DateTimeFormatter FMT_JOUR =
             DateTimeFormatter.ofPattern("d MMM", Locale.FRENCH);
 
     // -------------------------------------------------------------------------
-    //  Composants FXML (liés via fx:id dans timetable.fxml)
+    //  Composants FXML
     // -------------------------------------------------------------------------
 
-    @FXML private Label        labelSemaine;   // "Semaine du 17-21 mars 2026"
-    @FXML private Button       btnPrecedent;   // ◀ semaine précédente
-    @FXML private Button       btnSuivant;     // ▶ semaine suivante
-    @FXML private Button       btnAujourdHui;  // retour à la semaine courante
+    @FXML private Label          labelSemaine;
+    @FXML private Button         btnPrecedent;
+    @FXML private Button         btnSuivant;
+    @FXML private Button         btnAujourdHui;
+    @FXML private ToggleButton   tabMonEDT;
+    @FXML private ToggleButton   tabTiers;
+    @FXML private ToggleButton   tabSalle;
+    @FXML private HBox           selectorBar;
+    @FXML private ComboBox<String> comboSelector;
+    @FXML private ScrollPane     scrollPane;
+    @FXML private HBox           gridContainer;
 
-    @FXML private ToggleButton tabMonEDT;      // onglet "Mon EDT" (US2)
-    @FXML private ToggleButton tabTiers;       // onglet "Tiers" (US3) ou "EDT classe" (US5)
-    @FXML private ToggleButton tabSalle;       // onglet "Salle" (US4)
-    @FXML private HBox         selectorBar;    // barre de sélection (masquée par défaut)
-    @FXML private ComboBox<String> comboSelector; // liste déroulante tiers/salles
+    // -------------------------------------------------------------------------
+    //  DAOs (branchés sur PostgreSQL via JPAUtil)
+    // -------------------------------------------------------------------------
 
-    @FXML private ScrollPane   scrollPane;     // zone scrollable contenant la grille
-    @FXML private HBox         gridContainer;  // conteneur rempli dynamiquement
+    private final CoursDAO  coursDAO  = new CoursDAO();
+    private final SalleDAO  salleDAO  = new SalleDAO();
+    private final GroupeDAO groupeDAO = new GroupeDAO();
 
     // -------------------------------------------------------------------------
     //  État interne
     // -------------------------------------------------------------------------
 
-    /** Lundi de la semaine actuellement affichée. */
     private LocalDate currentMonday;
 
-    /** Mode d'affichage actif (Mon EDT / Tiers / Salle). */
     private enum TabMode { MON_EDT, TIERS, SALLE }
     private TabMode currentTab = TabMode.MON_EDT;
+
+    // Liste des salles en mémoire pour retrouver SalleEntity depuis le nom sélectionné
+    private List<SalleEntity> allSalles = List.of();
 
     // -------------------------------------------------------------------------
     //  Initialisation
     // -------------------------------------------------------------------------
 
-    /** Appelé automatiquement par JavaFX après le chargement du FXML. */
     @FXML
     public void initialize() {
-        // On démarre sur la semaine en cours
         currentMonday = LocalDate.now().with(DayOfWeek.MONDAY);
         setupTabs();
         updateWeekLabel();
-        buildGrid();   // Construit la structure de la grille (colonnes, fond)
-        loadCours();   // Charge et place les blocs de cours dans la grille
+        buildGrid();
+        loadCours();
     }
 
-    /** Configure les onglets de vue et adapte leur libellé selon le rôle. */
     private void setupTabs() {
         ToggleGroup group = new ToggleGroup();
         tabMonEDT.setToggleGroup(group);
         tabTiers.setToggleGroup(group);
         tabSalle.setToggleGroup(group);
         tabMonEDT.setSelected(true);
-        hideSelectorBar(); // La barre de sélection est masquée par défaut (US2)
-
-        // Tous les utilisateurs peuvent voir l'EDT d'une promo
+        hideSelectorBar();
         tabTiers.setText("EDT classe");
     }
 
     // -------------------------------------------------------------------------
-    //  Navigation entre les semaines
+    //  Navigation semaines
     // -------------------------------------------------------------------------
 
-    /** Passe à la semaine précédente. */
     @FXML private void onPrecedent()  { currentMonday = currentMonday.minusWeeks(1); refresh(); }
-
-    /** Passe à la semaine suivante. */
     @FXML private void onSuivant()    { currentMonday = currentMonday.plusWeeks(1);  refresh(); }
-
-    /** Revient à la semaine contenant aujourd'hui. */
     @FXML private void onAujourdHui() { currentMonday = LocalDate.now().with(DayOfWeek.MONDAY); refresh(); }
 
-    /** Met à jour le label et recharge les cours pour la nouvelle semaine. */
     private void refresh() {
         updateWeekLabel();
         loadCours();
     }
 
-    /** Met à jour le label "Semaine du X – Y". */
     private void updateWeekLabel() {
         LocalDate vendredi = currentMonday.plusDays(4);
         labelSemaine.setText("Semaine du "
@@ -137,55 +133,51 @@ public class TimetableController {
     }
 
     // -------------------------------------------------------------------------
-    //  Gestion des onglets de vue
+    //  Onglets
     // -------------------------------------------------------------------------
 
-    /**
-     * US2 – Mode "Mon EDT" : affiche les cours de l'utilisateur connecté.
-     * La barre de sélection est masquée (pas besoin de choisir).
-     */
+    /** US2/US5 – Mon EDT */
     @FXML private void onTabMonEDT() {
         currentTab = TabMode.MON_EDT;
         hideSelectorBar();
         loadCours();
     }
 
-    /**
-     * US3 (Étudiant/Gestionnaire) – Mode "Tiers" : choisir un autre utilisateur.
-     * US5 (Professeur) – Mode "EDT classe" : choisir une de ses classes/groupes.
-     * Affiche la barre de sélection avec la liste appropriée.
-     */
+    /** US3 – EDT d'un groupe : charge la liste des groupes depuis la BDD */
     @FXML private void onTabTiers() {
         currentTab = TabMode.TIERS;
-
-        // Tous les rôles voient la liste des promotions
-        List<String> choices = MockDataService.getInstance().getAllGroupes()
-                .stream().map(Groupe_Etudiant::getNom).toList();
         comboSelector.setPromptText("Choisir une classe…");
-        comboSelector.getItems().setAll(choices);
-
+        try {
+            List<String> noms = groupeDAO.findAll().stream()
+                    .map(g -> g.getNom())
+                    .toList();
+            comboSelector.getItems().setAll(noms);
+        } catch (Exception e) {
+            comboSelector.getItems().clear();
+        }
         showSelectorBar();
         loadCours();
     }
 
-    /**
-     * US4 – Mode "Salle" : affiche les cours planifiés dans une salle.
-     * La liste déroulante propose toutes les salles disponibles.
-     */
+    /** US4 – EDT d'une salle : charge la liste des salles depuis la BDD */
     @FXML private void onTabSalle() {
         currentTab = TabMode.SALLE;
-        List<String> salles = MockDataService.getInstance().getAllSalles()
-                .stream().map(s -> s.getNom()).toList();
-        comboSelector.getItems().setAll(salles);
         comboSelector.setPromptText("Choisir une salle…");
+        try {
+            allSalles = salleDAO.findAll();
+            List<String> noms = allSalles.stream().map(SalleEntity::getNom).toList();
+            comboSelector.getItems().setAll(noms);
+        } catch (Exception e) {
+            allSalles = List.of();
+            comboSelector.getItems().clear();
+        }
         showSelectorBar();
         loadCours();
     }
 
-    /** Déclenché quand l'utilisateur choisit une valeur dans la liste déroulante. */
     @FXML private void onSelectorChanged() { loadCours(); }
 
-    private void showSelectorBar() { selectorBar.setVisible(true);  selectorBar.setManaged(true);  }
+    private void showSelectorBar() { selectorBar.setVisible(true);  selectorBar.setManaged(true); }
     private void hideSelectorBar() {
         selectorBar.setVisible(false);
         selectorBar.setManaged(false);
@@ -194,45 +186,28 @@ public class TimetableController {
     }
 
     // -------------------------------------------------------------------------
-    //  Construction de la grille (structure fixe, bâtie une seule fois)
+    //  Construction de la grille (structure fixe)
     // -------------------------------------------------------------------------
 
-    /**
-     * Construit la structure complète de la grille :
-     *   colonne heures + 5 colonnes jours (lundi à vendredi).
-     * Les cours sont ajoutés/mis à jour séparément dans loadCours().
-     */
     private void buildGrid() {
         gridContainer.getChildren().clear();
         gridContainer.setSpacing(0);
-
-        // Première colonne : les heures (8h00, 9h00, … 19h00)
         gridContainer.getChildren().add(buildTimeColumn());
-
-        // Une colonne par jour de la semaine
         for (int i = 0; i < 5; i++) {
             VBox col = buildDayColumn(i);
-            HBox.setHgrow(col, Priority.ALWAYS); // chaque colonne prend la largeur disponible
+            HBox.setHgrow(col, Priority.ALWAYS);
             gridContainer.getChildren().add(col);
         }
     }
 
-    /**
-     * Crée la colonne de gauche avec les labels d'heure.
-     * Hauteur de chaque label = PX_PAR_HEURE (80px).
-     */
     private VBox buildTimeColumn() {
         VBox col = new VBox();
         col.setMinWidth(LARGEUR_HEURE);
         col.setMaxWidth(LARGEUR_HEURE);
         col.getStyleClass().add("time-column");
-
-        // Espace vide en haut pour aligner avec les en-têtes de jours
         Region header = new Region();
         header.setPrefHeight(HAUTEUR_HEADER);
         col.getChildren().add(header);
-
-        // Un label par heure
         for (int h = HEURE_DEBUT; h <= HEURE_FIN; h++) {
             Label lbl = new Label(String.format("%02dh00", h));
             lbl.getStyleClass().add("time-label");
@@ -243,37 +218,25 @@ public class TimetableController {
         return col;
     }
 
-    /**
-     * Crée la colonne d'un jour (0=Lundi … 4=Vendredi).
-     * Chaque colonne contient :
-     *   - un en-tête avec le nom du jour et la date
-     *   - un StackPane avec le fond quadrillé + le calque des cours
-     */
     private VBox buildDayColumn(int dayIndex) {
         VBox col = new VBox();
         col.getStyleClass().add("day-column");
-
-        // En-tête : "Lundi 17 mars" (surligné en bleu si c'est aujourd'hui)
-        LocalDate date = currentMonday.plusDays(dayIndex);
-        Label header = new Label(JOURS[dayIndex] + " " + date.format(FMT_JOUR));
+        LocalDate date   = currentMonday.plusDays(dayIndex);
+        Label    header  = new Label(JOURS[dayIndex] + " " + date.format(FMT_JOUR));
         header.getStyleClass().add("day-header");
         header.setPrefHeight(HAUTEUR_HEADER);
         header.setMaxWidth(Double.MAX_VALUE);
         header.setAlignment(Pos.CENTER);
         if (date.equals(LocalDate.now())) header.getStyleClass().add("day-header-today");
 
-        // Corps de la colonne : fond quadrillé + calque cours (superposés)
         StackPane body = new StackPane();
         body.getStyleClass().add("day-body");
-        body.setPrefHeight(NB_HEURES * PX_PAR_HEURE); // 11 × 80 = 880px
+        body.setPrefHeight(NB_HEURES * PX_PAR_HEURE);
         body.setId("dayBody_" + dayIndex);
-
-        // Couche 1 : fond quadrillé (lignes horizontales alternant blanc/gris clair)
         body.getChildren().add(buildDayGrid());
 
-        // Couche 2 : calque transparent où les cours seront positionnés (Pane = positionnement absolu)
         Pane coursPane = new Pane();
-        coursPane.setId("coursPane_" + dayIndex); // ID utilisé pour retrouver ce Pane via lookup()
+        coursPane.setId("coursPane_" + dayIndex);
         coursPane.prefHeightProperty().bind(body.heightProperty());
         body.getChildren().add(coursPane);
 
@@ -282,10 +245,6 @@ public class TimetableController {
         return col;
     }
 
-    /**
-     * Crée le fond quadrillé d'une colonne jour.
-     * Alternance de bandes blanches/grises pour visualiser les heures.
-     */
     private VBox buildDayGrid() {
         VBox grid = new VBox();
         grid.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -293,7 +252,6 @@ public class TimetableController {
             Region row = new Region();
             row.setPrefHeight(PX_PAR_HEURE);
             row.setMaxWidth(Double.MAX_VALUE);
-            // Alternance de couleur de fond (voir main.css : grid-row-even / grid-row-odd)
             row.getStyleClass().add(h % 2 == 0 ? "grid-row-even" : "grid-row-odd");
             grid.getChildren().add(row);
         }
@@ -301,120 +259,134 @@ public class TimetableController {
     }
 
     // -------------------------------------------------------------------------
-    //  Chargement et affichage des cours
+    //  Chargement des cours depuis la BDD
     // -------------------------------------------------------------------------
 
-    /**
-     * Récupère les cours selon le mode actif et les place dans la grille.
-     * Cette méthode est appelée à chaque changement de semaine ou d'onglet.
-     */
     private void loadCours() {
-        // Récupération des cours selon le mode d'affichage actif
-        List<CoursDisplay> cours = switch (currentTab) {
-            case MON_EDT -> MockDataService.getInstance().getCoursEtudiant(currentMonday);
-            case TIERS -> {
-                String sel = comboSelector.getValue();
-                if (sel == null) yield List.of();
-                // Tous les rôles consultent l'EDT par classe/promotion
-                yield MockDataService.getInstance().getCoursGroupe(sel, currentMonday);
-            }
-            case SALLE -> {
-                String salle = comboSelector.getValue();
-                yield salle == null
-                        ? List.of()
-                        : MockDataService.getInstance().getCoursSalle(salle, currentMonday);
-            }
-        };
+        UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
 
-        // Vider tous les panneaux de cours avant de les re-remplir
+        List<CoursDisplay> cours;
+        try {
+            cours = switch (currentTab) {
+                case MON_EDT -> loadMonEDT(u);
+                case TIERS   -> loadTiersEDT();
+                case SALLE   -> loadSalleEDT();
+            };
+        } catch (Exception e) {
+            cours = List.of(); // BDD inaccessible → grille vide
+        }
+
+        // Vider les panneaux de cours
         for (int i = 0; i < 5; i++) {
             Pane p = findCoursPane(i);
             if (p != null) p.getChildren().clear();
         }
 
-        // Placer chaque cours dans la bonne colonne au bon endroit vertical
+        // Placer chaque cours dans la bonne colonne
         for (CoursDisplay c : cours) {
-            // Calcul de l'indice de la colonne (0=Lundi, 4=Vendredi)
             int dayIndex = c.jour().getDayOfWeek().getValue() - 1;
-            if (dayIndex < 0 || dayIndex > 4) continue; // Ignorer week-end
+            if (dayIndex < 0 || dayIndex > 4) continue;
 
             Pane coursPane = findCoursPane(dayIndex);
             if (coursPane == null) continue;
 
-            VBox block = buildCoursBlock(c);
-
-            // Positionnement vertical : (heureDebut - 8h) × 80px depuis le haut
-            double top    = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
-            double height = minutesFromStart(c.heureFin())   / 60.0 * PX_PAR_HEURE - top - 2;
+            VBox block  = buildCoursBlock(c);
+            double top  = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
+            double height = minutesFromStart(c.heureFin()) / 60.0 * PX_PAR_HEURE - top - 2;
 
             block.setLayoutY(top);
             block.setPrefHeight(height);
             block.setLayoutX(4);
             block.setPrefWidth(Math.max(0, coursPane.getWidth() - 8));
-
-            // Ajustement dynamique de la largeur quand la fenêtre est redimensionnée
             coursPane.widthProperty().addListener((obs, o, w) ->
                     block.setPrefWidth(w.doubleValue() - 8));
-
             coursPane.getChildren().add(block);
         }
     }
 
-    /**
-     * Construit le bloc visuel d'un cours (couleur selon le type CM/TD/TP).
-     * Contenu du bloc :
-     *   - Badge de type (ex: [CM] en bleu)
-     *   - Nom du cours en gras
-     *   - Salle, groupe, professeur (si l'espace le permet)
-     *   - Tooltip au survol avec toutes les infos
-     */
+    /** US2/US5 : cours de l'utilisateur connecté pour la semaine */
+    private List<CoursDisplay> loadMonEDT(UserEntity u) {
+        if (u == null) return List.of();
+        List<CoursEntity> entities = switch (u.getRole()) {
+            case ETUDIANT   -> coursDAO.findByEtudiantAndSemaine(u, currentMonday);
+            case PROFESSEUR -> coursDAO.findByProfesseurAndSemaine(u, currentMonday);
+            default         -> List.of();
+        };
+        return toDisplayList(entities);
+    }
+
+    /** US3 : EDT d'un groupe sélectionné dans le ComboBox */
+    private List<CoursDisplay> loadTiersEDT() {
+        String sel = comboSelector.getValue();
+        if (sel == null) return List.of();
+        return toDisplayList(coursDAO.findByGroupeAndSemaine(sel, currentMonday));
+    }
+
+    /** US4 : EDT d'une salle sélectionnée dans le ComboBox */
+    private List<CoursDisplay> loadSalleEDT() {
+        String sel = comboSelector.getValue();
+        if (sel == null) return List.of();
+        // Retrouve le SalleEntity correspondant au nom sélectionné
+        return allSalles.stream()
+                .filter(s -> s.getNom().equals(sel))
+                .findFirst()
+                .map(salle -> toDisplayList(coursDAO.findBySalleAndSemaine(salle, currentMonday)))
+                .orElse(List.of());
+    }
+
+    /** Convertit une liste de CoursEntity en CoursDisplay, en filtrant les nulls */
+    private List<CoursDisplay> toDisplayList(List<CoursEntity> entities) {
+        return entities.stream()
+                .map(CoursDisplay::fromEntity)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    // -------------------------------------------------------------------------
+    //  Construction du bloc visuel d'un cours
+    // -------------------------------------------------------------------------
+
     private VBox buildCoursBlock(CoursDisplay c) {
         VBox block = new VBox(3);
         block.getStyleClass().add("cours-block");
         block.setAlignment(Pos.TOP_LEFT);
 
         TypeCours type = c.typeCours() != null ? c.typeCours() : TypeCours.CM;
-
-        // Style du bloc : fond clair + bordure gauche colorée selon le type
         block.setStyle(
                 "-fx-background-color: " + type.getCouleurFond() + ";"
               + "-fx-border-color: "     + type.getCouleurBordure() + ";"
-              + "-fx-border-width: 0 0 0 4;"          // bordure gauche seulement
+              + "-fx-border-width: 0 0 0 4;"
               + "-fx-background-radius: 6; -fx-border-radius: 6;"
               + "-fx-padding: 6 8 6 10;");
 
-        // Badge type (ex: "CM" sur fond bleu)
         Label badge = new Label(type.getLibelle());
         badge.setStyle(
                 "-fx-background-color: " + type.getCouleurBordure() + ";"
               + "-fx-text-fill: white; -fx-font-size: 10; -fx-font-weight: bold;"
               + "-fx-background-radius: 4; -fx-padding: 1 5 1 5;");
 
-        // Nom du cours en gras
         Label nomLbl = new Label(c.nom() != null ? c.nom() : "Cours");
         nomLbl.getStyleClass().add("cours-block-nom");
         nomLbl.setWrapText(true);
 
         block.getChildren().addAll(badge, nomLbl);
 
-        // Informations secondaires (affichées si le bloc est assez grand)
-        if (c.nomSalle() != null) {
-            Label l = new Label("\uD83D\uDCCD " + c.nomSalle()); // 📍
+        if (c.nomSalle()  != null) {
+            Label l = new Label("\uD83D\uDCCD " + c.nomSalle());
             l.getStyleClass().add("cours-block-detail");
             block.getChildren().add(l);
         }
         if (c.nomGroupe() != null) {
-            Label l = new Label("\uD83D\uDC65 " + c.nomGroupe()); // 👥
+            Label l = new Label("\uD83D\uDC65 " + c.nomGroupe());
             l.getStyleClass().add("cours-block-detail");
             block.getChildren().add(l);
         }
-        if (c.nomProf() != null) {
-            Label l = new Label("\uD83D\uDC64 " + c.nomProf()); // 👤
+        if (c.nomProf()   != null) {
+            Label l = new Label("\uD83D\uDC64 " + c.nomProf());
             l.getStyleClass().add("cours-block-detail");
             block.getChildren().add(l);
         }
 
-        // Tooltip (infobulle au survol) avec toutes les informations du cours
         Tooltip tip = new Tooltip(buildTooltip(c));
         tip.setWrapText(true);
         tip.setMaxWidth(280);
@@ -423,7 +395,6 @@ public class TimetableController {
         return block;
     }
 
-    /** Construit le texte de l'infobulle affichée au survol d'un cours. */
     private String buildTooltip(CoursDisplay c) {
         return (c.nom()       != null ? c.nom()       + "\n" : "")
              + (c.typeCours() != null ? "Type : " + c.typeCours().getLibelle() + "\n" : "")
@@ -436,18 +407,10 @@ public class TimetableController {
     //  Helpers
     // -------------------------------------------------------------------------
 
-    /**
-     * Retrouve le Pane de cours d'une colonne jour via son ID.
-     * L'ID est défini dans buildDayColumn() : "coursPane_0" à "coursPane_4".
-     */
     private Pane findCoursPane(int dayIndex) {
         return (Pane) gridContainer.lookup("#coursPane_" + dayIndex);
     }
 
-    /**
-     * Calcule le nombre de minutes écoulées depuis HEURE_DEBUT (8h00).
-     * Ex: 10h30 → (10-8)×60 + 30 = 150 minutes.
-     */
     private double minutesFromStart(LocalTime time) {
         return (time.getHour() - HEURE_DEBUT) * 60.0 + time.getMinute();
     }

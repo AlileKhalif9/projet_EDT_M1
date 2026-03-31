@@ -5,8 +5,6 @@ import projet.M1.model.planning.Cours;
 import projet.M1.model.planning.Horaire;
 import projet.M1.model.planning.Salle;
 import projet.M1.model.utilisateur_systeme.Professeur;
-import projet.M1.model.utilisateur_systeme.Utilisateur;
-import projet.M1.session.SessionManager;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -22,17 +20,11 @@ public class DemandeModificationController {
         this.demandeDAO = demandeDAO;
     }
 
-    // Soumet une demande de modification, professeur
+    // Soumet une demande de modification — le professeur est passé en paramètre
     public void soumettreDemande(Cours cours, Horaire nouveauCreneau,
-                                 Salle nouvelleSalle, String raison) {
-        Utilisateur u = SessionManager.getInstance().getUtilisateurConnecte();
-
-        if (!(u instanceof Professeur)) {
-            throw new IllegalStateException("Seul un professeur peut soumettre une demande.");
-        }
-
-        demandeDAO.sauvegarderDemande(cours, nouveauCreneau, nouvelleSalle, raison, (Professeur) u);
-        LOGGER.info("Demande soumise par : " + u.getNom());
+                                 Salle nouvelleSalle, String raison, Professeur professeur) {
+        demandeDAO.sauvegarderDemande(cours, nouveauCreneau, nouvelleSalle, raison, professeur);
+        LOGGER.info("Demande soumise par : " + professeur.getNom());
     }
 
     // Annule une demande en attente, professeur

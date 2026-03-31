@@ -6,7 +6,6 @@ import projet.M1.model.planning.Cours;
 import projet.M1.model.planning.Salle;
 import projet.M1.model.utilisateur_systeme.Etudiant;
 import projet.M1.model.utilisateur_systeme.Professeur;
-import projet.M1.session.SessionManager;
 import projet.M1.model.utilisateur_systeme.Utilisateur;
 
 import java.time.DayOfWeek;
@@ -21,17 +20,15 @@ public class EmploiDuTempsController {
         this.coursDAO = coursDAO;
     }
 
-    // EDT de l'utilisateur connecté selon son rôle
-    public List<Cours> getEmploiDuTempsConnecte(LocalDate semaine) {
-        Utilisateur u = SessionManager.getInstance().getUtilisateurConnecte();
-        LocalDate lundi = semaine.with(DayOfWeek.MONDAY);
+    // EDT d'un utilisateur selon son rôle — l'utilisateur est passé en paramètre
+    public List<Cours> getEmploiDuTempsConnecte(Utilisateur u, LocalDate semaine) {
+        LocalDate lundi    = semaine.with(DayOfWeek.MONDAY);
         LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
 
-        // Utilisation de la classe sealed
         return switch (u) {
-            case Etudiant e -> coursDAO.findByEtudiantAndSemaine(e, lundi, vendredi);
-            case Professeur p  -> coursDAO.findByProfesseurAndSemaine(p, lundi, vendredi);
-            default -> List.of(); // Gestionnaire et Invite n'ont pas d'EDT personnel
+            case Etudiant   e -> coursDAO.findByEtudiantAndSemaine(e, lundi, vendredi);
+            case Professeur p -> coursDAO.findByProfesseurAndSemaine(p, lundi, vendredi);
+            default           -> List.of();
         };
     }
 
