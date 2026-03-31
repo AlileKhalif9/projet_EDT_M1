@@ -690,6 +690,40 @@
     -fx-font-size: 13px;
 }
 
+/* Feedback label étape 1 — état neutre / trouvé / introuvable */
+.cours-found-idle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6B7280;
+    -fx-font-style: italic;
+    -fx-padding: 8 12 8 12;
+    -fx-background-color: #F3F4F6;
+    -fx-background-radius: 6;
+}
+
+.cours-found-ok {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #065F46;
+    -fx-padding: 8 12 8 12;
+    -fx-background-color: #D1FAE5;
+    -fx-background-radius: 6;
+    -fx-border-color: #6EE7B7;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+}
+
+.cours-found-error {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #991B1B;
+    -fx-padding: 8 12 8 12;
+    -fx-background-color: #FEE2E2;
+    -fx-background-radius: 6;
+    -fx-border-color: #FCA5A5;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+}
+
 .request-card {
     -fx-background-color: white;
     -fx-background-radius: 12;

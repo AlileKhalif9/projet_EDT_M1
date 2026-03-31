@@ -14,27 +14,24 @@ import projet.M1.session.SessionManager;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 
 /**
  * Page "Demandes de modification" — FXML : modification-request.fxml
  *
- * Mode PROFESSEUR  → formulaire en 3 étapes pour soumettre une demande (US6–US9)
- * Mode GESTIONNAIRE → liste des demandes en attente avec Approuver/Rejeter (US10, US12)
+ * Mode PROFESSEUR  → formulaire en 3 étapes :
+ *   1. Identifier le cours via date + heure (feedback immédiat si introuvable)
+ *   2. Nouveau créneau (date, heure début, heure fin, salle optionnelle)
+ *   3. Raison
  *
- * Intégration BDD :
- *  - Les cours du prof viennent de CoursDAO (ComboBox créneau actuel)
- *  - Les salles viennent de SalleDAO (ComboBox salle)
- *  - Les horaires viennent de HoraireDAO (ComboBox nouveau créneau)
- *  - Les demandes viennent de DemandeDAO (liste gestionnaire + historique prof)
- *  - La soumission persiste via DemandeDAO.save()
- *  - L'approbation/rejet via DemandeDAO.updateStatut()
+ * Mode GESTIONNAIRE → liste des demandes PENDING avec Approuver / Rejeter.
  */
 public class ModificationRequestController {
 
-    // Raisons prédéfinies (données métier fixes, pas en BDD)
     private static final List<String> RAISONS = List.of(
             "Conflit avec une réunion de département",
             "Besoin d'équipement de laboratoire",
@@ -46,10 +43,15 @@ public class ModificationRequestController {
             "Autre raison"
     );
 
-    private static final DateTimeFormatter FMT_DATE =
-            DateTimeFormatter.ofPattern("EEEE d MMM", Locale.FRENCH);
-    private static final DateTimeFormatter FMT_TIME =
-            DateTimeFormatter.ofPattern("HH'h'mm");
+    /** Créneaux disponibles toutes les 30 min de 07:30 à 19:00. */
+    private static final List<String> TIME_SLOTS = Stream
+            .iterate(LocalTime.of(7, 30), t -> !t.isAfter(LocalTime.of(19, 0)), t -> t.plusMinutes(30))
+            .map(t -> t.format(DateTimeFormatter.ofPattern("HH:mm")))
+            .toList();
+
+    private static final DateTimeFormatter FMT_DATE = DateTimeFormatter.ofPattern("EEEE d MMM", Locale.FRENCH);
+    private static final DateTimeFormatter FMT_TIME = DateTimeFormatter.ofPattern("HH'h'mm");
+    private static final DateTimeFormatter FMT_PARSE = DateTimeFormatter.ofPattern("HH:mm");
 
     // -------------------------------------------------------------------------
     //  Composants FXML
@@ -61,20 +63,31 @@ public class ModificationRequestController {
     @FXML private VBox   formPanel;
     @FXML private VBox   requestsContainer;
 
-    @FXML private DatePicker              datePicker;
-    @FXML private ComboBox<CoursEntity>   comboCreneauActuel;
-    @FXML private ComboBox<HoraireEntity> comboNouveauCreneau;
-    @FXML private ComboBox<SalleEntity>   comboSalle;
-    @FXML private ComboBox<String>        comboRaison;
+    // Étape 1 — identifier le cours
+    @FXML private DatePicker       datePickerActuel;
+    @FXML private ComboBox<String> comboHeureActuelle;
+    @FXML private Label            labelCoursFound;
+
+    // Étape 2 — nouveau créneau
+    @FXML private DatePicker           datePickerNouveau;
+    @FXML private ComboBox<String>     comboHeureDebutNouveau;
+    @FXML private ComboBox<String>     comboHeureFinNouveau;
+    @FXML private ComboBox<SalleEntity> comboSalle;
+
+    // Étape 3 — raison
+    @FXML private ComboBox<String> comboRaison;
 
     // -------------------------------------------------------------------------
-    //  DAOs
+    //  DAOs + état
     // -------------------------------------------------------------------------
 
     private final CoursDAO   coursDAO   = new CoursDAO();
     private final SalleDAO   salleDAO   = new SalleDAO();
     private final HoraireDAO horaireDAO = new HoraireDAO();
     private final DemandeDAO demandeDAO = new DemandeDAO();
+
+    /** Cours identifié à l'étape 1 — null si introuvable. */
+    private CoursEntity coursSelectionne = null;
 
     // -------------------------------------------------------------------------
     //  Initialisation
@@ -96,37 +109,17 @@ public class ModificationRequestController {
         buildRequestCards(isGestionnaire, u);
     }
 
-    /**
-     * Remplit les ComboBox du formulaire avec les vraies données de la BDD.
-     * Chaque ComboBox a un StringConverter pour afficher un texte lisible.
-     */
     private void setupFormCombos(UserEntity u) {
-        // -- ComboBox : cours du professeur (créneau à modifier) --
-        comboCreneauActuel.setConverter(new StringConverter<>() {
-            public String toString(CoursEntity c) {
-                if (c == null) return "";
-                String horaire = c.getHoraire() != null
-                        ? c.getHoraire().getJour().format(FMT_DATE)
-                          + " " + c.getHoraire().getHeureDebut().format(FMT_TIME)
-                          + " – " + c.getHoraire().getHeureFin().format(FMT_TIME)
-                        : "?";
-                return (c.getNom() != null ? c.getNom() : "Cours") + "  ·  " + horaire;
-            }
-            public CoursEntity fromString(String s) { return null; }
-        });
+        // Créneaux horaires (identiques pour les 3 combos)
+        comboHeureActuelle.getItems().setAll(TIME_SLOTS);
+        comboHeureDebutNouveau.getItems().setAll(TIME_SLOTS);
+        comboHeureFinNouveau.getItems().setAll(TIME_SLOTS);
 
-        // Charge les cours des 4 prochaines semaines du prof
-        if (u != null && u.getRole() == Role.PROFESSEUR) {
-            try {
-                LocalDate lundi = LocalDate.now().with(DayOfWeek.MONDAY);
-                List<CoursEntity> cours = coursDAO.findByProfesseurAndSemaine(u, lundi);
-                comboCreneauActuel.getItems().setAll(cours);
-            } catch (Exception e) {
-                comboCreneauActuel.getItems().clear();
-            }
-        }
+        // Étape 1 : chercher le cours dès que la date ou l'heure change
+        datePickerActuel.setOnAction(e -> searchCours(u));
+        comboHeureActuelle.setOnAction(e -> searchCours(u));
 
-        // -- ComboBox : toutes les salles --
+        // Salles
         comboSalle.setConverter(new StringConverter<>() {
             public String toString(SalleEntity s) {
                 if (s == null) return "";
@@ -140,35 +133,71 @@ public class ModificationRequestController {
             comboSalle.getItems().clear();
         }
 
-        // -- ComboBox : horaires disponibles pour le nouveau créneau --
-        // Quand le prof sélectionne une date, on recharge les horaires de ce jour
-        comboNouveauCreneau.setConverter(new StringConverter<>() {
-            public String toString(HoraireEntity h) {
-                if (h == null) return "";
-                return h.getJour().format(FMT_DATE)
-                        + "  " + h.getHeureDebut().format(FMT_TIME)
-                        + " – " + h.getHeureFin().format(FMT_TIME);
-            }
-            public HoraireEntity fromString(String s) { return null; }
-        });
-        datePicker.setValue(LocalDate.now());
-        datePicker.setOnAction(e -> reloadHoraires());
-        reloadHoraires();
-
-        // -- ComboBox : raisons (données fixes) --
         comboRaison.getItems().setAll(RAISONS);
     }
 
-    /** Recharge les horaires disponibles pour la date sélectionnée dans le DatePicker. */
-    private void reloadHoraires() {
-        LocalDate date = datePicker.getValue();
-        if (date == null) return;
-        try {
-            List<HoraireEntity> horaires = horaireDAO.findByJour(date);
-            comboNouveauCreneau.getItems().setAll(horaires);
-        } catch (Exception e) {
-            comboNouveauCreneau.getItems().clear();
+    // -------------------------------------------------------------------------
+    //  Étape 1 — recherche du cours
+    // -------------------------------------------------------------------------
+
+    /**
+     * Cherche le cours du prof correspondant à la date + heure sélectionnées.
+     * Met à jour labelCoursFound en temps réel avec le résultat.
+     */
+    private void searchCours(UserEntity u) {
+        coursSelectionne = null;
+        LocalDate date = datePickerActuel.getValue();
+        String heureStr = comboHeureActuelle.getValue();
+
+        if (date == null || heureStr == null) {
+            setCoursLabel("idle", "Choisissez une date et une heure pour identifier le cours");
+            return;
         }
+
+        LocalTime heure = LocalTime.parse(heureStr, FMT_PARSE);
+
+        try {
+            LocalDate lundi = date.with(DayOfWeek.MONDAY);
+            List<CoursEntity> semaine = (u.getRole() == Role.PROFESSEUR)
+                    ? coursDAO.findByProfesseurAndSemaine(u, lundi)
+                    : List.of();
+
+            coursSelectionne = semaine.stream()
+                    .filter(c -> c.getHoraire() != null
+                            && date.equals(c.getHoraire().getJour())
+                            && !heure.isBefore(c.getHoraire().getHeureDebut())
+                            && heure.isBefore(c.getHoraire().getHeureFin()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (coursSelectionne != null) {
+                HoraireEntity h = coursSelectionne.getHoraire();
+                String salle = coursSelectionne.getSalle() != null
+                        ? coursSelectionne.getSalle().getNom() : "salle inconnue";
+                setCoursLabel("ok",
+                        "Cours trouvé : " + coursSelectionne.getNom()
+                        + " (" + coursSelectionne.getTypeCours() + ")"
+                        + "  ·  " + h.getHeureDebut().format(FMT_TIME)
+                        + " – " + h.getHeureFin().format(FMT_TIME)
+                        + "  ·  " + salle);
+            } else {
+                setCoursLabel("error",
+                        "Aucun cours à ce créneau — vérifiez la date et l'heure");
+            }
+        } catch (Exception e) {
+            setCoursLabel("error", "Impossible de vérifier (base de données inaccessible)");
+        }
+    }
+
+    private void setCoursLabel(String state, String text) {
+        labelCoursFound.setText(text);
+        labelCoursFound.getStyleClass().setAll(
+                switch (state) {
+                    case "ok"    -> "cours-found-ok";
+                    case "error" -> "cours-found-error";
+                    default      -> "cours-found-idle";
+                }
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -183,45 +212,61 @@ public class ModificationRequestController {
         btnNouvellesDemande.setText(visible ? "+ Nouvelle demande" : "Voir les demandes");
     }
 
-    /**
-     * US8 – Soumet la demande en BDD.
-     * Crée un CoursModificationRequestEntity et le persiste via DemandeDAO.
-     */
     @FXML
     private void onSubmit() {
-        if (comboCreneauActuel.getValue() == null
-                || comboSalle.getValue() == null
+        if (coursSelectionne == null) {
+            showAlert(Alert.AlertType.WARNING, "Cours non identifié",
+                    "Aucun cours n'a été trouvé au créneau sélectionné.\n"
+                    + "Corrigez la date ou l'heure à l'étape 1.");
+            return;
+        }
+
+        if (datePickerNouveau.getValue() == null
+                || comboHeureDebutNouveau.getValue() == null
+                || comboHeureFinNouveau.getValue() == null
                 || comboRaison.getValue() == null) {
             showAlert(Alert.AlertType.WARNING, "Champs manquants",
-                    "Veuillez renseigner tous les champs avant de soumettre.");
+                    "Veuillez renseigner le nouveau créneau (date, heure début, heure fin) et la raison.");
+            return;
+        }
+
+        LocalDate nouvelleDate = datePickerNouveau.getValue();
+        LocalTime heureDebut   = LocalTime.parse(comboHeureDebutNouveau.getValue(), FMT_PARSE);
+        LocalTime heureFin     = LocalTime.parse(comboHeureFinNouveau.getValue(),   FMT_PARSE);
+
+        if (!heureFin.isAfter(heureDebut)) {
+            showAlert(Alert.AlertType.WARNING, "Horaire invalide",
+                    "L'heure de fin doit être strictement après l'heure de début.");
             return;
         }
 
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
 
-        CoursModificationRequestEntity demande = new CoursModificationRequestEntity();
-        demande.setCours(comboCreneauActuel.getValue());
-        demande.setDemandeur(u);
-        demande.setNouvelleSalle(comboSalle.getValue());
-        demande.setNouveauCreneau(comboNouveauCreneau.getValue()); // peut être null si aucun horaire sélectionné
-        demande.setRaison(comboRaison.getValue());
-        demande.setStatut(StatutDemande.PENDING);
-
         try {
+            HoraireEntity nouvelHoraire = horaireDAO.findOrCreate(nouvelleDate, heureDebut, heureFin);
+
+            CoursModificationRequestEntity demande = new CoursModificationRequestEntity();
+            demande.setCours(coursSelectionne);
+            demande.setDemandeur(u);
+            demande.setNouveauCreneau(nouvelHoraire);
+            demande.setNouvelleSalle(comboSalle.getValue()); // null = garder la même salle
+            demande.setRaison(comboRaison.getValue());
+            demande.setStatut(StatutDemande.PENDING);
+
             demandeDAO.save(demande);
+
             showAlert(Alert.AlertType.INFORMATION, "Demande soumise",
                     "Votre demande a été soumise avec succès.\nElle sera traitée par le gestionnaire.");
             resetForm();
             onAnnulerForm();
-            // Rafraîchit la liste des demandes du prof
             buildRequestCards(false, u);
+
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Erreur",
                     "Impossible de soumettre la demande. Vérifiez la connexion à la base de données.");
         }
     }
 
-    /** US9 – Annule et ferme le formulaire sans rien envoyer. */
     @FXML
     private void onAnnulerForm() {
         formPanel.setVisible(false);
@@ -230,10 +275,14 @@ public class ModificationRequestController {
     }
 
     private void resetForm() {
-        datePicker.setValue(LocalDate.now());
-        comboCreneauActuel.getSelectionModel().clearSelection();
+        datePickerActuel.setValue(null);
+        comboHeureActuelle.getSelectionModel().clearSelection();
+        setCoursLabel("idle", "Choisissez une date et une heure pour identifier le cours");
+        coursSelectionne = null;
+        datePickerNouveau.setValue(null);
+        comboHeureDebutNouveau.getSelectionModel().clearSelection();
+        comboHeureFinNouveau.getSelectionModel().clearSelection();
         comboSalle.getSelectionModel().clearSelection();
-        comboNouveauCreneau.getSelectionModel().clearSelection();
         comboRaison.getSelectionModel().clearSelection();
     }
 
@@ -241,11 +290,6 @@ public class ModificationRequestController {
     //  Liste des demandes (US10 gestionnaire / historique prof)
     // -------------------------------------------------------------------------
 
-    /**
-     * Construit les cartes de demandes depuis la BDD.
-     * Gestionnaire → toutes les demandes PENDING.
-     * Professeur   → toutes ses propres demandes.
-     */
     private void buildRequestCards(boolean isGestionnaire, UserEntity u) {
         requestsContainer.getChildren().clear();
         try {
@@ -272,12 +316,11 @@ public class ModificationRequestController {
         }
     }
 
-    /** Construit la carte visuelle d'une demande. */
     private VBox buildCard(CoursModificationRequestEntity d, boolean isGestionnaire) {
         VBox card = new VBox();
         card.getStyleClass().add("request-card");
 
-        // -- Header --
+        // Header
         HBox header = new HBox(12);
         header.getStyleClass().add("request-card-header");
         header.setAlignment(Pos.CENTER_LEFT);
@@ -300,7 +343,7 @@ public class ModificationRequestController {
         Label badge = buildStatusBadge(d.getStatut());
         header.getChildren().addAll(titles, badge);
 
-        // -- Corps --
+        // Corps
         VBox body = new VBox(16);
         body.getStyleClass().add("request-card-body");
 
@@ -350,7 +393,6 @@ public class ModificationRequestController {
         return card;
     }
 
-    /** Formate un HoraireEntity + nom de salle en texte lisible pour les panneaux. */
     private String formatCreneau(HoraireEntity h, String nomSalle) {
         if (h == null) return "Non défini";
         String horaire = h.getJour().format(FMT_DATE)
@@ -398,9 +440,19 @@ public class ModificationRequestController {
 
     private void onApprouver(Long id, String nomCours, VBox card) {
         try {
+            // Applique le déplacement sur le CoursEntity avant de valider le statut
+            demandeDAO.findById(id).ifPresent(d -> {
+                if (d.getCours() != null
+                        && (d.getNouveauCreneau() != null || d.getNouvelleSalle() != null)) {
+                    coursDAO.applyModification(
+                            d.getCours().getId(),
+                            d.getNouveauCreneau(),
+                            d.getNouvelleSalle());
+                }
+            });
             demandeDAO.updateStatut(id, StatutDemande.ACCEPTED);
             showAlert(Alert.AlertType.INFORMATION, "Demande approuvée",
-                    "La demande pour \"" + nomCours + "\" a été approuvée.");
+                    "La demande pour \"" + nomCours + "\" a été approuvée et le cours a été déplacé.");
             requestsContainer.getChildren().remove(card);
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible d'approuver la demande.");

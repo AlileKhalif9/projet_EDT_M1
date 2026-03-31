@@ -1,8 +1,10 @@
 package projet.M1.BDD.dao;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 import projet.M1.BDD.JPAUtil;
 import projet.M1.BDD.entity.CoursEntity;
+import projet.M1.BDD.entity.HoraireEntity;
 import projet.M1.BDD.entity.SalleEntity;
 import projet.M1.BDD.entity.UserEntity;
 
@@ -83,6 +85,31 @@ public class CoursDAO {
                     .setParameter("lundi",   lundi)
                     .setParameter("vendredi",vendredi)
                     .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Applique une demande approuvée : déplace le cours vers le nouvel horaire
+     * et/ou la nouvelle salle. Appelé par ModificationRequestController.onApprouver().
+     */
+    public void applyModification(Long coursId, HoraireEntity newHoraire, SalleEntity newSalle) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            CoursEntity cours = em.find(CoursEntity.class, coursId);
+            if (cours != null) {
+                if (newHoraire != null)
+                    cours.setHoraire(em.find(HoraireEntity.class, newHoraire.getId()));
+                if (newSalle != null)
+                    cours.setSalle(em.find(SalleEntity.class, newSalle.getId()));
+            }
+            tx.commit();
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            throw e;
         } finally {
             em.close();
         }

@@ -121,6 +121,7 @@ public class TimetableController {
 
     private void refresh() {
         updateWeekLabel();
+        buildGrid();
         loadCours();
     }
 

@@ -65,9 +65,11 @@
             <VBox styleClass="demo-box" spacing="6">
                 <VBox.margin><Insets top="20"/></VBox.margin>
                 <Label text="Comptes de démonstration" styleClass="demo-title"/>
-                <Label text="Étudiant    →  etudiant / 1234"   styleClass="demo-item"/>
-                <Label text="Professeur  →  professeur / 1234" styleClass="demo-item"/>
-                <Label text="Gestionnaire→  gestionnaire / 1234" styleClass="demo-item"/>
+                <Label text="Étudiant     →  etudiant1 / etudiant123"     styleClass="demo-item"/>
+                <Label text="Étudiant     →  etudiant2 / etudiant123"     styleClass="demo-item"/>
+                <Label text="Professeur   →  profmartin / prof123"        styleClass="demo-item"/>
+                <Label text="Professeur   →  profdupont / prof123"        styleClass="demo-item"/>
+                <Label text="Gestionnaire →  gestionnaire / gest123"      styleClass="demo-item"/>
             </VBox>
 
         </VBox>
