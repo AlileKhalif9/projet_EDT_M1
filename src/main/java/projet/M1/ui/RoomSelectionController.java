@@ -4,165 +4,105 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import projet.M1.model.planning.Salle;
-import projet.M1.service.MockDataService;
+import projet.M1.BDD.dao.SalleDAO;
+import projet.M1.BDD.entity.SalleEntity;
+import projet.M1.controller.SalleController;
 
 import java.util.List;
 
 /**
- * Controller de la page sélection de salle
+ * Controller de la page de sélection de salle — FXML : room-selection.fxml
  *
- * C'est la page où un prof choisit une salle pour sa demande de modif d'EDT.
+ * Affiche toutes les salles disponibles en grille, avec filtrage par nom.
+ * Passe par SalleController (back-end) — jamais SalleDAO directement.
  *
- * La salle choisie est stockée dans this.selectedSalle
- * Les données viennent de MockDataService, la classe Salle est celle du projet (non modifiée).
+ * Utilisé pour les US de sélection de salle lors d'une demande de modification.
  */
 public class RoomSelectionController {
 
-    @FXML private TextField searchField;        // Barre de recherche
-    @FXML private FlowPane roomGrid;          // Grille de cartes de salles
-    @FXML private Button btnConfirm;        // Bouton "Confirmer" (désactivé au départ)
-    @FXML private Label labelSelected;     // Affiche le nom de la salle choisie
+    @FXML private TextField  searchField;
+    @FXML private FlowPane   roomGrid;
+    @FXML private Label      labelSelected;
+    @FXML private Button     btnConfirm;
 
-    private List<Salle> allSalles;     // Toutes les salles (chargées au démarrage)
-    private Salle selectedSalle; // La salle actuellement sélectionnée (null par défaut)
-    private VBox selectedCard;  // La carte visuellement surlignée
+    // Passe par le back-end
+    private final SalleController salleController = new SalleController(new SalleDAO());
 
-    /** Appelé automatiquement par JavaFX après le chargement du FXML. */
+    private List<SalleEntity> allSalles = List.of();
+    private SalleEntity salleSelectionnee = null;
+
     @FXML
     public void initialize() {
-        // Chargement des salles depuis le service (fictif pour l'instant)
-        allSalles = MockDataService.getInstance().getAllSalles();
+        try {
+            allSalles = salleController.getAllSalles();
+        } catch (Exception e) {
+            allSalles = List.of();
+        }
 
-        // Bouton désactivé tant qu'aucune salle n'est choisie
-        btnConfirm.setDisable(true);
-        labelSelected.setText("Aucune salle sélectionnée");
-
-        // Filtrage en temps réel lors de la saisie dans la barre de recherche
-        searchField.textProperty().addListener((obs, old, val) -> filterRooms(val));
-
-        // Affichage initial de toutes les salles
-        renderRooms(allSalles);
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> filterRooms(newVal));
+        displayRooms(allSalles);
     }
 
-    // -------------------------------------------------------------------------
-    //  Filtrage
-    // -------------------------------------------------------------------------
-
-    /**
-     * Filtre les salles affichées selon le texte saisi.
-     * La recherche porte sur le nom de la salle ET sur ses équipements.
-     */
     private void filterRooms(String query) {
-        String q = query == null ? "" : query.trim().toLowerCase();
-        List<Salle> filtered = allSalles.stream()
-                .filter(s -> s.getNom().toLowerCase().contains(q)
-                          || s.getListe_materiel().stream()
-                              .anyMatch(m -> m.toLowerCase().contains(q)))
-                .toList();
-        renderRooms(filtered);
+        if (query == null || query.isBlank()) {
+            displayRooms(allSalles);
+            return;
+        }
+        String q = query.toLowerCase();
+        displayRooms(allSalles.stream()
+                .filter(s -> s.getNom().toLowerCase().contains(q))
+                .toList());
     }
 
-    // -------------------------------------------------------------------------
-    //  Rendu des cartes de salle
-    // -------------------------------------------------------------------------
-
-    /** Vide la grille et recrée les cartes pour la liste de salles donnée. */
-    private void renderRooms(List<Salle> salles) {
+    private void displayRooms(List<SalleEntity> salles) {
         roomGrid.getChildren().clear();
-        selectedCard = null; // Réinitialise la sélection visuelle lors du filtrage
-        for (Salle s : salles) {
+        if (salles.isEmpty()) {
+            Label empty = new Label("Aucune salle trouvée.");
+            empty.getStyleClass().add("text-muted");
+            roomGrid.getChildren().add(empty);
+            return;
+        }
+        for (SalleEntity s : salles) {
             roomGrid.getChildren().add(buildRoomCard(s));
         }
     }
 
-    /**
-     * Construit une carte visuelle pour une salle.
-     * Affiche : nom, capacité, séparateur, liste des équipements sous forme de tags.
-     * Un clic sur la carte appelle selectCard().
-     */
-    private VBox buildRoomCard(Salle salle) {
-        VBox card = new VBox(10);
+    private VBox buildRoomCard(SalleEntity salle) {
+        VBox card = new VBox(8);
         card.getStyleClass().add("room-card");
-        card.setPrefWidth(260);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setPrefWidth(200);
 
-        // En-tête : nom de la salle + capacité
-        HBox header = new HBox(8);
-        header.setAlignment(Pos.CENTER_LEFT);
+        Label nom = new Label(salle.getNom());
+        nom.getStyleClass().add("room-card-title");
 
-        Label nomLbl = new Label(salle.getNom());
-        nomLbl.getStyleClass().add("room-card-title");
-        HBox.setHgrow(nomLbl, Priority.ALWAYS);
+        Label places = new Label(salle.getPlace() + " places");
+        places.getStyleClass().add("room-card-detail");
 
-        Label capLbl = new Label("\uD83D\uDC65 " + salle.getPlace() + " places");
-        capLbl.getStyleClass().add("room-card-capacity");
+        card.getChildren().addAll(nom, places);
 
-        header.getChildren().addAll(nomLbl, capLbl);
-
-        // Séparateur horizontal
-        Separator sep = new Separator();
-
-        // Tags d'équipements (ex: "Projecteur", "WiFi")
-        FlowPane equipFlow = new FlowPane(6, 6);
-        for (String mat : salle.getListe_materiel()) {
-            Label tag = new Label(mat);
-            tag.getStyleClass().add("equipment-tag"); // Style bleu clair (voir main.css)
-            equipFlow.getChildren().add(tag);
-        }
-
-        card.getChildren().addAll(header, sep, equipFlow);
-
-        // Sélection de la salle au clic sur la carte
-        card.setOnMouseClicked(e -> selectCard(card, salle));
-
+        card.setOnMouseClicked(e -> selectSalle(salle, card));
         return card;
     }
 
-    // -------------------------------------------------------------------------
-    //  Sélection
-    // -------------------------------------------------------------------------
-
-    /**
-     * Marque une carte comme sélectionnée visuellement (bordure bleue)
-     * et enregistre la salle correspondante.
-     * Active le bouton "Confirmer".
-     */
-    private void selectCard(VBox card, Salle salle) {
-        // Retire la surbrillance de la carte précédemment sélectionnée
-        if (selectedCard != null) {
-            selectedCard.getStyleClass().remove("room-card-selected");
-        }
-
-        selectedCard  = card;
-        selectedSalle = salle;
-
-        card.getStyleClass().add("room-card-selected"); // Bordure bleue (voir main.css)
-        btnConfirm.setDisable(false);
+    private void selectSalle(SalleEntity salle, VBox card) {
+        // Désélectionne toutes les cartes
+        roomGrid.getChildren().forEach(n -> n.getStyleClass().remove("room-card-selected"));
+        // Sélectionne celle cliquée
+        card.getStyleClass().add("room-card-selected");
+        salleSelectionnee = salle;
         labelSelected.setText("Salle sélectionnée : " + salle.getNom()
                 + "  (" + salle.getPlace() + " places)");
+        btnConfirm.setDisable(false);
     }
 
-    // -------------------------------------------------------------------------
-    //  Actions boutons
-    // -------------------------------------------------------------------------
-
-    /**
-     * Confirme la salle sélectionnée.
-     */
     @FXML
     private void onConfirm() {
-        if (selectedSalle == null) return;
-
-        // TODO Sprint 2 : passer selectedSalle au contrôleur de l'étape suivante (US7)
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Salle sélectionnée");
-        alert.setHeaderText(null);
-        alert.setContentText("Salle choisie : " + selectedSalle.getNom()
-                + "\nLa suite du flux (choix du créneau) sera intégrée au Sprint 2.");
-        alert.showAndWait();
+        if (salleSelectionnee == null) return;
+        // Navigue vers la demande de modification avec la salle sélectionnée
+        SceneManager.getInstance().getMainLayoutController().navigateTo(View.MODIFICATION_REQUEST);
     }
 
-    /** Annule la sélection et retourne à l'emploi du temps. */
     @FXML
     private void onCancel() {
         SceneManager.getInstance().getMainLayoutController().navigateTo(View.TIMETABLE);
