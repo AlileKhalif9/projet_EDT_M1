@@ -10,6 +10,9 @@ import projet.M1.BDD.dao.SalleDAO;
 import projet.M1.BDD.entity.CoursEntity;
 import projet.M1.BDD.entity.SalleEntity;
 import projet.M1.BDD.entity.UserEntity;
+import projet.M1.controller.EmploiDuTempsController;
+import projet.M1.controller.GroupeController;
+import projet.M1.controller.SalleController;
 import projet.M1.model.planning.TypeCours;
 import projet.M1.session.SessionManager;
 
@@ -22,18 +25,9 @@ import java.util.Locale;
 import java.util.Objects;
 
 /**
- * Controller de la page EDT — fichier FXML : timetable.fxml
- *
- * US2 – Mon EDT (onglet par défaut)
- * US3 – EDT d'un groupe/classe (onglet "EDT classe")
- * US4 – EDT d'une salle (onglet "Salle")
- * US5 – Pour les profs : même vue que US2 mais avec les cours qu'ils enseignent
- *
- * Intégration BDD : les cours viennent maintenant de CoursDAO (PostgreSQL).
- * Les listes salles/groupes viennent de SalleDAO / GroupeDAO.
- *
- * La grille est construite en Java (buildGrid/buildDayColumn).
- * Chaque cours est positionné via layoutY = (heureDebut - 8h) × 80px.
+ * Controller de la page EDT.
+ * Passe par EmploiDuTempsController / SalleController / GroupeController (back-end) —
+ * jamais les DAOs directement.
  */
 public class TimetableController {
 
@@ -48,7 +42,7 @@ public class TimetableController {
     private static final double HAUTEUR_HEADER  = 44.0;
     private static final double LARGEUR_HEURE   = 64.0;
 
-    private static final String[] JOURS    = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"};
+    private static final String[] JOURS = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"};
     private static final DateTimeFormatter FMT_JOUR =
             DateTimeFormatter.ofPattern("d MMM", Locale.FRENCH);
 
@@ -69,12 +63,13 @@ public class TimetableController {
     @FXML private HBox           gridContainer;
 
     // -------------------------------------------------------------------------
-    //  DAOs (branchés sur PostgreSQL via JPAUtil)
+    //  Back-end controllers (jamais de DAO directement dans le front)
     // -------------------------------------------------------------------------
 
-    private final CoursDAO  coursDAO  = new CoursDAO();
-    private final SalleDAO  salleDAO  = new SalleDAO();
-    private final GroupeDAO groupeDAO = new GroupeDAO();
+    private final EmploiDuTempsController edtController =
+            new EmploiDuTempsController(new CoursDAO());
+    private final SalleController   salleController  = new SalleController(new SalleDAO());
+    private final GroupeController  groupeController = new GroupeController(new GroupeDAO());
 
     // -------------------------------------------------------------------------
     //  État interne
@@ -85,7 +80,6 @@ public class TimetableController {
     private enum TabMode { MON_EDT, TIERS, SALLE }
     private TabMode currentTab = TabMode.MON_EDT;
 
-    // Liste des salles en mémoire pour retrouver SalleEntity depuis le nom sélectionné
     private List<SalleEntity> allSalles = List.of();
 
     // -------------------------------------------------------------------------
@@ -137,19 +131,17 @@ public class TimetableController {
     //  Onglets
     // -------------------------------------------------------------------------
 
-    /** US2/US5 – Mon EDT */
     @FXML private void onTabMonEDT() {
         currentTab = TabMode.MON_EDT;
         hideSelectorBar();
         loadCours();
     }
 
-    /** US3 – EDT d'un groupe : charge la liste des groupes depuis la BDD */
     @FXML private void onTabTiers() {
         currentTab = TabMode.TIERS;
         comboSelector.setPromptText("Choisir une classe…");
         try {
-            List<String> noms = groupeDAO.findAll().stream()
+            List<String> noms = groupeController.getAllGroupes().stream()
                     .map(g -> g.getNom())
                     .toList();
             comboSelector.getItems().setAll(noms);
@@ -160,14 +152,13 @@ public class TimetableController {
         loadCours();
     }
 
-    /** US4 – EDT d'une salle : charge la liste des salles depuis la BDD */
     @FXML private void onTabSalle() {
         currentTab = TabMode.SALLE;
         comboSelector.setPromptText("Choisir une salle…");
         try {
-            allSalles = salleDAO.findAll();
-            List<String> noms = allSalles.stream().map(SalleEntity::getNom).toList();
-            comboSelector.getItems().setAll(noms);
+            allSalles = salleController.getAllSalles();
+            comboSelector.getItems().setAll(
+                    allSalles.stream().map(SalleEntity::getNom).toList());
         } catch (Exception e) {
             allSalles = List.of();
             comboSelector.getItems().clear();
@@ -222,8 +213,8 @@ public class TimetableController {
     private VBox buildDayColumn(int dayIndex) {
         VBox col = new VBox();
         col.getStyleClass().add("day-column");
-        LocalDate date   = currentMonday.plusDays(dayIndex);
-        Label    header  = new Label(JOURS[dayIndex] + " " + date.format(FMT_JOUR));
+        LocalDate date  = currentMonday.plusDays(dayIndex);
+        Label header    = new Label(JOURS[dayIndex] + " " + date.format(FMT_JOUR));
         header.getStyleClass().add("day-header");
         header.setPrefHeight(HAUTEUR_HEADER);
         header.setMaxWidth(Double.MAX_VALUE);
@@ -260,7 +251,7 @@ public class TimetableController {
     }
 
     // -------------------------------------------------------------------------
-    //  Chargement des cours depuis la BDD
+    //  Chargement des cours via le back-end
     // -------------------------------------------------------------------------
 
     private void loadCours() {
@@ -274,16 +265,14 @@ public class TimetableController {
                 case SALLE   -> loadSalleEDT();
             };
         } catch (Exception e) {
-            cours = List.of(); // BDD inaccessible → grille vide
+            cours = List.of();
         }
 
-        // Vider les panneaux de cours
         for (int i = 0; i < 5; i++) {
             Pane p = findCoursPane(i);
             if (p != null) p.getChildren().clear();
         }
 
-        // Placer chaque cours dans la bonne colonne
         for (CoursDisplay c : cours) {
             int dayIndex = c.jour().getDayOfWeek().getValue() - 1;
             if (dayIndex < 0 || dayIndex > 4) continue;
@@ -292,8 +281,8 @@ public class TimetableController {
             if (coursPane == null) continue;
 
             VBox block  = buildCoursBlock(c);
-            double top  = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
-            double height = minutesFromStart(c.heureFin()) / 60.0 * PX_PAR_HEURE - top - 2;
+            double top    = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
+            double height = minutesFromStart(c.heureFin())   / 60.0 * PX_PAR_HEURE - top - 2;
 
             block.setLayoutY(top);
             block.setPrefHeight(height);
@@ -305,37 +294,27 @@ public class TimetableController {
         }
     }
 
-    /** US2/US5 : cours de l'utilisateur connecté pour la semaine */
     private List<CoursDisplay> loadMonEDT(UserEntity u) {
         if (u == null) return List.of();
-        List<CoursEntity> entities = switch (u.getRole()) {
-            case ETUDIANT   -> coursDAO.findByEtudiantAndSemaine(u, currentMonday);
-            case PROFESSEUR -> coursDAO.findByProfesseurAndSemaine(u, currentMonday);
-            default         -> List.of();
-        };
-        return toDisplayList(entities);
+        return toDisplayList(edtController.getEmploiDuTempsConnecte(u, currentMonday));
     }
 
-    /** US3 : EDT d'un groupe sélectionné dans le ComboBox */
     private List<CoursDisplay> loadTiersEDT() {
         String sel = comboSelector.getValue();
         if (sel == null) return List.of();
-        return toDisplayList(coursDAO.findByGroupeAndSemaine(sel, currentMonday));
+        return toDisplayList(edtController.getEmploiDuTempsGroupe(sel, currentMonday));
     }
 
-    /** US4 : EDT d'une salle sélectionnée dans le ComboBox */
     private List<CoursDisplay> loadSalleEDT() {
         String sel = comboSelector.getValue();
         if (sel == null) return List.of();
-        // Retrouve le SalleEntity correspondant au nom sélectionné
         return allSalles.stream()
                 .filter(s -> s.getNom().equals(sel))
                 .findFirst()
-                .map(salle -> toDisplayList(coursDAO.findBySalleAndSemaine(salle, currentMonday)))
+                .map(salle -> toDisplayList(edtController.getEmploiDuTempsSalle(salle, currentMonday)))
                 .orElse(List.of());
     }
 
-    /** Convertit une liste de CoursEntity en CoursDisplay, en filtrant les nulls */
     private List<CoursDisplay> toDisplayList(List<CoursEntity> entities) {
         return entities.stream()
                 .map(CoursDisplay::fromEntity)

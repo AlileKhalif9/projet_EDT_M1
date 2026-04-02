@@ -7,19 +7,11 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import projet.M1.BDD.dao.UserDAO;
 import projet.M1.BDD.entity.UserEntity;
+import projet.M1.controller.AuthController;
 import projet.M1.session.SessionManager;
 
 import java.util.Optional;
 
-/**
- * Controller de la page de connexion.
- *
- * Intégration BDD : utilise UserDAO pour authentifier l'utilisateur
- * contre la base PostgreSQL (plus de MockUtilisateurDAO).
- *
- * En cas d'échec de connexion à la BDD (ex: PostgreSQL non démarré),
- * une alerte explicite s'affiche plutôt qu'un crash silencieux.
- */
 public class LoginController {
 
     @FXML private TextField     loginField;
@@ -27,13 +19,13 @@ public class LoginController {
     @FXML private Label         errorLabel;
     @FXML private Button        loginButton;
 
-    // DAO branché sur la vraie BDD PostgreSQL via JPAUtil
-    private final UserDAO userDAO = new UserDAO();
+    // Passe par le back-end AuthController, pas directement par UserDAO
+    private final AuthController authController = new AuthController(new UserDAO());
 
     @FXML
     public void initialize() {
         loginField.setOnAction(e -> passwordField.requestFocus());
-        passwordField.setOnAction(e -> handleLogin()); // Entrée = connexion
+        passwordField.setOnAction(e -> handleLogin());
         hideError();
     }
 
@@ -48,10 +40,9 @@ public class LoginController {
         }
 
         try {
-            Optional<UserEntity> result = userDAO.findByLoginAndMotDePasse(login, password);
+            Optional<UserEntity> result = authController.connecter(login, password);
 
             if (result.isPresent()) {
-                // Connexion réussie : on stocke le UserEntity dans la session
                 SessionManager.getInstance().setUtilisateurConnecte(result.get());
                 SceneManager.getInstance().showMainLayout();
             } else {
@@ -61,7 +52,6 @@ public class LoginController {
             }
 
         } catch (Exception e) {
-            // La BDD est inaccessible (PostgreSQL non démarré, mauvaise config…)
             showError("Impossible de joindre la base de données.");
         }
     }

@@ -96,8 +96,7 @@ public class MainLayoutController {
         switch (view) {
             case DASHBOARD            -> btnDashboard.getStyleClass().add("sidebar-nav-item-active");
             case TIMETABLE            -> btnTimetable.getStyleClass().add("sidebar-nav-item-active");
-            case ROOM_SELECTION,
-                 MODIFICATION_REQUEST -> btnRoomSelection.getStyleClass().add("sidebar-nav-item-active");
+            case MODIFICATION_REQUEST -> btnRoomSelection.getStyleClass().add("sidebar-nav-item-active");
         }
     }
 
