@@ -20,9 +20,9 @@
 
         <properties>
             <!-- PostgreSQL -->
-            <property name="jakarta.persistence.jdbc.url"      value="jdbc:postgresql://localhost:5432/timetable"/>
-            <property name="jakarta.persistence.jdbc.user"     value="postgres"/>
-            <property name="jakarta.persistence.jdbc.password" value="password"/>
+            <property name="jakarta.persistence.jdbc.url"      value="jdbc:postgresql://ep-bold-dust-ab4se8tq-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&amp;channel_binding=require"/>
+            <property name="jakarta.persistence.jdbc.user"     value="neondb_owner"/>
+            <property name="jakarta.persistence.jdbc.password" value="npg_Di5XcIw4fQOo"/>
             <property name="jakarta.persistence.jdbc.driver"   value="org.postgresql.Driver"/>
 
             <property name="hibernate.dialect"       value="org.hibernate.dialect.PostgreSQLDialect"/>
