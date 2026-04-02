@@ -47,11 +47,40 @@ public class UserDAO {
         }
     }
 
-    /** Charge un utilisateur par son id (utile après login pour refresh les lazy collections). */
+    /** Charge un utilisateur par son id. */
     public Optional<UserEntity> findById(Long id) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             return Optional.ofNullable(em.find(UserEntity.class, id));
+        } finally {
+            em.close();
+        }
+    }
+
+    /** Vérifie si un login existe déjà en base. */
+    public boolean loginExiste(String login) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            Long count = em.createQuery(
+                            "SELECT COUNT(u) FROM UserEntity u WHERE u.login = :login", Long.class)
+                    .setParameter("login", login)
+                    .getSingleResult();
+            return count > 0;
+        } finally {
+            em.close();
+        }
+    }
+
+    /** Persiste un nouvel utilisateur en base. */
+    public void save(UserEntity user) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        em.getTransaction().begin();
+        try {
+            em.persist(user);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
         } finally {
             em.close();
         }
