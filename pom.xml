@@ -54,6 +54,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- HikariCP — connection pooling pour éviter de rouvrir une connexion à chaque requête -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-hikaricp</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

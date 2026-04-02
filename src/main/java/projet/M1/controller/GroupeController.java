@@ -1,5 +1,6 @@
 package projet.M1.controller;
 
+import projet.M1.BDD.DataCache;
 import projet.M1.BDD.dao.GroupeDAO;
 import projet.M1.BDD.entity.GroupeEtudiantEntity;
 
@@ -7,7 +8,7 @@ import java.util.List;
 
 /**
  * Back-end : gestion des groupes d'étudiants.
- * Le front appelle getAllGroupes() — jamais GroupeDAO directement.
+ * Utilise le DataCache — pas de requête réseau si les données sont déjà chargées.
  */
 public class GroupeController {
 
@@ -18,6 +19,8 @@ public class GroupeController {
     }
 
     public List<GroupeEtudiantEntity> getAllGroupes() {
+        List<GroupeEtudiantEntity> cached = DataCache.getInstance().getGroupes();
+        if (!cached.isEmpty()) return cached;
         return groupeDAO.findAll();
     }
 }

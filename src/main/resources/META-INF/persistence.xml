@@ -19,15 +19,23 @@
         <class>projet.M1.BDD.entity.CoursModificationRequestEntity</class>
 
         <properties>
-            <!-- PostgreSQL -->
+            <!-- PostgreSQL Neon -->
             <property name="jakarta.persistence.jdbc.url"      value="jdbc:postgresql://ep-bold-dust-ab4se8tq-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&amp;channel_binding=require"/>
             <property name="jakarta.persistence.jdbc.user"     value="neondb_owner"/>
             <property name="jakarta.persistence.jdbc.password" value="npg_Di5XcIw4fQOo"/>
             <property name="jakarta.persistence.jdbc.driver"   value="org.postgresql.Driver"/>
 
-            <property name="hibernate.dialect"       value="org.hibernate.dialect.PostgreSQLDialect"/>
-            <property name="hibernate.hbm2ddl.auto"  value="update"/>
-            <property name="hibernate.show_sql"      value="true"/>
+            <property name="hibernate.dialect"      value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql"     value="false"/>
+
+            <!-- Connection pooling HikariCP — évite d'ouvrir une connexion à chaque requête -->
+            <property name="hibernate.connection.provider_class"            value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider"/>
+            <property name="hibernate.hikari.minimumIdle"                   value="2"/>
+            <property name="hibernate.hikari.maximumPoolSize"               value="5"/>
+            <property name="hibernate.hikari.idleTimeout"                   value="30000"/>
+            <property name="hibernate.hikari.connectionTimeout"             value="5000"/>
+            <property name="hibernate.hikari.keepaliveTime"                 value="60000"/>
         </properties>
 
     </persistence-unit>

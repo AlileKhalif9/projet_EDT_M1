@@ -1,5 +1,6 @@
 package projet.M1.controller;
 
+import projet.M1.BDD.DataCache;
 import projet.M1.BDD.dao.SalleDAO;
 import projet.M1.BDD.entity.SalleEntity;
 
@@ -7,7 +8,7 @@ import java.util.List;
 
 /**
  * Back-end : gestion des salles.
- * Le front appelle getAllSalles() — jamais SalleDAO directement.
+ * Utilise le DataCache — pas de requête réseau si les données sont déjà chargées.
  */
 public class SalleController {
 
@@ -18,6 +19,8 @@ public class SalleController {
     }
 
     public List<SalleEntity> getAllSalles() {
+        List<SalleEntity> cached = DataCache.getInstance().getSalles();
+        if (!cached.isEmpty()) return cached;
         return salleDAO.findAll();
     }
 }

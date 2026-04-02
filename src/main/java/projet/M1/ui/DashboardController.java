@@ -1,7 +1,9 @@
 package projet.M1.ui;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.VBox;
 import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.entity.CoursEntity;
@@ -23,12 +25,13 @@ import java.util.Objects;
  */
 public class DashboardController {
 
-    @FXML private Label labelWelcome;
-    @FXML private Label labelDate;
-    @FXML private Label labelCoursAujourdHui;
-    @FXML private Label labelCoursSemaine;
-    @FXML private VBox  cardDemandeModif;
-    @FXML private VBox  todayCoursContainer;
+    @FXML private Label             labelWelcome;
+    @FXML private Label             labelDate;
+    @FXML private Label             labelCoursAujourdHui;
+    @FXML private Label             labelCoursSemaine;
+    @FXML private VBox              cardDemandeModif;
+    @FXML private VBox              todayCoursContainer;
+    @FXML private ProgressIndicator loadingIndicator;
 
     // Passe par le back-end, pas directement par le DAO
     private final EmploiDuTempsController edtController =
@@ -43,19 +46,30 @@ public class DashboardController {
         labelDate.setText(LocalDate.now().format(
                 DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.FRENCH)));
 
-        List<CoursEntity> semaine = loadCoursSemaine(u);
-        loadStats(semaine);
-        loadTodayCours(semaine);
         applyRoleVisibility(u);
-    }
 
-    private List<CoursEntity> loadCoursSemaine(UserEntity u) {
+        // Requête BDD en arrière-plan
         LocalDate lundi = LocalDate.now().with(DayOfWeek.MONDAY);
-        try {
-            return edtController.getEmploiDuTempsConnecte(u, lundi);
-        } catch (Exception e) {
-            return List.of();
-        }
+        Thread t = new Thread(() -> {
+            List<CoursEntity> semaine;
+            try {
+                semaine = edtController.getEmploiDuTempsConnecte(u, lundi);
+            } catch (Exception e) {
+                semaine = List.of();
+            }
+            final List<CoursEntity> result = semaine;
+            Platform.runLater(() -> {
+                loadStats(result);
+                loadTodayCours(result);
+                // Cache le spinner, affiche le contenu
+                loadingIndicator.setVisible(false);
+                loadingIndicator.setManaged(false);
+                todayCoursContainer.setVisible(true);
+                todayCoursContainer.setManaged(true);
+            });
+        });
+        t.setDaemon(true);
+        t.start();
     }
 
     private void loadStats(List<CoursEntity> semaine) {
