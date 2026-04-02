@@ -8,7 +8,8 @@ package projet.M1.ui;
 public enum View {
     DASHBOARD            ("dashboard"),
     TIMETABLE            ("timetable"),
-    MODIFICATION_REQUEST ("modification-request");
+    MODIFICATION_REQUEST ("modification-request"),
+    GROUPES              ("groupes");
 
     private final String fxmlName;
 

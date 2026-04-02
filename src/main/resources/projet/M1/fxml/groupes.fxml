@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true" fitToHeight="false"
+            style="-fx-background-color: #F8FAFC; -fx-background: #F8FAFC; -fx-border-color: transparent;"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="projet.M1.ui.GroupesController">
+
+    <VBox styleClass="page-container" spacing="24">
+
+        <!-- En-tête -->
+        <HBox alignment="CENTER_LEFT" spacing="16">
+            <VBox HBox.hgrow="ALWAYS" spacing="4">
+                <Label text="Gestion des groupes" styleClass="page-title"/>
+                <Label text="Consultez les groupes d'étudiants et leurs membres" styleClass="page-subtitle"/>
+            </VBox>
+        </HBox>
+
+        <!-- Barre de recherche -->
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <TextField fx:id="fieldRecherche"
+                       promptText="Rechercher un groupe…"
+                       prefWidth="320"
+                       styleClass="login-field"
+                       onKeyReleased="#onRecherche"/>
+        </HBox>
+
+        <!-- Liste des groupes (remplie dynamiquement) -->
+        <ProgressIndicator fx:id="loadingIndicator" prefWidth="32" prefHeight="32"
+                           visible="true" managed="true"/>
+        <FlowPane fx:id="groupesContainer"
+                  hgap="16" vgap="16"
+                  visible="false" managed="false"/>
+
+    </VBox>
+
+</ScrollPane>
