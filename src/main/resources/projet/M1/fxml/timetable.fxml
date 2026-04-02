@@ -26,6 +26,8 @@
         <Button fx:id="btnSuivant"  text="▶" styleClass="btn-icon" onAction="#onSuivant"/>
         <Button fx:id="btnAujourdHui" text="Aujourd'hui" styleClass="btn-secondary"
                 onAction="#onAujourdHui"/>
+        <Button fx:id="btnAjouterCours" text="+ Ajouter un cours" styleClass="btn-primary"
+                onAction="#onAjouterCours" visible="false" managed="false"/>
 
     </HBox>
 
