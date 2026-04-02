@@ -190,7 +190,44 @@ public class GroupesController {
             }
         }
 
-        content.getChildren().addAll(titre, sousTitre, tableau);
+        // US17 — Bouton modifier le nom du groupe
+        Button btnModifier = new Button("Modifier le nom");
+        btnModifier.getStyleClass().add("btn-secondary");
+        btnModifier.setOnAction(e -> {
+            TextInputDialog inputDialog = new TextInputDialog(g.getNom());
+            inputDialog.setTitle("Modifier le groupe");
+            inputDialog.setHeaderText(null);
+            inputDialog.setContentText("Nouveau nom du groupe :");
+            inputDialog.getDialogPane().getStylesheets().add(
+                    getClass().getResource("/projet/M1/css/main.css").toExternalForm());
+
+            inputDialog.showAndWait().ifPresent(nouveauNom -> {
+                String nom = nouveauNom.trim();
+                if (nom.isEmpty()) return;
+                // Mise à jour visuelle dans le dialog
+                titre.setText(nom);
+                dialog.setTitle("Groupe " + nom);
+                // Mise à jour visuelle sur la carte dans la liste
+                groupesContainer.getChildren().stream()
+                        .filter(n -> n instanceof VBox)
+                        .map(n -> (VBox) n)
+                        .forEach(card -> {
+                            card.getChildren().stream()
+                                    .filter(n -> n instanceof HBox)
+                                    .map(n -> (HBox) n)
+                                    .flatMap(hbox -> hbox.getChildren().stream())
+                                    .filter(n -> n instanceof Label)
+                                    .map(n -> (Label) n)
+                                    .filter(l -> l.getStyleClass().contains("groupe-card-nom")
+                                            && l.getText().equals(g.getNom()))
+                                    .findFirst()
+                                    .ifPresent(l -> l.setText(nom));
+                        });
+                g.setNom(nom);
+            });
+        });
+
+        content.getChildren().addAll(titre, sousTitre, btnModifier, tableau);
         dialog.getDialogPane().setContent(content);
         dialog.showAndWait();
     }
