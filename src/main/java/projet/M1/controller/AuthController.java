@@ -1,30 +1,32 @@
 package projet.M1.controller;
 
-import projet.M1.controller.dao.UtilisateurDAO;
-import projet.M1.model.utilisateur_systeme.Utilisateur;
-import java.util.Optional;
+import projet.M1.BDD.dao.UserDAO;
+import projet.M1.BDD.entity.UserEntity;
 
+import java.util.Optional;
 import java.util.logging.Logger;
 
+/**
+ * Back-end : authentification.
+ * Le front (LoginController) appelle connecter() — jamais UserDAO directement.
+ */
 public class AuthController {
 
     private static final Logger LOGGER = Logger.getLogger(AuthController.class.getName());
 
-    private final UtilisateurDAO utilisateurDAO;
+    private final UserDAO userDAO;
 
-    public AuthController(UtilisateurDAO utilisateurDAO) {
-        this.utilisateurDAO = utilisateurDAO;
+    public AuthController(UserDAO userDAO) {
+        this.userDAO = userDAO;
     }
 
-    public Optional<Utilisateur> connecter(String login, String motDePasse) {
-        Optional<Utilisateur> utilisateurOpt = utilisateurDAO.findByLogin(login, motDePasse);
-
-        if(utilisateurOpt.isPresent()) {
-            LOGGER.info("Connexion réussie pour : " + utilisateurOpt.get().getNom());
+    public Optional<UserEntity> connecter(String login, String motDePasse) {
+        Optional<UserEntity> result = userDAO.findByLoginAndMotDePasse(login, motDePasse);
+        if (result.isPresent()) {
+            LOGGER.info("Connexion réussie : " + result.get().getNom());
         } else {
-            LOGGER.warning("Login ou mot de passe incorrect pour : " + login);
+            LOGGER.warning("Échec connexion pour : " + login);
         }
-
-        return utilisateurOpt;
+        return result;
     }
 }
