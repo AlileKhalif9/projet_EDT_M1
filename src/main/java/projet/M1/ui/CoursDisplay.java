@@ -14,6 +14,7 @@ import java.time.LocalTime;
  * Cela évite de passer des entités JPA directement aux controllers JavaFX.
  */
 public record CoursDisplay(
+        Long      id,
         String    nom,
         TypeCours typeCours,
         String    nomGroupe,
@@ -54,6 +55,7 @@ public record CoursDisplay(
         }
 
         return new CoursDisplay(
+                c.getId(),
                 c.getNom(),
                 TypeCours.fromString(c.getTypeCours()),
                 groupe,

@@ -4,12 +4,14 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.layout.*;
 import javafx.scene.layout.StackPane;
 import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.dao.GroupeDAO;
 import projet.M1.BDD.dao.SalleDAO;
 import projet.M1.BDD.entity.CoursEntity;
+import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.SalleEntity;
 import projet.M1.BDD.entity.UserEntity;
 import projet.M1.controller.EmploiDuTempsController;
@@ -387,7 +389,61 @@ public class TimetableController {
         tip.setMaxWidth(280);
         Tooltip.install(block, tip);
 
+        // US13 — Annuler un cours : clic uniquement pour le prof sur son EDT
+        UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
+        if (u != null && u.getRole() == Role.PROFESSEUR && currentTab == TabMode.MON_EDT
+                && type != TypeCours.ANNULE) {
+            block.setStyle(block.getStyle() + "-fx-cursor: hand;");
+            block.setOnMouseClicked(e -> onClickCours(c, block));
+        }
+
         return block;
+    }
+
+    private void onClickCours(CoursDisplay c, VBox block) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Annuler le cours");
+        confirm.setHeaderText("Annuler « " + c.nom() + " » ?");
+        confirm.setContentText(
+                "Date : " + c.jour().format(DateTimeFormatter.ofPattern("EEEE d MMM", Locale.FRENCH))
+                + "\nHoraire : " + c.heureDebut() + " – " + c.heureFin()
+                + (c.nomSalle() != null ? "\nSalle : " + c.nomSalle() : "")
+                + "\n\nCette action est irréversible.");
+
+        ButtonType btnAnnuler = new ButtonType("Annuler le cours", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnGarder  = new ButtonType("Garder", ButtonBar.ButtonData.CANCEL_CLOSE);
+        confirm.getButtonTypes().setAll(btnAnnuler, btnGarder);
+
+        confirm.showAndWait().ifPresent(result -> {
+            if (result == btnAnnuler) {
+                appliquerAnnulation(block);
+            }
+        });
+    }
+
+    private void appliquerAnnulation(VBox block) {
+        // Visuel : fond gris barré
+        block.setStyle(
+                "-fx-background-color: #F3F4F6;"
+              + "-fx-border-color: #9CA3AF;"
+              + "-fx-border-width: 0 0 0 4;"
+              + "-fx-background-radius: 6; -fx-border-radius: 6;"
+              + "-fx-padding: 6 8 6 10; -fx-opacity: 0.6;");
+        block.setOnMouseClicked(null);
+        block.setStyle(block.getStyle() + "-fx-cursor: default;");
+
+        // Met à jour le badge type en "ANNULÉ"
+        block.getChildren().stream()
+                .filter(n -> n instanceof Label && ((Label) n).getStyle().contains("-fx-background-color"))
+                .findFirst()
+                .ifPresent(n -> {
+                    Label badge = (Label) n;
+                    badge.setText("ANNULÉ");
+                    badge.setStyle(
+                            "-fx-background-color: #6B7280;"
+                          + "-fx-text-fill: white; -fx-font-size: 10; -fx-font-weight: bold;"
+                          + "-fx-background-radius: 4; -fx-padding: 1 5 1 5;");
+                });
     }
 
     private String buildTooltip(CoursDisplay c) {
