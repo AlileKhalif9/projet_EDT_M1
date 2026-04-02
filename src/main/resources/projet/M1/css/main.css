@@ -826,6 +826,102 @@
     -fx-text-fill: #B91C1C;
 }
 
+/* =============================================================================
+   US16 — GROUPES
+============================================================================= */
+
+.groupe-card {
+    -fx-background-color: white;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 8, 0, 0, 2);
+    -fx-padding: 16;
+    -fx-cursor: hand;
+}
+.groupe-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.14), 14, 0, 0, 4);
+    -fx-border-color: #93C5FD;
+}
+.groupe-card-nom {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E3A5F;
+}
+.groupe-card-stats {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6B7280;
+}
+.avatar-small {
+    -fx-background-color: #1E3A5F;
+    -fx-text-fill: white;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 50;
+    -fx-min-width: 32;
+    -fx-min-height: 32;
+    -fx-max-width: 32;
+    -fx-max-height: 32;
+    -fx-alignment: CENTER;
+    -fx-border-color: white;
+    -fx-border-width: 2;
+    -fx-border-radius: 50;
+}
+.avatar-more {
+    -fx-background-color: #E5E7EB;
+    -fx-text-fill: #6B7280;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 50;
+    -fx-min-width: 32;
+    -fx-min-height: 32;
+    -fx-max-width: 32;
+    -fx-max-height: 32;
+    -fx-alignment: CENTER;
+    -fx-border-color: white;
+    -fx-border-width: 2;
+    -fx-border-radius: 50;
+}
+.groupe-tableau {
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+.groupe-tableau-header {
+    -fx-background-color: #F3F4F6;
+    -fx-padding: 10 16 10 16;
+    -fx-background-radius: 8 8 0 0;
+}
+.groupe-col-header {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6B7280;
+}
+.groupe-tableau-row {
+    -fx-background-color: white;
+    -fx-padding: 10 16 10 16;
+}
+.groupe-tableau-row-alt {
+    -fx-background-color: #F9FAFB;
+    -fx-padding: 10 16 10 16;
+}
+.groupe-etudiant-nom {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F2937;
+}
+.groupe-etudiant-login {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6B7280;
+}
+.text-muted {
+    -fx-font-size: 13px;
+    -fx-text-fill: #9CA3AF;
+    -fx-font-style: italic;
+}
+
 /* ---- US11 — Bouton EDT croisés ------------------------------------------ */
 .btn-edt-croise {
     -fx-background-color: #EFF6FF;

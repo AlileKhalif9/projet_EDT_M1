@@ -28,6 +28,7 @@ public class MainLayoutController {
     @FXML private Button    btnDashboard;
     @FXML private Button    btnTimetable;
     @FXML private Button    btnRoomSelection;
+    @FXML private Button    btnGroupes;
     @FXML private Circle    avatarCircle;
     @FXML private Label     labelAvatarInitials;
     @FXML private Label     labelUserName;
@@ -57,11 +58,14 @@ public class MainLayoutController {
     private void applyRoleVisibility() {
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
         if (u == null) return;
-        // Le bouton "Demande de modif" est accessible uniquement aux profs et gestionnaires
         boolean canRequest = u.getRole() == Role.PROFESSEUR
                           || u.getRole() == Role.GESTIONNAIRE_PLANNING;
         btnRoomSelection.setVisible(canRequest);
         btnRoomSelection.setManaged(canRequest);
+
+        boolean isGestionnaire = u.getRole() == Role.GESTIONNAIRE_PLANNING;
+        btnGroupes.setVisible(isGestionnaire);
+        btnGroupes.setManaged(isGestionnaire);
     }
 
     /** Charge une page dans la zone centrale (remplace le contenu précédent). */
@@ -82,6 +86,7 @@ public class MainLayoutController {
     @FXML private void onDashboard()     { navigateTo(View.DASHBOARD); }
     @FXML private void onTimetable()     { navigateTo(View.TIMETABLE); }
     @FXML private void onRoomSelection() { navigateTo(View.MODIFICATION_REQUEST); }
+    @FXML private void onGroupes()       { navigateTo(View.GROUPES); }
 
     @FXML
     private void onLogout() {
@@ -93,10 +98,12 @@ public class MainLayoutController {
         btnDashboard.getStyleClass().remove("sidebar-nav-item-active");
         btnTimetable.getStyleClass().remove("sidebar-nav-item-active");
         btnRoomSelection.getStyleClass().remove("sidebar-nav-item-active");
+        btnGroupes.getStyleClass().remove("sidebar-nav-item-active");
         switch (view) {
             case DASHBOARD            -> btnDashboard.getStyleClass().add("sidebar-nav-item-active");
             case TIMETABLE            -> btnTimetable.getStyleClass().add("sidebar-nav-item-active");
             case MODIFICATION_REQUEST -> btnRoomSelection.getStyleClass().add("sidebar-nav-item-active");
+            case GROUPES              -> btnGroupes.getStyleClass().add("sidebar-nav-item-active");
         }
     }
 
