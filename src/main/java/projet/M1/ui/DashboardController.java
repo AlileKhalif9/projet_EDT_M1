@@ -7,6 +7,7 @@ import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.entity.CoursEntity;
 import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.UserEntity;
+import projet.M1.controller.EmploiDuTempsController;
 import projet.M1.session.SessionManager;
 
 import java.time.DayOfWeek;
@@ -17,13 +18,8 @@ import java.util.Locale;
 import java.util.Objects;
 
 /**
- * Controller du tableau de bord — fichier FXML : dashboard.fxml
- *
- * Affiche : message de bienvenue, stats de la semaine, raccourcis rapides,
- * et la liste des cours du jour en bas.
- *
- * Intégration BDD : les cours viennent désormais de CoursDAO (PostgreSQL).
- * La carte "Demande de modification" est masquée pour les Étudiants et Invités.
+ * Controller du tableau de bord.
+ * Passe par EmploiDuTempsController (back-end) — jamais CoursDAO directement.
  */
 public class DashboardController {
 
@@ -34,7 +30,9 @@ public class DashboardController {
     @FXML private VBox  cardDemandeModif;
     @FXML private VBox  todayCoursContainer;
 
-    private final CoursDAO coursDAO = new CoursDAO();
+    // Passe par le back-end, pas directement par le DAO
+    private final EmploiDuTempsController edtController =
+            new EmploiDuTempsController(new CoursDAO());
 
     @FXML
     public void initialize() {
@@ -51,22 +49,11 @@ public class DashboardController {
         applyRoleVisibility(u);
     }
 
-    /**
-     * Charge les cours de la semaine en cours selon le rôle :
-     * - ETUDIANT   → cours où il est inscrit
-     * - PROFESSEUR → cours qu'il enseigne
-     * - Autres     → liste vide (pas d'EDT personnel)
-     */
     private List<CoursEntity> loadCoursSemaine(UserEntity u) {
         LocalDate lundi = LocalDate.now().with(DayOfWeek.MONDAY);
         try {
-            return switch (u.getRole()) {
-                case ETUDIANT   -> coursDAO.findByEtudiantAndSemaine(u, lundi);
-                case PROFESSEUR -> coursDAO.findByProfesseurAndSemaine(u, lundi);
-                default         -> List.of();
-            };
+            return edtController.getEmploiDuTempsConnecte(u, lundi);
         } catch (Exception e) {
-            // BDD inaccessible : on affiche zéro cours plutôt que de crasher
             return List.of();
         }
     }
@@ -102,7 +89,6 @@ public class DashboardController {
         }
     }
 
-    // Petite carte colorée pour un cours (couleur = type CM/TD/TP…)
     private VBox buildCoursMini(CoursDisplay c) {
         VBox card = new VBox(4);
         String type  = c.typeCours() != null ? c.typeCours().getLibelle() : "?";

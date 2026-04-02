@@ -1,56 +1,47 @@
 package projet.M1.controller;
 
-import projet.M1.controller.dao.UtilisateurDAO;
-import projet.M1.model.utilisateur_systeme.Utilisateur;
+import projet.M1.BDD.dao.UserDAO;
+import projet.M1.BDD.entity.Role;
+import projet.M1.BDD.entity.UserEntity;
 
-import java.util.Random;
+import java.util.logging.Logger;
 
+/**
+ * Back-end : inscription d'un nouvel utilisateur.
+ *
+ * Vérifie que le login n'existe pas déjà, crée le UserEntity
+ * et le persiste via UserDAO.
+ *
+ * Le front appellera inscrireUtilisateur() — jamais UserDAO directement.
+ */
 public class Service_Inscription {
 
-    private final UtilisateurDAO utilisateurDAO;
-    private final Random random = new Random();
+    private static final Logger LOGGER = Logger.getLogger(Service_Inscription.class.getName());
 
-    public Service_Inscription(UtilisateurDAO utilisateurDAO) {
-        this.utilisateurDAO = utilisateurDAO;
+    private final UserDAO userDAO;
+
+    public Service_Inscription(UserDAO userDAO) {
+        this.userDAO = userDAO;
     }
 
-    public void inscrireUtilisateur(Utilisateur utilisateur) {
-        boolean aLogin = utilisateur.getLogin() != null && !utilisateur.getLogin().isEmpty();
-        boolean aMotDePasse = utilisateur.getMotDePasse() != null && !utilisateur.getMotDePasse().isEmpty();
-
-        if (aLogin && aMotDePasse) {
-            throw new IllegalStateException("L'utilisateur a déjà un login et un mot de passe.");
+    /**
+     * Inscrit un nouvel utilisateur en base.
+     * Le login doit être unique — lève une IllegalArgumentException sinon.
+     */
+    public void inscrireUtilisateur(String nom, String prenom, String login,
+                                    String motDePasse, Role role) {
+        if (userDAO.loginExiste(login)) {
+            throw new IllegalArgumentException("Le login \"" + login + "\" est déjà utilisé.");
         }
 
-        if (aLogin || aMotDePasse) {
-            throw new IllegalStateException("État incohérent : l'utilisateur a un login sans mot de passe ou inversement.");
-        }
+        UserEntity user = new UserEntity();
+        user.setNom(nom);
+        user.setPrenom(prenom);
+        user.setLogin(login);
+        user.setMotDePasse(motDePasse);
+        user.setRole(role);
 
-        String login = genererLoginUnique(utilisateur);
-        utilisateur.setLogin(login);
-
-        String motDePasse = genererMotDePasse();
-        utilisateur.setMotDePasse(motDePasse);
-
-        utilisateurDAO.sauvegarderUtilisateur(utilisateur);
-    }
-
-    private String genererLoginUnique(Utilisateur utilisateur) {
-        String prenom = utilisateur.getPrenom().toLowerCase();
-        String nom = utilisateur.getNom().toLowerCase();
-        String base = String.valueOf(prenom.charAt(0)) + nom;
-
-        String login;
-        do {
-            int deuxChiffres = random.nextInt(90) + 10;
-            login = base + deuxChiffres;
-        } while (utilisateurDAO.loginExiste(login));
-
-        return login;
-    }
-
-    private String genererMotDePasse() {
-        // à définir plus tard
-        return null;
+        userDAO.save(user);
+        LOGGER.info("Utilisateur inscrit : " + login + " (" + role + ")");
     }
 }
