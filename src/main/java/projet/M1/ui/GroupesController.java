@@ -30,9 +30,14 @@ public class GroupesController {
     @FXML
     public void initialize() {
         fieldRecherche.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (tousLesGroupes.isEmpty()) return;
             String query = newVal.trim().toLowerCase();
+            if (query.isEmpty()) {
+                afficherGroupes(tousLesGroupes);
+                return;
+            }
             List<GroupeEtudiantEntity> filtres = tousLesGroupes.stream()
-                    .filter(g -> g.getNom().toLowerCase().contains(query))
+                    .filter(g -> g.getNom() != null && g.getNom().toLowerCase().contains(query))
                     .toList();
             afficherGroupes(filtres);
         });
