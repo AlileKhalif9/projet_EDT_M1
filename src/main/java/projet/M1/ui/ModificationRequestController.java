@@ -1,5 +1,6 @@
 package projet.M1.ui;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -369,8 +370,20 @@ public class ModificationRequestController {
             btnReject.getStyleClass().add("btn-reject");
             btnReject.setOnAction(e -> onRejeter(d.getId(), nomCours, card));
 
-            actions.getChildren().addAll(btnApprove, btnReject);
-            body.getChildren().addAll(sep, actions);
+            // US11 — EDT croisés
+            Button btnEdtCroise = new Button("Voir les EDT croisés");
+            btnEdtCroise.getStyleClass().add("btn-edt-croise");
+
+            // Panneau EDT croisés — masqué par défaut, affiché au clic
+            VBox edtCroisePanel = new VBox(12);
+            edtCroisePanel.getStyleClass().add("edt-croise-panel");
+            edtCroisePanel.setVisible(false);
+            edtCroisePanel.setManaged(false);
+
+            btnEdtCroise.setOnAction(e -> toggleEdtCroise(d, edtCroisePanel, btnEdtCroise));
+
+            actions.getChildren().addAll(btnApprove, btnReject, btnEdtCroise);
+            body.getChildren().addAll(sep, actions, edtCroisePanel);
         }
 
         card.getChildren().addAll(header, body);
@@ -442,6 +455,135 @@ public class ModificationRequestController {
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de rejeter la demande.");
         }
+    }
+
+    // -------------------------------------------------------------------------
+    //  US11 — EDT croisés (prof + groupe) pour la semaine de la demande
+    // -------------------------------------------------------------------------
+
+    private void toggleEdtCroise(CoursModificationRequestEntity d, VBox panel, Button btn) {
+        boolean wasVisible = panel.isVisible();
+        if (wasVisible) {
+            panel.setVisible(false);
+            panel.setManaged(false);
+            btn.setText("Voir les EDT croisés");
+            return;
+        }
+
+        btn.setText("Chargement…");
+        btn.setDisable(true);
+        panel.getChildren().clear();
+        panel.setVisible(true);
+        panel.setManaged(true);
+
+        LocalDate semaine = d.getCours() != null && d.getCours().getHoraire() != null
+                ? d.getCours().getHoraire().getJour().with(DayOfWeek.MONDAY)
+                : LocalDate.now().with(DayOfWeek.MONDAY);
+
+        Thread t = new Thread(() -> {
+            List<CoursEntity> coursProfList;
+            List<CoursEntity> coursGroupeList;
+
+            try {
+                UserEntity prof = d.getCours() != null && d.getCours().getList_professeur() != null
+                        && !d.getCours().getList_professeur().isEmpty()
+                        ? d.getCours().getList_professeur().get(0) : null;
+
+                coursProfList = prof != null
+                        ? edtController.getEmploiDuTempsConnecte(prof, semaine)
+                        : List.of();
+
+                String nomGroupe = d.getCours() != null && d.getCours().getList_etudiant() != null
+                        && !d.getCours().getList_etudiant().isEmpty()
+                        && d.getCours().getList_etudiant().get(0).getGroupe() != null
+                        ? d.getCours().getList_etudiant().get(0).getGroupe().getNom() : null;
+
+                coursGroupeList = nomGroupe != null
+                        ? edtController.getEmploiDuTempsGroupe(nomGroupe, semaine)
+                        : List.of();
+
+                String nomProf   = prof != null ? prof.getPrenom() + " " + prof.getNom() : "Professeur inconnu";
+                String nomGroupe2 = nomGroupe != null ? nomGroupe : "Groupe inconnu";
+
+                Platform.runLater(() -> {
+                    buildEdtCroisePanel(panel, semaine, nomProf, coursProfList, nomGroupe2, coursGroupeList);
+                    btn.setText("Masquer les EDT croisés");
+                    btn.setDisable(false);
+                });
+            } catch (Exception ex) {
+                Platform.runLater(() -> {
+                    Label err = new Label("Impossible de charger les EDT (BDD inaccessible).");
+                    err.getStyleClass().add("cours-found-error");
+                    panel.getChildren().add(err);
+                    btn.setText("Voir les EDT croisés");
+                    btn.setDisable(false);
+                });
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void buildEdtCroisePanel(VBox panel, LocalDate semaine,
+                                     String nomProf, List<CoursEntity> coursProfList,
+                                     String nomGroupe, List<CoursEntity> coursGroupeList) {
+        DateTimeFormatter fmtSemaine = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.FRENCH);
+        Label titre = new Label("EDT croisés — semaine du " + semaine.format(fmtSemaine));
+        titre.getStyleClass().add("edt-croise-title");
+
+        HBox grilles = new HBox(16);
+
+        VBox colProf = buildEdtMiniGrid(nomProf, coursProfList);
+        VBox colGroupe = buildEdtMiniGrid(nomGroupe, coursGroupeList);
+        HBox.setHgrow(colProf,   Priority.ALWAYS);
+        HBox.setHgrow(colGroupe, Priority.ALWAYS);
+        colProf.setMaxWidth(Double.MAX_VALUE);
+        colGroupe.setMaxWidth(Double.MAX_VALUE);
+
+        grilles.getChildren().addAll(colProf, colGroupe);
+        panel.getChildren().addAll(titre, grilles);
+    }
+
+    private VBox buildEdtMiniGrid(String titre, List<CoursEntity> cours) {
+        VBox col = new VBox(6);
+        col.getStyleClass().add("edt-croise-col");
+
+        Label header = new Label(titre);
+        header.getStyleClass().add("edt-croise-col-title");
+        header.setWrapText(true);
+        col.getChildren().add(header);
+
+        if (cours.isEmpty()) {
+            Label vide = new Label("Aucun cours cette semaine");
+            vide.getStyleClass().add("edt-croise-empty");
+            col.getChildren().add(vide);
+            return col;
+        }
+
+        for (CoursEntity c : cours) {
+            HoraireEntity h = c.getHoraire();
+            if (h == null) continue;
+
+            HBox row = new HBox(8);
+            row.getStyleClass().add("edt-croise-row");
+            row.setAlignment(Pos.CENTER_LEFT);
+
+            String jour = h.getJour().format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.FRENCH));
+            String heure = h.getHeureDebut().format(FMT_TIME) + " – " + h.getHeureFin().format(FMT_TIME);
+
+            Label nomLabel = new Label(c.getNom() != null ? c.getNom() : "—");
+            nomLabel.getStyleClass().add("edt-croise-cours-nom");
+            HBox.setHgrow(nomLabel, Priority.ALWAYS);
+            nomLabel.setMaxWidth(Double.MAX_VALUE);
+
+            Label infoLabel = new Label(jour + "  " + heure);
+            infoLabel.getStyleClass().add("edt-croise-cours-info");
+
+            row.getChildren().addAll(nomLabel, infoLabel);
+            col.getChildren().add(row);
+        }
+
+        return col;
     }
 
     // -------------------------------------------------------------------------

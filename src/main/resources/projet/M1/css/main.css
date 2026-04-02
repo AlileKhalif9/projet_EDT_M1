@@ -826,6 +826,70 @@
     -fx-text-fill: #B91C1C;
 }
 
+/* ---- US11 — Bouton EDT croisés ------------------------------------------ */
+.btn-edt-croise {
+    -fx-background-color: #EFF6FF;
+    -fx-border-color: #93C5FD;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-text-fill: #1D4ED8;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-padding: 6 14 6 14;
+}
+.btn-edt-croise:hover {
+    -fx-background-color: #DBEAFE;
+    -fx-border-color: #60A5FA;
+}
+
+/* ---- US11 — Panneau EDT croisés ----------------------------------------- */
+.edt-croise-panel {
+    -fx-background-color: #F8FAFC;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 16;
+}
+.edt-croise-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+}
+.edt-croise-col {
+    -fx-background-color: white;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 12;
+}
+.edt-croise-col-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E3A5F;
+}
+.edt-croise-empty {
+    -fx-font-size: 12px;
+    -fx-text-fill: #9CA3AF;
+    -fx-font-style: italic;
+}
+.edt-croise-row {
+    -fx-background-color: #F1F5F9;
+    -fx-background-radius: 6;
+    -fx-padding: 6 10 6 10;
+}
+.edt-croise-cours-nom {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F2937;
+}
+.edt-croise-cours-info {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6B7280;
+}
+
 /* =============================================================================
    US6 — LISTE DES SALLES
 ============================================================================= */
