@@ -5,61 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c8e6b128-748e-466d-ae8c-b44faf5488e4" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/CoursEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/CoursModificationRequestEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/GroupeEtudiantEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/HoraireEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/ModuleEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/NoteEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/PromotionEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/Role.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/SalleEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/StatutDemande.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/UserEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/repository/CoursModificationRequestRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/repository/CoursRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/repository/GroupeEtudiantRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/repository/HoraireRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/repository/ModuleRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/repository/NoteRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/repository/PromotionRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/repository/SalleRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/service/CoursModificationRequestService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/service/InscriptionService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/service/ScheduleTiersService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/DemandeModificationController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/EmploiDuTempsController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/GestionnaireController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/ProfesseurController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/dao/CoursDAO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/dao/DemandeModificationDAO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/ClassRoom.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/Course.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/CourseModificationRequest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/Horaire.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/Subject.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/User.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/repository/CourseRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/repository/RequestRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/repository/UserRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/service/RequestService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/service/AuthService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/service/ScheduleService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/service/ScheduleService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/EtudiantController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/EtudiantController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/Service_Inscription.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/Service_Inscription.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/dao/MockUtilisateurDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/dao/MockUtilisateurDAO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/CoursDisplay.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/CoursDisplay.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/DashboardController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/DashboardController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/LoginController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/MainLayoutController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/MainLayoutController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/ModificationRequestController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/ModificationRequestController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/RoomSelectionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/RoomSelectionController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/SceneManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/SceneManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/TimetableController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/TimetableController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/persistence.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/persistence.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -89,21 +35,21 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;naim&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/matig/Desktop/M1/dev_java/projet_EDT/dev_projet/src/main/java/projet/M1/Main.java&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.intentionPowerPack&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "Rebasing naim",
+    "kotlin-language-version-configured": "true",
+    "onboarding.tips.debug.path": "C:/Users/matig/Desktop/M1/dev_java/projet_EDT/dev_projet/src/main/java/projet/M1/Main.java",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "preferences.intentionPowerPack"
   }
-}</component>
+}]]></component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="c8e6b128-748e-466d-ae8c-b44faf5488e4" name="Changes" comment="" />
