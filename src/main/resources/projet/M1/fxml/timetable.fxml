@@ -81,6 +81,13 @@
         </HBox>
     </HBox>
 
+    <!-- Spinner affiché pendant le chargement des cours -->
+    <StackPane fx:id="loadingPane" visible="true" managed="true">
+        <ProgressIndicator prefWidth="40" prefHeight="40"/>
+        <Label text="  Chargement…" style="-fx-text-fill: #6B7280; -fx-font-size: 13px;"
+               StackPane.alignment="CENTER" translateX="30"/>
+    </StackPane>
+
     <!-- ============================================================
          Grille de l'emploi du temps
     ============================================================ -->
