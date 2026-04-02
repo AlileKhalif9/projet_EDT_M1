@@ -5,7 +5,9 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.ButtonBar;
+import javafx.scene.control.DatePicker;
 import javafx.scene.layout.*;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.dao.GroupeDAO;
@@ -58,6 +60,7 @@ public class TimetableController {
     @FXML private Button         btnPrecedent;
     @FXML private Button         btnSuivant;
     @FXML private Button         btnAujourdHui;
+    @FXML private Button         btnAjouterCours;
     @FXML private ToggleButton   tabMonEDT;
     @FXML private ToggleButton   tabTiers;
     @FXML private ToggleButton   tabSalle;
@@ -98,6 +101,13 @@ public class TimetableController {
         updateWeekLabel();
         buildGrid();
         loadCours();
+
+        // US14 — bouton visible uniquement pour le gestionnaire
+        UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
+        if (u != null && u.getRole() == Role.GESTIONNAIRE_PLANNING) {
+            btnAjouterCours.setVisible(true);
+            btnAjouterCours.setManaged(true);
+        }
     }
 
     private void setupTabs() {
@@ -452,6 +462,151 @@ public class TimetableController {
              + "Horaire : " + c.heureDebut() + " – " + c.heureFin() + "\n"
              + (c.nomSalle()  != null ? "Salle : "  + c.nomSalle()  + "\n" : "")
              + (c.nomGroupe() != null ? "Groupe : " + c.nomGroupe()         : "");
+    }
+
+    // -------------------------------------------------------------------------
+    //  US14 — Ajouter un cours (gestionnaire, front uniquement)
+    // -------------------------------------------------------------------------
+
+    @FXML
+    private void onAjouterCours() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Ajouter un cours");
+        dialog.setHeaderText("Nouveau cours dans l'EDT");
+
+        ButtonType btnValider = new ButtonType("Ajouter", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnValider, ButtonType.CANCEL);
+
+        // Formulaire
+        GridPane form = new GridPane();
+        form.setHgap(12);
+        form.setVgap(10);
+        form.setPadding(new javafx.geometry.Insets(16));
+
+        TextField fieldNom = new TextField();
+        fieldNom.setPromptText("Ex : Algorithmique");
+
+        ComboBox<String> comboType = new ComboBox<>();
+        comboType.getItems().addAll("CM", "TD", "TP", "EXAMEN");
+        comboType.setPromptText("Type");
+        comboType.setPrefWidth(120);
+
+        DatePicker datePicker = new DatePicker(currentMonday);
+
+        ComboBox<String> comboDebut = new ComboBox<>();
+        ComboBox<String> comboFin   = new ComboBox<>();
+        List<String> slots = java.util.stream.Stream
+                .iterate(LocalTime.of(7, 30), t -> !t.isAfter(LocalTime.of(19, 0)), t -> t.plusMinutes(30))
+                .map(t -> t.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")))
+                .toList();
+        comboDebut.getItems().addAll(slots);
+        comboFin.getItems().addAll(slots);
+        comboDebut.setPromptText("Heure début");
+        comboFin.setPromptText("Heure fin");
+        comboDebut.setPrefWidth(120);
+        comboFin.setPrefWidth(120);
+
+        ComboBox<String> comboSalle = new ComboBox<>();
+        try {
+            salleController.getAllSalles().forEach(s -> comboSalle.getItems().add(s.getNom()));
+        } catch (Exception ignored) {}
+        comboSalle.setPromptText("Salle (optionnel)");
+
+        ComboBox<String> comboGroupe = new ComboBox<>();
+        try {
+            groupeController.getAllGroupes().forEach(g -> comboGroupe.getItems().add(g.getNom()));
+        } catch (Exception ignored) {}
+        comboGroupe.setPromptText("Groupe (optionnel)");
+
+        form.add(new Label("Nom du cours *"), 0, 0);   form.add(fieldNom,   1, 0);
+        form.add(new Label("Type *"),          0, 1);   form.add(comboType,  1, 1);
+        form.add(new Label("Date *"),          0, 2);   form.add(datePicker, 1, 2);
+        form.add(new Label("Heure début *"),   0, 3);   form.add(comboDebut, 1, 3);
+        form.add(new Label("Heure fin *"),     0, 4);   form.add(comboFin,   1, 4);
+        form.add(new Label("Salle"),           0, 5);   form.add(comboSalle, 1, 5);
+        form.add(new Label("Groupe"),          0, 6);   form.add(comboGroupe,1, 6);
+
+        // Styles labels
+        form.getChildren().stream()
+                .filter(n -> n instanceof Label)
+                .forEach(n -> ((Label) n).getStyleClass().add("form-label"));
+
+        dialog.getDialogPane().setContent(form);
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource("/projet/M1/css/main.css").toExternalForm());
+
+        dialog.showAndWait().ifPresent(result -> {
+            if (result != btnValider) return;
+
+            String nom    = fieldNom.getText().trim();
+            String type   = comboType.getValue();
+            LocalDate date = datePicker.getValue();
+            String debutStr = comboDebut.getValue();
+            String finStr   = comboFin.getValue();
+
+            if (nom.isEmpty() || type == null || date == null || debutStr == null || finStr == null) {
+                Alert err = new Alert(Alert.AlertType.WARNING, "Veuillez remplir tous les champs obligatoires (*).");
+                err.setHeaderText(null);
+                err.showAndWait();
+                return;
+            }
+
+            LocalTime debut = LocalTime.parse(debutStr, java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+            LocalTime fin   = LocalTime.parse(finStr,   java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+
+            if (!fin.isAfter(debut)) {
+                Alert err = new Alert(Alert.AlertType.WARNING, "L'heure de fin doit être après l'heure de début.");
+                err.setHeaderText(null);
+                err.showAndWait();
+                return;
+            }
+
+            // Construire un CoursDisplay temporaire (visuel uniquement, pas de BDD)
+            CoursDisplay nouveau = new CoursDisplay(
+                    null,
+                    nom,
+                    TypeCours.fromString(type),
+                    comboGroupe.getValue(),
+                    null,
+                    comboSalle.getValue(),
+                    date,
+                    debut,
+                    fin
+            );
+
+            afficherCoursTemporaire(nouveau);
+        });
+    }
+
+    private void afficherCoursTemporaire(CoursDisplay c) {
+        int dayIndex = c.jour().getDayOfWeek().getValue() - 1;
+        if (dayIndex < 0 || dayIndex > 4) return;
+
+        // Vérifier que la date est dans la semaine affichée
+        LocalDate lundi = currentMonday;
+        LocalDate vendredi = currentMonday.plusDays(4);
+        if (c.jour().isBefore(lundi) || c.jour().isAfter(vendredi)) {
+            Alert info = new Alert(Alert.AlertType.INFORMATION,
+                    "Le cours a été créé mais la date est hors de la semaine affichée.\nNaviguez vers la bonne semaine pour le voir.");
+            info.setHeaderText(null);
+            info.showAndWait();
+            return;
+        }
+
+        Pane coursPane = findCoursPane(dayIndex);
+        if (coursPane == null) return;
+
+        VBox block    = buildCoursBlock(c);
+        double top    = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
+        double height = minutesFromStart(c.heureFin())   / 60.0 * PX_PAR_HEURE - top - 2;
+
+        block.setLayoutY(top);
+        block.setPrefHeight(height);
+        block.setLayoutX(4);
+        block.setPrefWidth(Math.max(0, coursPane.getWidth() - 8));
+        coursPane.widthProperty().addListener((obs, o, w) ->
+                block.setPrefWidth(w.doubleValue() - 8));
+        coursPane.getChildren().add(block);
     }
 
     // -------------------------------------------------------------------------
