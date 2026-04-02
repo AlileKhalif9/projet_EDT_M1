@@ -1,17 +1,18 @@
 package projet.M1.controller;
 
-import projet.M1.controller.dao.CoursDAO;
-import projet.M1.model.academique.Promotion;
-import projet.M1.model.planning.Cours;
-import projet.M1.model.planning.Salle;
-import projet.M1.model.utilisateur_systeme.Etudiant;
-import projet.M1.model.utilisateur_systeme.Professeur;
-import projet.M1.model.utilisateur_systeme.Utilisateur;
+import projet.M1.BDD.dao.CoursDAO;
+import projet.M1.BDD.entity.CoursEntity;
+import projet.M1.BDD.entity.SalleEntity;
+import projet.M1.BDD.entity.UserEntity;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Back-end : emploi du temps.
+ * Le front (TimetableController, DashboardController) appelle ces méthodes —
+ * jamais CoursDAO directement.
+ */
 public class EmploiDuTempsController {
 
     private final CoursDAO coursDAO;
@@ -20,29 +21,22 @@ public class EmploiDuTempsController {
         this.coursDAO = coursDAO;
     }
 
-    // EDT d'un utilisateur selon son rôle — l'utilisateur est passé en paramètre
-    public List<Cours> getEmploiDuTempsConnecte(Utilisateur u, LocalDate semaine) {
-        LocalDate lundi    = semaine.with(DayOfWeek.MONDAY);
-        LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
-
-        return switch (u) {
-            case Etudiant   e -> coursDAO.findByEtudiantAndSemaine(e, lundi, vendredi);
-            case Professeur p -> coursDAO.findByProfesseurAndSemaine(p, lundi, vendredi);
-            default           -> List.of();
+    /** Cours de l'utilisateur connecté pour la semaine, selon son rôle. */
+    public List<CoursEntity> getEmploiDuTempsConnecte(UserEntity u, LocalDate semaine) {
+        return switch (u.getRole()) {
+            case ETUDIANT   -> coursDAO.findByEtudiantAndSemaine(u, semaine);
+            case PROFESSEUR -> coursDAO.findByProfesseurAndSemaine(u, semaine);
+            default         -> List.of();
         };
     }
 
-    // EDT d'une promotion pour tous les rôles
-    public List<Cours> getEmploiDuTempsPromotion(Promotion promotion, LocalDate semaine) {
-        LocalDate lundi    = semaine.with(DayOfWeek.MONDAY);
-        LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
-        return coursDAO.findByPromotionAndSemaine(promotion, lundi, vendredi);
+    /** Cours d'un groupe pour la semaine (onglet EDT classe). */
+    public List<CoursEntity> getEmploiDuTempsGroupe(String nomGroupe, LocalDate semaine) {
+        return coursDAO.findByGroupeAndSemaine(nomGroupe, semaine);
     }
 
-    // EDT d'une salle
-    public List<Cours> getEmploiDuTempsSalle(Salle salle, LocalDate semaine) {
-        LocalDate lundi = semaine.with(DayOfWeek.MONDAY);
-        LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
-        return coursDAO.findBySalleAndSemaine(salle, lundi, vendredi);
+    /** Cours d'une salle pour la semaine (onglet Salle). */
+    public List<CoursEntity> getEmploiDuTempsSalle(SalleEntity salle, LocalDate semaine) {
+        return coursDAO.findBySalleAndSemaine(salle, semaine);
     }
 }

@@ -10,6 +10,10 @@ import projet.M1.BDD.dao.DemandeDAO;
 import projet.M1.BDD.dao.HoraireDAO;
 import projet.M1.BDD.dao.SalleDAO;
 import projet.M1.BDD.entity.*;
+import projet.M1.controller.DemandeModificationController;
+import projet.M1.controller.EmploiDuTempsController;
+import projet.M1.controller.HoraireController;
+import projet.M1.controller.SalleController;
 import projet.M1.session.SessionManager;
 
 import java.time.DayOfWeek;
@@ -21,14 +25,11 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 /**
- * Page "Demandes de modification" — FXML : modification-request.fxml
+ * Controller de la page "Demandes de modification".
+ * Passe par les back-end controllers — jamais les DAOs directement.
  *
- * Mode PROFESSEUR  → formulaire en 3 étapes :
- *   1. Identifier le cours via date + heure (feedback immédiat si introuvable)
- *   2. Nouveau créneau (date, heure début, heure fin, salle optionnelle)
- *   3. Raison
- *
- * Mode GESTIONNAIRE → liste des demandes PENDING avec Approuver / Rejeter.
+ * Mode PROFESSEUR  → formulaire 3 étapes (US6–9)
+ * Mode GESTIONNAIRE → liste PENDING avec Approuver / Rejeter (US10–12)
  */
 public class ModificationRequestController {
 
@@ -43,14 +44,13 @@ public class ModificationRequestController {
             "Autre raison"
     );
 
-    /** Créneaux disponibles toutes les 30 min de 07:30 à 19:00. */
     private static final List<String> TIME_SLOTS = Stream
             .iterate(LocalTime.of(7, 30), t -> !t.isAfter(LocalTime.of(19, 0)), t -> t.plusMinutes(30))
             .map(t -> t.format(DateTimeFormatter.ofPattern("HH:mm")))
             .toList();
 
-    private static final DateTimeFormatter FMT_DATE = DateTimeFormatter.ofPattern("EEEE d MMM", Locale.FRENCH);
-    private static final DateTimeFormatter FMT_TIME = DateTimeFormatter.ofPattern("HH'h'mm");
+    private static final DateTimeFormatter FMT_DATE  = DateTimeFormatter.ofPattern("EEEE d MMM", Locale.FRENCH);
+    private static final DateTimeFormatter FMT_TIME  = DateTimeFormatter.ofPattern("HH'h'mm");
     private static final DateTimeFormatter FMT_PARSE = DateTimeFormatter.ofPattern("HH:mm");
 
     // -------------------------------------------------------------------------
@@ -63,28 +63,27 @@ public class ModificationRequestController {
     @FXML private VBox   formPanel;
     @FXML private VBox   requestsContainer;
 
-    // Étape 1 — identifier le cours
     @FXML private DatePicker       datePickerActuel;
     @FXML private ComboBox<String> comboHeureActuelle;
     @FXML private Label            labelCoursFound;
 
-    // Étape 2 — nouveau créneau
     @FXML private DatePicker           datePickerNouveau;
     @FXML private ComboBox<String>     comboHeureDebutNouveau;
     @FXML private ComboBox<String>     comboHeureFinNouveau;
     @FXML private ComboBox<SalleEntity> comboSalle;
 
-    // Étape 3 — raison
     @FXML private ComboBox<String> comboRaison;
 
     // -------------------------------------------------------------------------
-    //  DAOs + état
+    //  Back-end controllers (jamais de DAO directement dans le front)
     // -------------------------------------------------------------------------
 
-    private final CoursDAO   coursDAO   = new CoursDAO();
-    private final SalleDAO   salleDAO   = new SalleDAO();
-    private final HoraireDAO horaireDAO = new HoraireDAO();
-    private final DemandeDAO demandeDAO = new DemandeDAO();
+    private final DemandeModificationController demandeController =
+            new DemandeModificationController(new DemandeDAO(), new CoursDAO());
+    private final EmploiDuTempsController edtController =
+            new EmploiDuTempsController(new CoursDAO());
+    private final SalleController   salleController   = new SalleController(new SalleDAO());
+    private final HoraireController horaireController = new HoraireController(new HoraireDAO());
 
     /** Cours identifié à l'étape 1 — null si introuvable. */
     private CoursEntity coursSelectionne = null;
@@ -110,16 +109,13 @@ public class ModificationRequestController {
     }
 
     private void setupFormCombos(UserEntity u) {
-        // Créneaux horaires (identiques pour les 3 combos)
         comboHeureActuelle.getItems().setAll(TIME_SLOTS);
         comboHeureDebutNouveau.getItems().setAll(TIME_SLOTS);
         comboHeureFinNouveau.getItems().setAll(TIME_SLOTS);
 
-        // Étape 1 : chercher le cours dès que la date ou l'heure change
         datePickerActuel.setOnAction(e -> searchCours(u));
         comboHeureActuelle.setOnAction(e -> searchCours(u));
 
-        // Salles
         comboSalle.setConverter(new StringConverter<>() {
             public String toString(SalleEntity s) {
                 if (s == null) return "";
@@ -128,7 +124,7 @@ public class ModificationRequestController {
             public SalleEntity fromString(String s) { return null; }
         });
         try {
-            comboSalle.getItems().setAll(salleDAO.findAll());
+            comboSalle.getItems().setAll(salleController.getAllSalles());
         } catch (Exception e) {
             comboSalle.getItems().clear();
         }
@@ -137,17 +133,13 @@ public class ModificationRequestController {
     }
 
     // -------------------------------------------------------------------------
-    //  Étape 1 — recherche du cours
+    //  Étape 1 — recherche du cours via EmploiDuTempsController
     // -------------------------------------------------------------------------
 
-    /**
-     * Cherche le cours du prof correspondant à la date + heure sélectionnées.
-     * Met à jour labelCoursFound en temps réel avec le résultat.
-     */
     private void searchCours(UserEntity u) {
         coursSelectionne = null;
-        LocalDate date = datePickerActuel.getValue();
-        String heureStr = comboHeureActuelle.getValue();
+        LocalDate date    = datePickerActuel.getValue();
+        String    heureStr = comboHeureActuelle.getValue();
 
         if (date == null || heureStr == null) {
             setCoursLabel("idle", "Choisissez une date et une heure pour identifier le cours");
@@ -157,9 +149,8 @@ public class ModificationRequestController {
         LocalTime heure = LocalTime.parse(heureStr, FMT_PARSE);
 
         try {
-            LocalDate lundi = date.with(DayOfWeek.MONDAY);
             List<CoursEntity> semaine = (u.getRole() == Role.PROFESSEUR)
-                    ? coursDAO.findByProfesseurAndSemaine(u, lundi)
+                    ? edtController.getEmploiDuTempsConnecte(u, date.with(DayOfWeek.MONDAY))
                     : List.of();
 
             coursSelectionne = semaine.stream()
@@ -181,8 +172,7 @@ public class ModificationRequestController {
                         + " – " + h.getHeureFin().format(FMT_TIME)
                         + "  ·  " + salle);
             } else {
-                setCoursLabel("error",
-                        "Aucun cours à ce créneau — vérifiez la date et l'heure");
+                setCoursLabel("error", "Aucun cours à ce créneau — vérifiez la date et l'heure");
             }
         } catch (Exception e) {
             setCoursLabel("error", "Impossible de vérifier (base de données inaccessible)");
@@ -201,7 +191,7 @@ public class ModificationRequestController {
     }
 
     // -------------------------------------------------------------------------
-    //  Formulaire (prof)
+    //  Formulaire prof
     // -------------------------------------------------------------------------
 
     @FXML
@@ -243,17 +233,15 @@ public class ModificationRequestController {
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
 
         try {
-            HoraireEntity nouvelHoraire = horaireDAO.findOrCreate(nouvelleDate, heureDebut, heureFin);
+            HoraireEntity nouvelHoraire =
+                    horaireController.findOrCreate(nouvelleDate, heureDebut, heureFin);
 
-            CoursModificationRequestEntity demande = new CoursModificationRequestEntity();
-            demande.setCours(coursSelectionne);
-            demande.setDemandeur(u);
-            demande.setNouveauCreneau(nouvelHoraire);
-            demande.setNouvelleSalle(comboSalle.getValue()); // null = garder la même salle
-            demande.setRaison(comboRaison.getValue());
-            demande.setStatut(StatutDemande.PENDING);
-
-            demandeDAO.save(demande);
+            demandeController.soumettreDemande(
+                    coursSelectionne,
+                    nouvelHoraire,
+                    comboSalle.getValue(),
+                    comboRaison.getValue(),
+                    u);
 
             showAlert(Alert.AlertType.INFORMATION, "Demande soumise",
                     "Votre demande a été soumise avec succès.\nElle sera traitée par le gestionnaire.");
@@ -287,15 +275,15 @@ public class ModificationRequestController {
     }
 
     // -------------------------------------------------------------------------
-    //  Liste des demandes (US10 gestionnaire / historique prof)
+    //  Liste des demandes via DemandeModificationController
     // -------------------------------------------------------------------------
 
     private void buildRequestCards(boolean isGestionnaire, UserEntity u) {
         requestsContainer.getChildren().clear();
         try {
             List<CoursModificationRequestEntity> demandes = isGestionnaire
-                    ? demandeDAO.findByStatut(StatutDemande.PENDING)
-                    : demandeDAO.findByDemandeur(u);
+                    ? demandeController.getDemandesEnAttente()
+                    : demandeController.getDemandesByProfesseur(u);
 
             if (demandes.isEmpty()) {
                 Label empty = new Label(isGestionnaire
@@ -320,7 +308,6 @@ public class ModificationRequestController {
         VBox card = new VBox();
         card.getStyleClass().add("request-card");
 
-        // Header
         HBox header = new HBox(12);
         header.getStyleClass().add("request-card-header");
         header.setAlignment(Pos.CENTER_LEFT);
@@ -343,7 +330,6 @@ public class ModificationRequestController {
         Label badge = buildStatusBadge(d.getStatut());
         header.getChildren().addAll(titles, badge);
 
-        // Corps
         VBox body = new VBox(16);
         body.getStyleClass().add("request-card-body");
 
@@ -358,8 +344,7 @@ public class ModificationRequestController {
         HBox schedules = new HBox(12);
         schedules.getChildren().addAll(
                 buildSchedulePanel(false, creneauActuel),
-                buildSchedulePanel(true,  creneauNouveau)
-        );
+                buildSchedulePanel(true,  creneauNouveau));
 
         HBox reasonRow = new HBox(4);
         Label rKey = new Label("Raison : ");
@@ -371,7 +356,6 @@ public class ModificationRequestController {
 
         body.getChildren().addAll(schedules, reasonRow);
 
-        // Boutons gestionnaire (US12) — uniquement sur les demandes PENDING
         if (isGestionnaire && d.getStatut() == StatutDemande.PENDING) {
             Separator sep = new Separator();
             HBox actions = new HBox(10);
@@ -435,22 +419,12 @@ public class ModificationRequestController {
     }
 
     // -------------------------------------------------------------------------
-    //  Actions gestionnaire (US12)
+    //  Actions gestionnaire via DemandeModificationController
     // -------------------------------------------------------------------------
 
     private void onApprouver(Long id, String nomCours, VBox card) {
         try {
-            // Applique le déplacement sur le CoursEntity avant de valider le statut
-            demandeDAO.findById(id).ifPresent(d -> {
-                if (d.getCours() != null
-                        && (d.getNouveauCreneau() != null || d.getNouvelleSalle() != null)) {
-                    coursDAO.applyModification(
-                            d.getCours().getId(),
-                            d.getNouveauCreneau(),
-                            d.getNouvelleSalle());
-                }
-            });
-            demandeDAO.updateStatut(id, StatutDemande.ACCEPTED);
+            demandeController.approuverDemande(id);
             showAlert(Alert.AlertType.INFORMATION, "Demande approuvée",
                     "La demande pour \"" + nomCours + "\" a été approuvée et le cours a été déplacé.");
             requestsContainer.getChildren().remove(card);
@@ -461,7 +435,7 @@ public class ModificationRequestController {
 
     private void onRejeter(Long id, String nomCours, VBox card) {
         try {
-            demandeDAO.updateStatut(id, StatutDemande.REFUSED);
+            demandeController.rejeterDemande(id);
             showAlert(Alert.AlertType.INFORMATION, "Demande rejetée",
                     "La demande pour \"" + nomCours + "\" a été rejetée.");
             requestsContainer.getChildren().remove(card);
