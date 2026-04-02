@@ -511,9 +511,12 @@ public class ModificationRequestController {
                     btn.setDisable(false);
                 });
             } catch (Exception ex) {
+                ex.printStackTrace();
+                String msg = ex.getClass().getSimpleName() + ": " + ex.getMessage();
                 Platform.runLater(() -> {
-                    Label err = new Label("Impossible de charger les EDT (BDD inaccessible).");
+                    Label err = new Label("Erreur : " + msg);
                     err.getStyleClass().add("cours-found-error");
+                    err.setWrapText(true);
                     panel.getChildren().add(err);
                     btn.setText("Voir les EDT croisés");
                     btn.setDisable(false);
