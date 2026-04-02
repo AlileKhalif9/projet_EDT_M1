@@ -92,7 +92,9 @@
         <!-- Cours du jour -->
         <VBox styleClass="card" spacing="12">
             <Label text="Cours du jour" styleClass="section-title"/>
-            <VBox fx:id="todayCoursContainer" spacing="8"/>
+            <ProgressIndicator fx:id="loadingIndicator" prefWidth="32" prefHeight="32"
+                               visible="true" managed="true"/>
+            <VBox fx:id="todayCoursContainer" spacing="8" visible="false" managed="false"/>
         </VBox>
 
     </VBox>
