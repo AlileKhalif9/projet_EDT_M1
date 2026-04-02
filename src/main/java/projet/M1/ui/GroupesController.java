@@ -21,7 +21,7 @@ public class GroupesController {
 
     @FXML private TextField fieldRecherche;
     @FXML private ProgressIndicator loadingIndicator;
-    @FXML private FlowPane groupesContainer;
+    @FXML private VBox groupesContainer;
 
     private final GroupeController groupeController = new GroupeController(new GroupeDAO());
 
@@ -76,45 +76,26 @@ public class GroupesController {
         }
     }
 
-    private VBox buildGroupeCard(GroupeEtudiantEntity g) {
-        VBox card = new VBox(12);
+    private HBox buildGroupeCard(GroupeEtudiantEntity g) {
+        HBox card = new HBox(16);
         card.getStyleClass().add("groupe-card");
-        card.setPrefWidth(260);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setMaxWidth(Double.MAX_VALUE);
         card.setOnMouseClicked(e -> ouvrirDetail(g));
 
-        // Header
-        HBox header = new HBox();
-        header.setAlignment(Pos.CENTER_LEFT);
-        Label nomLabel = new Label(g.getNom());
+        Label nomLabel = new Label(g.getNom() != null ? g.getNom() : "—");
         nomLabel.getStyleClass().add("groupe-card-nom");
         HBox.setHgrow(nomLabel, Priority.ALWAYS);
-        header.getChildren().add(nomLabel);
+        nomLabel.setMaxWidth(Double.MAX_VALUE);
 
-        // Nb étudiants
         int nbEtudiants = g.getList_etudiant() != null ? g.getList_etudiant().size() : 0;
-        HBox stats = new HBox(8);
-        stats.setAlignment(Pos.CENTER_LEFT);
-        Label nbLabel = new Label(nbEtudiants + " étudiant" + (nbEtudiants > 1 ? "s" : ""));
+        Label nbLabel = new Label("👥 " + nbEtudiants + " étudiant" + (nbEtudiants > 1 ? "s" : ""));
         nbLabel.getStyleClass().add("groupe-card-stats");
 
-        // Avatars
-        HBox avatars = new HBox(-8);
-        avatars.setAlignment(Pos.CENTER_LEFT);
-        List<UserEntity> etudiants = g.getList_etudiant() != null ? g.getList_etudiant() : List.of();
-        int shown = Math.min(etudiants.size(), 4);
-        for (int i = 0; i < shown; i++) {
-            UserEntity u = etudiants.get(i);
-            Label av = buildAvatar(u);
-            avatars.getChildren().add(av);
-        }
-        if (etudiants.size() > 4) {
-            Label more = new Label("+" + (etudiants.size() - 4));
-            more.getStyleClass().add("avatar-more");
-            avatars.getChildren().add(more);
-        }
+        Label chevron = new Label("›");
+        chevron.getStyleClass().add("quick-action-chevron");
 
-        stats.getChildren().addAll(nbLabel);
-        card.getChildren().addAll(header, avatars, stats);
+        card.getChildren().addAll(nomLabel, nbLabel, chevron);
         return card;
     }
 
