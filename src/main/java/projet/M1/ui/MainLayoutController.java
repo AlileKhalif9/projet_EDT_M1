@@ -29,6 +29,7 @@ public class MainLayoutController {
     @FXML private Button    btnTimetable;
     @FXML private Button    btnRoomSelection;
     @FXML private Button    btnGroupes;
+    @FXML private Button    btnSalles;
     @FXML private Circle    avatarCircle;
     @FXML private Label     labelAvatarInitials;
     @FXML private Label     labelUserName;
@@ -66,6 +67,8 @@ public class MainLayoutController {
         boolean isGestionnaire = u.getRole() == Role.GESTIONNAIRE_PLANNING;
         btnGroupes.setVisible(isGestionnaire);
         btnGroupes.setManaged(isGestionnaire);
+        btnSalles.setVisible(isGestionnaire);
+        btnSalles.setManaged(isGestionnaire);
     }
 
     /** Charge une page dans la zone centrale (remplace le contenu précédent). */
@@ -87,6 +90,7 @@ public class MainLayoutController {
     @FXML private void onTimetable()     { navigateTo(View.TIMETABLE); }
     @FXML private void onRoomSelection() { navigateTo(View.MODIFICATION_REQUEST); }
     @FXML private void onGroupes()       { navigateTo(View.GROUPES); }
+    @FXML private void onSalles()        { navigateTo(View.SALLES); }
 
     @FXML
     private void onLogout() {
@@ -99,11 +103,13 @@ public class MainLayoutController {
         btnTimetable.getStyleClass().remove("sidebar-nav-item-active");
         btnRoomSelection.getStyleClass().remove("sidebar-nav-item-active");
         btnGroupes.getStyleClass().remove("sidebar-nav-item-active");
+        btnSalles.getStyleClass().remove("sidebar-nav-item-active");
         switch (view) {
             case DASHBOARD            -> btnDashboard.getStyleClass().add("sidebar-nav-item-active");
             case TIMETABLE            -> btnTimetable.getStyleClass().add("sidebar-nav-item-active");
             case MODIFICATION_REQUEST -> btnRoomSelection.getStyleClass().add("sidebar-nav-item-active");
             case GROUPES              -> btnGroupes.getStyleClass().add("sidebar-nav-item-active");
+            case SALLES               -> btnSalles.getStyleClass().add("sidebar-nav-item-active");
         }
     }
 

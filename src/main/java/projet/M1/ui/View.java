@@ -9,7 +9,8 @@ public enum View {
     DASHBOARD            ("dashboard"),
     TIMETABLE            ("timetable"),
     MODIFICATION_REQUEST ("modification-request"),
-    GROUPES              ("groupes");
+    GROUPES              ("groupes"),
+    SALLES               ("salles");
 
     private final String fxmlName;
 
