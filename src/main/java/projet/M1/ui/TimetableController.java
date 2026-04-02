@@ -85,6 +85,9 @@ public class TimetableController {
 
     private LocalDate currentMonday;
 
+    /** Cours actuellement affichés dans la grille, indexés par jour (0=lundi…4=vendredi). */
+    private final java.util.Map<Integer, List<CoursDisplay>> coursParJour = new java.util.HashMap<>();
+
     private enum TabMode { MON_EDT, TIERS, SALLE }
     private TabMode currentTab = TabMode.MON_EDT;
 
@@ -316,88 +319,73 @@ public class TimetableController {
     }
 
     private void displayCours(List<CoursDisplay> cours) {
+        coursParJour.clear();
         for (int i = 0; i < 5; i++) {
             Pane p = findCoursPane(i);
             if (p != null) p.getChildren().clear();
         }
-
-        // Grouper par jour
-        java.util.Map<Integer, List<CoursDisplay>> parJour = new java.util.HashMap<>();
         for (CoursDisplay c : cours) {
             int dayIndex = c.jour().getDayOfWeek().getValue() - 1;
             if (dayIndex < 0 || dayIndex > 4) continue;
-            parJour.computeIfAbsent(dayIndex, k -> new java.util.ArrayList<>()).add(c);
+            coursParJour.computeIfAbsent(dayIndex, k -> new java.util.ArrayList<>()).add(c);
+        }
+        for (int i = 0; i < 5; i++) renderDay(i);
+    }
+
+    /** Re-rend tous les blocs d'un jour en appliquant l'anti-chevauchement. */
+    private void renderDay(int dayIndex) {
+        Pane coursPane = findCoursPane(dayIndex);
+        if (coursPane == null) return;
+        coursPane.getChildren().clear();
+
+        List<CoursDisplay> jourCours = coursParJour.getOrDefault(dayIndex, List.of());
+        int n = jourCours.size();
+        if (n == 0) return;
+
+        int[] colonne    = new int[n];
+        int[] nbColonnes = new int[n];
+
+        for (int i = 0; i < n; i++) {
+            java.util.Set<Integer> colonnesUtilisees = new java.util.HashSet<>();
+            for (int j = 0; j < i; j++) {
+                if (seChevauche(jourCours.get(i), jourCours.get(j)))
+                    colonnesUtilisees.add(colonne[j]);
+            }
+            int col = 0;
+            while (colonnesUtilisees.contains(col)) col++;
+            colonne[i] = col;
+            for (int j = 0; j < n; j++) {
+                if (seChevauche(jourCours.get(i), jourCours.get(j)))
+                    nbColonnes[j] = Math.max(nbColonnes[j], col + 1);
+            }
         }
 
-        for (java.util.Map.Entry<Integer, List<CoursDisplay>> entry : parJour.entrySet()) {
-            int dayIndex = entry.getKey();
-            List<CoursDisplay> jourCours = entry.getValue();
-            Pane coursPane = findCoursPane(dayIndex);
-            if (coursPane == null) continue;
+        for (int i = 0; i < n; i++) {
+            CoursDisplay c  = jourCours.get(i);
+            final int col   = colonne[i];
+            final int total = Math.max(nbColonnes[i], 1);
 
-            // Calculer colonne et nb de colonnes pour chaque cours
-            int n = jourCours.size();
-            int[] colonne   = new int[n];
-            int[] nbColonnes = new int[n];
+            VBox block    = buildCoursBlock(c);
+            double top    = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
+            double height = minutesFromStart(c.heureFin())   / 60.0 * PX_PAR_HEURE - top - 2;
+            block.setLayoutY(top);
+            block.setPrefHeight(height);
 
-            for (int i = 0; i < n; i++) {
-                // Trouver tous les cours qui se chevauchent avec i
-                List<Integer> overlaps = new java.util.ArrayList<>();
-                for (int j = 0; j < n; j++) {
-                    if (seChevauche(jourCours.get(i), jourCours.get(j))) overlaps.add(j);
-                }
-                // Assigner la première colonne libre parmi les chevauchements
-                java.util.Set<Integer> colonnesUtilisees = new java.util.HashSet<>();
-                for (int j : overlaps) {
-                    if (j < i) colonnesUtilisees.add(colonne[j]);
-                }
-                int col = 0;
-                while (colonnesUtilisees.contains(col)) col++;
-                colonne[i] = col;
-                // Nb de colonnes = taille du groupe de chevauchement
-                for (int j : overlaps) nbColonnes[j] = Math.max(nbColonnes[j], col + 1);
+            coursPane.widthProperty().addListener((obs, o, w) -> {
+                double colW = (w.doubleValue() - 4) / total;
+                block.setLayoutX(4 + col * colW);
+                block.setPrefWidth(colW - 4);
+            });
+            double paneW = coursPane.getWidth() - 4;
+            if (paneW > 0) {
+                double colW = paneW / total;
+                block.setLayoutX(4 + col * colW);
+                block.setPrefWidth(colW - 4);
+            } else {
+                block.setLayoutX(4);
+                block.setPrefWidth(100);
             }
-            // Second pass pour s'assurer que nbColonnes est cohérent
-            for (int i = 0; i < n; i++) {
-                List<Integer> overlaps = new java.util.ArrayList<>();
-                for (int j = 0; j < n; j++) {
-                    if (seChevauche(jourCours.get(i), jourCours.get(j))) overlaps.add(j);
-                }
-                int maxCol = overlaps.stream().mapToInt(j -> colonne[j]).max().orElse(0) + 1;
-                for (int j : overlaps) nbColonnes[j] = Math.max(nbColonnes[j], maxCol);
-            }
-
-            for (int i = 0; i < n; i++) {
-                CoursDisplay c = jourCours.get(i);
-                final int col  = colonne[i];
-                final int total = nbColonnes[i];
-
-                VBox block  = buildCoursBlock(c);
-                double top    = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
-                double height = minutesFromStart(c.heureFin())   / 60.0 * PX_PAR_HEURE - top - 2;
-
-                block.setLayoutY(top);
-                block.setPrefHeight(height);
-
-                // Répartir la largeur selon le nombre de colonnes
-                coursPane.widthProperty().addListener((obs, o, w) -> {
-                    double paneW   = w.doubleValue() - 4;
-                    double colW    = paneW / total;
-                    block.setLayoutX(4 + col * colW);
-                    block.setPrefWidth(colW - 4);
-                });
-                double paneW = coursPane.getWidth() - 4;
-                if (paneW > 0) {
-                    double colW = paneW / total;
-                    block.setLayoutX(4 + col * colW);
-                    block.setPrefWidth(colW - 4);
-                } else {
-                    block.setLayoutX(4);
-                    block.setPrefWidth(100);
-                }
-
-                coursPane.getChildren().add(block);
-            }
+            coursPane.getChildren().add(block);
         }
     }
 
@@ -648,34 +636,27 @@ public class TimetableController {
     }
 
     private void afficherCoursTemporaire(CoursDisplay c) {
-        int dayIndex = c.jour().getDayOfWeek().getValue() - 1;
-        if (dayIndex < 0 || dayIndex > 4) return;
-
-        // Vérifier que la date est dans la semaine affichée
-        LocalDate lundi = currentMonday;
         LocalDate vendredi = currentMonday.plusDays(4);
-        if (c.jour().isBefore(lundi) || c.jour().isAfter(vendredi)) {
+        if (c.jour().isBefore(currentMonday) || c.jour().isAfter(vendredi)) {
             Alert info = new Alert(Alert.AlertType.INFORMATION,
                     "Le cours a été créé mais la date est hors de la semaine affichée.\nNaviguez vers la bonne semaine pour le voir.");
             info.setHeaderText(null);
             info.showAndWait();
             return;
         }
+        int dayIndex = c.jour().getDayOfWeek().getValue() - 1;
+        if (dayIndex < 0 || dayIndex > 4) return;
+        coursParJour.computeIfAbsent(dayIndex, k -> new java.util.ArrayList<>()).add(c);
+        renderDay(dayIndex);
+    }
 
-        Pane coursPane = findCoursPane(dayIndex);
-        if (coursPane == null) return;
-
-        VBox block    = buildCoursBlock(c);
-        double top    = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
-        double height = minutesFromStart(c.heureFin())   / 60.0 * PX_PAR_HEURE - top - 2;
-
-        block.setLayoutY(top);
-        block.setPrefHeight(height);
-        block.setLayoutX(4);
-        block.setPrefWidth(Math.max(0, coursPane.getWidth() - 8));
-        coursPane.widthProperty().addListener((obs, o, w) ->
-                block.setPrefWidth(w.doubleValue() - 8));
-        coursPane.getChildren().add(block);
+    /** Retire un cours de la liste interne et re-rend le jour. */
+    private void retirerCours(CoursDisplay c) {
+        int dayIndex = c.jour().getDayOfWeek().getValue() - 1;
+        if (dayIndex < 0 || dayIndex > 4) return;
+        List<CoursDisplay> liste = coursParJour.get(dayIndex);
+        if (liste != null) liste.removeIf(x -> x == c);
+        renderDay(dayIndex);
     }
 
     // -------------------------------------------------------------------------
@@ -789,11 +770,7 @@ public class TimetableController {
                     fin
             );
 
-            // Remplacer le bloc existant par le bloc mis à jour
-            Pane parent = (Pane) block.getParent();
-            if (parent != null) {
-                parent.getChildren().remove(block);
-            }
+            retirerCours(c);
             afficherCoursTemporaire(modifie);
         });
     }
