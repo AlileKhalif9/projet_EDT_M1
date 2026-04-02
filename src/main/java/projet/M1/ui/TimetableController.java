@@ -321,25 +321,89 @@ public class TimetableController {
             if (p != null) p.getChildren().clear();
         }
 
+        // Grouper par jour
+        java.util.Map<Integer, List<CoursDisplay>> parJour = new java.util.HashMap<>();
         for (CoursDisplay c : cours) {
             int dayIndex = c.jour().getDayOfWeek().getValue() - 1;
             if (dayIndex < 0 || dayIndex > 4) continue;
+            parJour.computeIfAbsent(dayIndex, k -> new java.util.ArrayList<>()).add(c);
+        }
 
+        for (java.util.Map.Entry<Integer, List<CoursDisplay>> entry : parJour.entrySet()) {
+            int dayIndex = entry.getKey();
+            List<CoursDisplay> jourCours = entry.getValue();
             Pane coursPane = findCoursPane(dayIndex);
             if (coursPane == null) continue;
 
-            VBox block    = buildCoursBlock(c);
-            double top    = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
-            double height = minutesFromStart(c.heureFin())   / 60.0 * PX_PAR_HEURE - top - 2;
+            // Calculer colonne et nb de colonnes pour chaque cours
+            int n = jourCours.size();
+            int[] colonne   = new int[n];
+            int[] nbColonnes = new int[n];
 
-            block.setLayoutY(top);
-            block.setPrefHeight(height);
-            block.setLayoutX(4);
-            block.setPrefWidth(Math.max(0, coursPane.getWidth() - 8));
-            coursPane.widthProperty().addListener((obs, o, w) ->
-                    block.setPrefWidth(w.doubleValue() - 8));
-            coursPane.getChildren().add(block);
+            for (int i = 0; i < n; i++) {
+                // Trouver tous les cours qui se chevauchent avec i
+                List<Integer> overlaps = new java.util.ArrayList<>();
+                for (int j = 0; j < n; j++) {
+                    if (seChevauche(jourCours.get(i), jourCours.get(j))) overlaps.add(j);
+                }
+                // Assigner la première colonne libre parmi les chevauchements
+                java.util.Set<Integer> colonnesUtilisees = new java.util.HashSet<>();
+                for (int j : overlaps) {
+                    if (j < i) colonnesUtilisees.add(colonne[j]);
+                }
+                int col = 0;
+                while (colonnesUtilisees.contains(col)) col++;
+                colonne[i] = col;
+                // Nb de colonnes = taille du groupe de chevauchement
+                for (int j : overlaps) nbColonnes[j] = Math.max(nbColonnes[j], col + 1);
+            }
+            // Second pass pour s'assurer que nbColonnes est cohérent
+            for (int i = 0; i < n; i++) {
+                List<Integer> overlaps = new java.util.ArrayList<>();
+                for (int j = 0; j < n; j++) {
+                    if (seChevauche(jourCours.get(i), jourCours.get(j))) overlaps.add(j);
+                }
+                int maxCol = overlaps.stream().mapToInt(j -> colonne[j]).max().orElse(0) + 1;
+                for (int j : overlaps) nbColonnes[j] = Math.max(nbColonnes[j], maxCol);
+            }
+
+            for (int i = 0; i < n; i++) {
+                CoursDisplay c = jourCours.get(i);
+                final int col  = colonne[i];
+                final int total = nbColonnes[i];
+
+                VBox block  = buildCoursBlock(c);
+                double top    = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
+                double height = minutesFromStart(c.heureFin())   / 60.0 * PX_PAR_HEURE - top - 2;
+
+                block.setLayoutY(top);
+                block.setPrefHeight(height);
+
+                // Répartir la largeur selon le nombre de colonnes
+                coursPane.widthProperty().addListener((obs, o, w) -> {
+                    double paneW   = w.doubleValue() - 4;
+                    double colW    = paneW / total;
+                    block.setLayoutX(4 + col * colW);
+                    block.setPrefWidth(colW - 4);
+                });
+                double paneW = coursPane.getWidth() - 4;
+                if (paneW > 0) {
+                    double colW = paneW / total;
+                    block.setLayoutX(4 + col * colW);
+                    block.setPrefWidth(colW - 4);
+                } else {
+                    block.setLayoutX(4);
+                    block.setPrefWidth(100);
+                }
+
+                coursPane.getChildren().add(block);
+            }
         }
+    }
+
+    /** Retourne true si deux cours se chevauchent dans le temps. */
+    private boolean seChevauche(CoursDisplay a, CoursDisplay b) {
+        return a.heureDebut().isBefore(b.heureFin()) && b.heureDebut().isBefore(a.heureFin());
     }
 
     private List<CoursDisplay> toDisplayList(List<CoursEntity> entities) {
