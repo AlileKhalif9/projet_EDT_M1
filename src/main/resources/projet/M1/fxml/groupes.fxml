@@ -23,8 +23,7 @@
             <TextField fx:id="fieldRecherche"
                        promptText="Rechercher un groupe…"
                        prefWidth="320"
-                       styleClass="login-field"
-                       onKeyReleased="#onRecherche"/>
+                       styleClass="login-field"/>
         </HBox>
 
         <!-- Liste des groupes (remplie dynamiquement) -->
