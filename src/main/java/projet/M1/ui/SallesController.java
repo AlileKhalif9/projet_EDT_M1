@@ -17,7 +17,7 @@ public class SallesController {
 
     @FXML private TextField fieldRecherche;
     @FXML private ProgressIndicator loadingIndicator;
-    @FXML private FlowPane sallesContainer;
+    @FXML private VBox sallesContainer;
 
     private final SalleController salleController = new SalleController(new SalleDAO());
 
@@ -72,36 +72,39 @@ public class SallesController {
         }
     }
 
-    private VBox buildSalleCard(SalleEntity s) {
-        VBox card = new VBox(12);
+    private HBox buildSalleCard(SalleEntity s) {
+        HBox card = new HBox(16);
         card.getStyleClass().add("salle-card-us18");
-        card.setPrefWidth(260);
+        card.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        card.setMaxWidth(Double.MAX_VALUE);
         card.setOnMouseClicked(e -> ouvrirDetail(s));
 
-        // Nom
         Label nomLabel = new Label(s.getNom() != null ? s.getNom() : "—");
         nomLabel.getStyleClass().add("groupe-card-nom");
+        HBox.setHgrow(nomLabel, Priority.ALWAYS);
+        nomLabel.setMaxWidth(Double.MAX_VALUE);
 
-        // Capacité
         Label capLabel = new Label("👥 " + s.getPlace() + " places");
         capLabel.getStyleClass().add("groupe-card-stats");
 
-        // Équipements (3 max)
         List<String> materiel = s.getListe_materiel() != null ? s.getListe_materiel() : List.of();
         HBox equipBox = new HBox(6);
-        int shown = Math.min(materiel.size(), 3);
+        int shown = Math.min(materiel.size(), 2);
         for (int i = 0; i < shown; i++) {
             Label tag = new Label(materiel.get(i));
             tag.getStyleClass().add("salle-tag");
             equipBox.getChildren().add(tag);
         }
-        if (materiel.size() > 3) {
-            Label more = new Label("+" + (materiel.size() - 3));
+        if (materiel.size() > 2) {
+            Label more = new Label("+" + (materiel.size() - 2));
             more.getStyleClass().add("salle-tag-more");
             equipBox.getChildren().add(more);
         }
 
-        card.getChildren().addAll(nomLabel, capLabel, equipBox);
+        Label chevron = new Label("›");
+        chevron.getStyleClass().add("quick-action-chevron");
+
+        card.getChildren().addAll(nomLabel, capLabel, equipBox, chevron);
         return card;
     }
 

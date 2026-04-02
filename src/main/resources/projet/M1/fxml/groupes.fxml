@@ -29,9 +29,8 @@
         <!-- Liste des groupes (remplie dynamiquement) -->
         <ProgressIndicator fx:id="loadingIndicator" prefWidth="32" prefHeight="32"
                            visible="true" managed="true"/>
-        <FlowPane fx:id="groupesContainer"
-                  hgap="16" vgap="16"
-                  visible="false" managed="false"/>
+        <VBox fx:id="groupesContainer" spacing="12"
+              visible="false" managed="false"/>
 
     </VBox>
 
