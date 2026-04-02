@@ -635,19 +635,37 @@ public class TimetableController {
         });
     }
 
-    private void afficherCoursTemporaire(CoursDisplay c) {
+    /**
+     * Tente d'afficher un cours temporaire.
+     * Retourne false et affiche une erreur si le créneau est déjà occupé.
+     */
+    private boolean afficherCoursTemporaire(CoursDisplay c) {
         LocalDate vendredi = currentMonday.plusDays(4);
         if (c.jour().isBefore(currentMonday) || c.jour().isAfter(vendredi)) {
             Alert info = new Alert(Alert.AlertType.INFORMATION,
                     "Le cours a été créé mais la date est hors de la semaine affichée.\nNaviguez vers la bonne semaine pour le voir.");
             info.setHeaderText(null);
             info.showAndWait();
-            return;
+            return false;
         }
         int dayIndex = c.jour().getDayOfWeek().getValue() - 1;
-        if (dayIndex < 0 || dayIndex > 4) return;
+        if (dayIndex < 0 || dayIndex > 4) return false;
+
+        List<CoursDisplay> existing = coursParJour.getOrDefault(dayIndex, List.of());
+        for (CoursDisplay other : existing) {
+            if (seChevauche(c, other)) {
+                Alert err = new Alert(Alert.AlertType.WARNING);
+                err.setTitle("Créneau occupé");
+                err.setHeaderText("Conflit d'horaire");
+                err.setContentText("Le créneau " + c.heureDebut() + " – " + c.heureFin()
+                        + " est déjà occupé par « " + other.nom() + " ».\nChoisissez un autre horaire.");
+                err.showAndWait();
+                return false;
+            }
+        }
         coursParJour.computeIfAbsent(dayIndex, k -> new java.util.ArrayList<>()).add(c);
         renderDay(dayIndex);
+        return true;
     }
 
     /** Retire un cours de la liste interne et re-rend le jour. */
@@ -771,7 +789,10 @@ public class TimetableController {
             );
 
             retirerCours(c);
-            afficherCoursTemporaire(modifie);
+            if (!afficherCoursTemporaire(modifie)) {
+                // Créneau refusé — on remet l'ancien cours
+                afficherCoursTemporaire(c);
+            }
         });
     }
 
