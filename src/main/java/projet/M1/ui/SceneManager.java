@@ -2,8 +2,10 @@ package projet.M1.ui;
 
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -47,6 +49,12 @@ public class SceneManager {
             primaryStage.setTitle("Hyperplanning");
             primaryStage.setMinWidth(1100);
             primaryStage.setMinHeight(700);
+            primaryStage.setResizable(true);
+            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+            primaryStage.setX(bounds.getMinX());
+            primaryStage.setY(bounds.getMinY());
+            primaryStage.setWidth(bounds.getWidth());
+            primaryStage.setHeight(bounds.getHeight());
             primaryStage.show();
 
             mainLayoutController.navigateTo(View.DASHBOARD);
