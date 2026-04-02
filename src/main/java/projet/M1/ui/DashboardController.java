@@ -3,6 +3,7 @@ package projet.M1.ui;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.VBox;
 import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.entity.CoursEntity;
@@ -24,12 +25,13 @@ import java.util.Objects;
  */
 public class DashboardController {
 
-    @FXML private Label labelWelcome;
-    @FXML private Label labelDate;
-    @FXML private Label labelCoursAujourdHui;
-    @FXML private Label labelCoursSemaine;
-    @FXML private VBox  cardDemandeModif;
-    @FXML private VBox  todayCoursContainer;
+    @FXML private Label             labelWelcome;
+    @FXML private Label             labelDate;
+    @FXML private Label             labelCoursAujourdHui;
+    @FXML private Label             labelCoursSemaine;
+    @FXML private VBox              cardDemandeModif;
+    @FXML private VBox              todayCoursContainer;
+    @FXML private ProgressIndicator loadingIndicator;
 
     // Passe par le back-end, pas directement par le DAO
     private final EmploiDuTempsController edtController =
@@ -46,7 +48,7 @@ public class DashboardController {
 
         applyRoleVisibility(u);
 
-        // Requête BDD en arrière-plan pour ne pas bloquer l'UI
+        // Requête BDD en arrière-plan
         LocalDate lundi = LocalDate.now().with(DayOfWeek.MONDAY);
         Thread t = new Thread(() -> {
             List<CoursEntity> semaine;
@@ -59,6 +61,11 @@ public class DashboardController {
             Platform.runLater(() -> {
                 loadStats(result);
                 loadTodayCours(result);
+                // Cache le spinner, affiche le contenu
+                loadingIndicator.setVisible(false);
+                loadingIndicator.setManaged(false);
+                todayCoursContainer.setVisible(true);
+                todayCoursContainer.setManaged(true);
             });
         });
         t.setDaemon(true);
