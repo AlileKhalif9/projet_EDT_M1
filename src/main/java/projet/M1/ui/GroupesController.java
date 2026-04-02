@@ -29,6 +29,14 @@ public class GroupesController {
 
     @FXML
     public void initialize() {
+        fieldRecherche.textProperty().addListener((obs, oldVal, newVal) -> {
+            String query = newVal.trim().toLowerCase();
+            List<GroupeEtudiantEntity> filtres = tousLesGroupes.stream()
+                    .filter(g -> g.getNom().toLowerCase().contains(query))
+                    .toList();
+            afficherGroupes(filtres);
+        });
+
         Thread t = new Thread(() -> {
             List<GroupeEtudiantEntity> groupes;
             try {
@@ -48,15 +56,6 @@ public class GroupesController {
         });
         t.setDaemon(true);
         t.start();
-    }
-
-    @FXML
-    private void onRecherche() {
-        String query = fieldRecherche.getText().trim().toLowerCase();
-        List<GroupeEtudiantEntity> filtres = tousLesGroupes.stream()
-                .filter(g -> g.getNom().toLowerCase().contains(query))
-                .toList();
-        afficherGroupes(filtres);
     }
 
     private void afficherGroupes(List<GroupeEtudiantEntity> groupes) {
