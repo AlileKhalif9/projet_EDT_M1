@@ -1,5 +1,6 @@
 package projet.M1.ui;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
@@ -43,19 +44,25 @@ public class DashboardController {
         labelDate.setText(LocalDate.now().format(
                 DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.FRENCH)));
 
-        List<CoursEntity> semaine = loadCoursSemaine(u);
-        loadStats(semaine);
-        loadTodayCours(semaine);
         applyRoleVisibility(u);
-    }
 
-    private List<CoursEntity> loadCoursSemaine(UserEntity u) {
+        // Requête BDD en arrière-plan pour ne pas bloquer l'UI
         LocalDate lundi = LocalDate.now().with(DayOfWeek.MONDAY);
-        try {
-            return edtController.getEmploiDuTempsConnecte(u, lundi);
-        } catch (Exception e) {
-            return List.of();
-        }
+        Thread t = new Thread(() -> {
+            List<CoursEntity> semaine;
+            try {
+                semaine = edtController.getEmploiDuTempsConnecte(u, lundi);
+            } catch (Exception e) {
+                semaine = List.of();
+            }
+            final List<CoursEntity> result = semaine;
+            Platform.runLater(() -> {
+                loadStats(result);
+                loadTodayCours(result);
+            });
+        });
+        t.setDaemon(true);
+        t.start();
     }
 
     private void loadStats(List<CoursEntity> semaine) {

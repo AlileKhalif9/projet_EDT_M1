@@ -1,5 +1,6 @@
 package projet.M1.ui;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -256,18 +257,43 @@ public class TimetableController {
 
     private void loadCours() {
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
+        TabMode tab   = currentTab;
+        LocalDate monday = currentMonday;
+        String sel    = comboSelector.getValue();
 
-        List<CoursDisplay> cours;
-        try {
-            cours = switch (currentTab) {
-                case MON_EDT -> loadMonEDT(u);
-                case TIERS   -> loadTiersEDT();
-                case SALLE   -> loadSalleEDT();
-            };
-        } catch (Exception e) {
-            cours = List.of();
+        // Vider la grille immédiatement
+        for (int i = 0; i < 5; i++) {
+            Pane p = findCoursPane(i);
+            if (p != null) p.getChildren().clear();
         }
 
+        // Requête BDD en arrière-plan pour ne pas bloquer l'UI
+        Thread t = new Thread(() -> {
+            List<CoursDisplay> cours;
+            try {
+                cours = switch (tab) {
+                    case MON_EDT -> toDisplayList(edtController.getEmploiDuTempsConnecte(u, monday));
+                    case TIERS   -> sel == null ? List.of()
+                            : toDisplayList(edtController.getEmploiDuTempsGroupe(sel, monday));
+                    case SALLE   -> sel == null ? List.of()
+                            : allSalles.stream()
+                                .filter(s -> s.getNom().equals(sel))
+                                .findFirst()
+                                .map(salle -> toDisplayList(edtController.getEmploiDuTempsSalle(salle, monday)))
+                                .orElse(List.of());
+                };
+            } catch (Exception e) {
+                cours = List.of();
+            }
+
+            final List<CoursDisplay> result = cours;
+            Platform.runLater(() -> displayCours(result));
+        });
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void displayCours(List<CoursDisplay> cours) {
         for (int i = 0; i < 5; i++) {
             Pane p = findCoursPane(i);
             if (p != null) p.getChildren().clear();
@@ -280,7 +306,7 @@ public class TimetableController {
             Pane coursPane = findCoursPane(dayIndex);
             if (coursPane == null) continue;
 
-            VBox block  = buildCoursBlock(c);
+            VBox block    = buildCoursBlock(c);
             double top    = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
             double height = minutesFromStart(c.heureFin())   / 60.0 * PX_PAR_HEURE - top - 2;
 
