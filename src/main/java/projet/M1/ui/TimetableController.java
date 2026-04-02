@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.layout.StackPane;
 import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.dao.GroupeDAO;
 import projet.M1.BDD.dao.SalleDAO;
@@ -62,6 +63,7 @@ public class TimetableController {
     @FXML private ComboBox<String> comboSelector;
     @FXML private ScrollPane     scrollPane;
     @FXML private HBox           gridContainer;
+    @FXML private StackPane      loadingPane;
 
     // -------------------------------------------------------------------------
     //  Back-end controllers (jamais de DAO directement dans le front)
@@ -267,6 +269,10 @@ public class TimetableController {
             if (p != null) p.getChildren().clear();
         }
 
+        // Affiche le spinner
+        loadingPane.setVisible(true);
+        loadingPane.setManaged(true);
+
         // Requête BDD en arrière-plan pour ne pas bloquer l'UI
         Thread t = new Thread(() -> {
             List<CoursDisplay> cours;
@@ -287,7 +293,11 @@ public class TimetableController {
             }
 
             final List<CoursDisplay> result = cours;
-            Platform.runLater(() -> displayCours(result));
+            Platform.runLater(() -> {
+                loadingPane.setVisible(false);
+                loadingPane.setManaged(false);
+                displayCours(result);
+            });
         });
         t.setDaemon(true);
         t.start();
@@ -318,27 +328,6 @@ public class TimetableController {
                     block.setPrefWidth(w.doubleValue() - 8));
             coursPane.getChildren().add(block);
         }
-    }
-
-    private List<CoursDisplay> loadMonEDT(UserEntity u) {
-        if (u == null) return List.of();
-        return toDisplayList(edtController.getEmploiDuTempsConnecte(u, currentMonday));
-    }
-
-    private List<CoursDisplay> loadTiersEDT() {
-        String sel = comboSelector.getValue();
-        if (sel == null) return List.of();
-        return toDisplayList(edtController.getEmploiDuTempsGroupe(sel, currentMonday));
-    }
-
-    private List<CoursDisplay> loadSalleEDT() {
-        String sel = comboSelector.getValue();
-        if (sel == null) return List.of();
-        return allSalles.stream()
-                .filter(s -> s.getNom().equals(sel))
-                .findFirst()
-                .map(salle -> toDisplayList(edtController.getEmploiDuTempsSalle(salle, currentMonday)))
-                .orElse(List.of());
     }
 
     private List<CoursDisplay> toDisplayList(List<CoursEntity> entities) {
