@@ -126,12 +126,12 @@ public class CoursDAO {
             LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
             return em.createQuery(
                             "SELECT c FROM CoursEntity c " +
-                            "WHERE c.salle = :salle AND c.horaire.jour BETWEEN :lundi AND :vendredi " +
-                            "ORDER BY c.horaire.jour, c.horaire.heureDebut",
+                                    "WHERE c.salle.id = :salleId AND c.horaire.jour BETWEEN :lundi AND :vendredi " +
+                                    "ORDER BY c.horaire.jour, c.horaire.heureDebut",
                             CoursEntity.class)
-                    .setParameter("salle",   em.merge(salle))
-                    .setParameter("lundi",   lundi)
-                    .setParameter("vendredi",vendredi)
+                    .setParameter("salleId",  salle.getId())
+                    .setParameter("lundi",    lundi)
+                    .setParameter("vendredi", vendredi)
                     .getResultList();
         } finally {
             em.close();
