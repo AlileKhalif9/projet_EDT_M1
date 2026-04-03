@@ -16,6 +16,12 @@ import java.io.IOException;
 
 /**
  * Controller du layout principal (sidebar + zone centrale).
+ *
+ * Visibilité des boutons selon le rôle :
+ *   ETUDIANT              → Dashboard, EDT
+ *   PROFESSEUR            → Dashboard, EDT, Demande modification, Salles
+ *   INVITE                → Dashboard, EDT, Salles
+ *   GESTIONNAIRE_PLANNING → Dashboard, EDT, Demande modification, Groupes, Salles
  */
 public class MainLayoutController {
 
@@ -55,18 +61,21 @@ public class MainLayoutController {
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
         if (u == null) return;
 
+        // Demande de modification : professeur et gestionnaire uniquement (pas l'invité)
         boolean canRequest = u.getRole() == Role.PROFESSEUR
                 || u.getRole() == Role.GESTIONNAIRE_PLANNING;
         btnRoomSelection.setVisible(canRequest);
         btnRoomSelection.setManaged(canRequest);
 
+        // Groupes : gestionnaire uniquement
         boolean isGestionnaire = u.getRole() == Role.GESTIONNAIRE_PLANNING;
         btnGroupes.setVisible(isGestionnaire);
         btnGroupes.setManaged(isGestionnaire);
 
-        // UC9 — Salles visibles pour le gestionnaire ET le professeur
+        // Salles : gestionnaire, professeur et invité
         boolean canSeeSalles = u.getRole() == Role.GESTIONNAIRE_PLANNING
-                || u.getRole() == Role.PROFESSEUR;
+                || u.getRole() == Role.PROFESSEUR
+                || u.getRole() == Role.INVITE;
         btnSalles.setVisible(canSeeSalles);
         btnSalles.setManaged(canSeeSalles);
     }

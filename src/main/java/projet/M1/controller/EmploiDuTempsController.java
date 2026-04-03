@@ -13,6 +13,12 @@ import java.util.List;
  * Back-end : emploi du temps.
  * Le front (TimetableController, DashboardController) appelle ces méthodes —
  * jamais CoursDAO directement.
+ *
+ * Rôles et leur EDT :
+ *   ETUDIANT              → ses cours uniquement (findByEtudiantAndSemaine)
+ *   PROFESSEUR            → ses cours uniquement (findByProfesseurAndSemaine)
+ *   INVITE                → ses cours uniquement, comme un professeur (findByProfesseurAndSemaine)
+ *   GESTIONNAIRE_PLANNING → tous les cours de la semaine (findAllBySemaine)
  */
 public class EmploiDuTempsController {
 
@@ -22,27 +28,18 @@ public class EmploiDuTempsController {
         this.coursDAO = coursDAO;
     }
 
-    /**
-     * Cours de l'utilisateur connecté pour la semaine, selon son rôle.
-     * - ETUDIANT      → ses cours uniquement
-     * - PROFESSEUR    → ses cours uniquement
-     * - GESTIONNAIRE  → tous les cours de la semaine (pour voir ce qu'il ajoute/modifie)
-     */
     public List<CoursEntity> getEmploiDuTempsConnecte(UserEntity u, LocalDate semaine) {
         return switch (u.getRole()) {
             case ETUDIANT              -> coursDAO.findByEtudiantAndSemaine(u, semaine);
-            case PROFESSEUR            -> coursDAO.findByProfesseurAndSemaine(u, semaine);
+            case PROFESSEUR, INVITE    -> coursDAO.findByProfesseurAndSemaine(u, semaine);
             case GESTIONNAIRE_PLANNING -> coursDAO.findAllBySemaine(semaine);
-            default                    -> List.of();
         };
     }
 
-    /** Cours d'un groupe pour la semaine (onglet EDT classe). */
     public List<CoursEntity> getEmploiDuTempsGroupe(String nomGroupe, LocalDate semaine) {
         return coursDAO.findByGroupeAndSemaine(nomGroupe, semaine);
     }
 
-    /** Cours d'une salle pour la semaine (onglet Salle). */
     public List<CoursEntity> getEmploiDuTempsSalle(SalleEntity salle, LocalDate semaine) {
         return coursDAO.findBySalleAndSemaine(salle, semaine);
     }

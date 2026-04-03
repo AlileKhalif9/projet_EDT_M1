@@ -470,7 +470,7 @@ public class TimetableController {
 
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
 
-        // US13 — Professeur sur son EDT : toggle annulation/réactivation
+        // US13 — Professeur sur son EDT : toggle annulation/réactivation (pas l'invité)
         if (u != null && u.getRole() == Role.PROFESSEUR && currentTab == TabMode.MON_EDT) {
             block.setStyle(block.getStyle() + "-fx-cursor: hand;");
             if (type == TypeCours.ANNULE) {
