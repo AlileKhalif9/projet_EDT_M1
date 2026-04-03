@@ -43,6 +43,18 @@
                         onAction="#onRoomSelection"
                         visible="false" managed="false"/>
 
+                <Button fx:id="btnGroupes"
+                        text="👥  Groupes"
+                        styleClass="sidebar-nav-item"
+                        onAction="#onGroupes"
+                        visible="false" managed="false"/>
+
+                <Button fx:id="btnSalles"
+                        text="🏫  Salles"
+                        styleClass="sidebar-nav-item"
+                        onAction="#onSalles"
+                        visible="false" managed="false"/>
+
             </VBox>
 
             <!-- Section utilisateur (en bas) -->

@@ -4,12 +4,16 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.DatePicker;
 import javafx.scene.layout.*;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.dao.GroupeDAO;
 import projet.M1.BDD.dao.SalleDAO;
 import projet.M1.BDD.entity.CoursEntity;
+import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.SalleEntity;
 import projet.M1.BDD.entity.UserEntity;
 import projet.M1.controller.EmploiDuTempsController;
@@ -56,6 +60,7 @@ public class TimetableController {
     @FXML private Button         btnPrecedent;
     @FXML private Button         btnSuivant;
     @FXML private Button         btnAujourdHui;
+    @FXML private Button         btnAjouterCours;
     @FXML private ToggleButton   tabMonEDT;
     @FXML private ToggleButton   tabTiers;
     @FXML private ToggleButton   tabSalle;
@@ -80,6 +85,9 @@ public class TimetableController {
 
     private LocalDate currentMonday;
 
+    /** Cours actuellement affichés dans la grille, indexés par jour (0=lundi…4=vendredi). */
+    private final java.util.Map<Integer, List<CoursDisplay>> coursParJour = new java.util.HashMap<>();
+
     private enum TabMode { MON_EDT, TIERS, SALLE }
     private TabMode currentTab = TabMode.MON_EDT;
 
@@ -96,6 +104,13 @@ public class TimetableController {
         updateWeekLabel();
         buildGrid();
         loadCours();
+
+        // US14 — bouton visible uniquement pour le gestionnaire
+        UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
+        if (u != null && u.getRole() == Role.GESTIONNAIRE_PLANNING) {
+            btnAjouterCours.setVisible(true);
+            btnAjouterCours.setManaged(true);
+        }
     }
 
     private void setupTabs() {
@@ -304,30 +319,79 @@ public class TimetableController {
     }
 
     private void displayCours(List<CoursDisplay> cours) {
+        coursParJour.clear();
         for (int i = 0; i < 5; i++) {
             Pane p = findCoursPane(i);
             if (p != null) p.getChildren().clear();
         }
-
         for (CoursDisplay c : cours) {
             int dayIndex = c.jour().getDayOfWeek().getValue() - 1;
             if (dayIndex < 0 || dayIndex > 4) continue;
+            coursParJour.computeIfAbsent(dayIndex, k -> new java.util.ArrayList<>()).add(c);
+        }
+        for (int i = 0; i < 5; i++) renderDay(i);
+    }
 
-            Pane coursPane = findCoursPane(dayIndex);
-            if (coursPane == null) continue;
+    /** Re-rend tous les blocs d'un jour en appliquant l'anti-chevauchement. */
+    private void renderDay(int dayIndex) {
+        Pane coursPane = findCoursPane(dayIndex);
+        if (coursPane == null) return;
+        coursPane.getChildren().clear();
+
+        List<CoursDisplay> jourCours = coursParJour.getOrDefault(dayIndex, List.of());
+        int n = jourCours.size();
+        if (n == 0) return;
+
+        int[] colonne    = new int[n];
+        int[] nbColonnes = new int[n];
+
+        for (int i = 0; i < n; i++) {
+            java.util.Set<Integer> colonnesUtilisees = new java.util.HashSet<>();
+            for (int j = 0; j < i; j++) {
+                if (seChevauche(jourCours.get(i), jourCours.get(j)))
+                    colonnesUtilisees.add(colonne[j]);
+            }
+            int col = 0;
+            while (colonnesUtilisees.contains(col)) col++;
+            colonne[i] = col;
+            for (int j = 0; j < n; j++) {
+                if (seChevauche(jourCours.get(i), jourCours.get(j)))
+                    nbColonnes[j] = Math.max(nbColonnes[j], col + 1);
+            }
+        }
+
+        for (int i = 0; i < n; i++) {
+            CoursDisplay c  = jourCours.get(i);
+            final int col   = colonne[i];
+            final int total = Math.max(nbColonnes[i], 1);
 
             VBox block    = buildCoursBlock(c);
             double top    = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
             double height = minutesFromStart(c.heureFin())   / 60.0 * PX_PAR_HEURE - top - 2;
-
             block.setLayoutY(top);
             block.setPrefHeight(height);
-            block.setLayoutX(4);
-            block.setPrefWidth(Math.max(0, coursPane.getWidth() - 8));
-            coursPane.widthProperty().addListener((obs, o, w) ->
-                    block.setPrefWidth(w.doubleValue() - 8));
+
+            coursPane.widthProperty().addListener((obs, o, w) -> {
+                double colW = (w.doubleValue() - 4) / total;
+                block.setLayoutX(4 + col * colW);
+                block.setPrefWidth(colW - 4);
+            });
+            double paneW = coursPane.getWidth() - 4;
+            if (paneW > 0) {
+                double colW = paneW / total;
+                block.setLayoutX(4 + col * colW);
+                block.setPrefWidth(colW - 4);
+            } else {
+                block.setLayoutX(4);
+                block.setPrefWidth(100);
+            }
             coursPane.getChildren().add(block);
         }
+    }
+
+    /** Retourne true si deux cours se chevauchent dans le temps. */
+    private boolean seChevauche(CoursDisplay a, CoursDisplay b) {
+        return a.heureDebut().isBefore(b.heureFin()) && b.heureDebut().isBefore(a.heureFin());
     }
 
     private List<CoursDisplay> toDisplayList(List<CoursEntity> entities) {
@@ -387,7 +451,66 @@ public class TimetableController {
         tip.setMaxWidth(280);
         Tooltip.install(block, tip);
 
+        UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
+        // US13 — Annuler un cours : clic uniquement pour le prof sur son EDT
+        if (u != null && u.getRole() == Role.PROFESSEUR && currentTab == TabMode.MON_EDT
+                && type != TypeCours.ANNULE) {
+            block.setStyle(block.getStyle() + "-fx-cursor: hand;");
+            block.setOnMouseClicked(e -> onClickCours(c, block));
+        }
+        // US15 — Modifier un cours : clic uniquement pour le gestionnaire
+        if (u != null && u.getRole() == Role.GESTIONNAIRE_PLANNING && type != TypeCours.ANNULE) {
+            block.setStyle(block.getStyle() + "-fx-cursor: hand;");
+            block.setOnMouseClicked(e -> onModifierCours(c, block));
+        }
+
         return block;
+    }
+
+    private void onClickCours(CoursDisplay c, VBox block) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Annuler le cours");
+        confirm.setHeaderText("Annuler « " + c.nom() + " » ?");
+        confirm.setContentText(
+                "Date : " + c.jour().format(DateTimeFormatter.ofPattern("EEEE d MMM", Locale.FRENCH))
+                + "\nHoraire : " + c.heureDebut() + " – " + c.heureFin()
+                + (c.nomSalle() != null ? "\nSalle : " + c.nomSalle() : "")
+                + "\n\nCette action est irréversible.");
+
+        ButtonType btnAnnuler = new ButtonType("Annuler le cours", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnGarder  = new ButtonType("Garder", ButtonBar.ButtonData.CANCEL_CLOSE);
+        confirm.getButtonTypes().setAll(btnAnnuler, btnGarder);
+
+        confirm.showAndWait().ifPresent(result -> {
+            if (result == btnAnnuler) {
+                appliquerAnnulation(block);
+            }
+        });
+    }
+
+    private void appliquerAnnulation(VBox block) {
+        // Visuel : fond gris barré
+        block.setStyle(
+                "-fx-background-color: #F3F4F6;"
+              + "-fx-border-color: #9CA3AF;"
+              + "-fx-border-width: 0 0 0 4;"
+              + "-fx-background-radius: 6; -fx-border-radius: 6;"
+              + "-fx-padding: 6 8 6 10; -fx-opacity: 0.6;");
+        block.setOnMouseClicked(null);
+        block.setStyle(block.getStyle() + "-fx-cursor: default;");
+
+        // Met à jour le badge type en "ANNULÉ"
+        block.getChildren().stream()
+                .filter(n -> n instanceof Label && ((Label) n).getStyle().contains("-fx-background-color"))
+                .findFirst()
+                .ifPresent(n -> {
+                    Label badge = (Label) n;
+                    badge.setText("ANNULÉ");
+                    badge.setStyle(
+                            "-fx-background-color: #6B7280;"
+                          + "-fx-text-fill: white; -fx-font-size: 10; -fx-font-weight: bold;"
+                          + "-fx-background-radius: 4; -fx-padding: 1 5 1 5;");
+                });
     }
 
     private String buildTooltip(CoursDisplay c) {
@@ -396,6 +519,281 @@ public class TimetableController {
              + "Horaire : " + c.heureDebut() + " – " + c.heureFin() + "\n"
              + (c.nomSalle()  != null ? "Salle : "  + c.nomSalle()  + "\n" : "")
              + (c.nomGroupe() != null ? "Groupe : " + c.nomGroupe()         : "");
+    }
+
+    // -------------------------------------------------------------------------
+    //  US14 — Ajouter un cours (gestionnaire, front uniquement)
+    // -------------------------------------------------------------------------
+
+    @FXML
+    private void onAjouterCours() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Ajouter un cours");
+        dialog.setHeaderText("Nouveau cours dans l'EDT");
+
+        ButtonType btnValider = new ButtonType("Ajouter", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnValider, ButtonType.CANCEL);
+
+        // Formulaire
+        GridPane form = new GridPane();
+        form.setHgap(12);
+        form.setVgap(10);
+        form.setPadding(new javafx.geometry.Insets(16));
+
+        TextField fieldNom = new TextField();
+        fieldNom.setPromptText("Ex : Algorithmique");
+
+        ComboBox<String> comboType = new ComboBox<>();
+        comboType.getItems().addAll("CM", "TD", "TP", "EXAMEN");
+        comboType.setPromptText("Type");
+        comboType.setPrefWidth(120);
+
+        DatePicker datePicker = new DatePicker(currentMonday);
+
+        ComboBox<String> comboDebut = new ComboBox<>();
+        ComboBox<String> comboFin   = new ComboBox<>();
+        List<String> slots = java.util.stream.Stream
+                .iterate(LocalTime.of(7, 30), t -> !t.isAfter(LocalTime.of(19, 0)), t -> t.plusMinutes(30))
+                .map(t -> t.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")))
+                .toList();
+        comboDebut.getItems().addAll(slots);
+        comboFin.getItems().addAll(slots);
+        comboDebut.setPromptText("Heure début");
+        comboFin.setPromptText("Heure fin");
+        comboDebut.setPrefWidth(120);
+        comboFin.setPrefWidth(120);
+
+        ComboBox<String> comboSalle = new ComboBox<>();
+        try {
+            salleController.getAllSalles().forEach(s -> comboSalle.getItems().add(s.getNom()));
+        } catch (Exception ignored) {}
+        comboSalle.setPromptText("Salle (optionnel)");
+
+        ComboBox<String> comboGroupe = new ComboBox<>();
+        try {
+            groupeController.getAllGroupes().forEach(g -> comboGroupe.getItems().add(g.getNom()));
+        } catch (Exception ignored) {}
+        comboGroupe.setPromptText("Groupe (optionnel)");
+
+        form.add(new Label("Nom du cours *"), 0, 0);   form.add(fieldNom,   1, 0);
+        form.add(new Label("Type *"),          0, 1);   form.add(comboType,  1, 1);
+        form.add(new Label("Date *"),          0, 2);   form.add(datePicker, 1, 2);
+        form.add(new Label("Heure début *"),   0, 3);   form.add(comboDebut, 1, 3);
+        form.add(new Label("Heure fin *"),     0, 4);   form.add(comboFin,   1, 4);
+        form.add(new Label("Salle"),           0, 5);   form.add(comboSalle, 1, 5);
+        form.add(new Label("Groupe"),          0, 6);   form.add(comboGroupe,1, 6);
+
+        // Styles labels
+        form.getChildren().stream()
+                .filter(n -> n instanceof Label)
+                .forEach(n -> ((Label) n).getStyleClass().add("form-label"));
+
+        dialog.getDialogPane().setContent(form);
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource("/projet/M1/css/main.css").toExternalForm());
+
+        dialog.showAndWait().ifPresent(result -> {
+            if (result != btnValider) return;
+
+            String nom    = fieldNom.getText().trim();
+            String type   = comboType.getValue();
+            LocalDate date = datePicker.getValue();
+            String debutStr = comboDebut.getValue();
+            String finStr   = comboFin.getValue();
+
+            if (nom.isEmpty() || type == null || date == null || debutStr == null || finStr == null) {
+                Alert err = new Alert(Alert.AlertType.WARNING, "Veuillez remplir tous les champs obligatoires (*).");
+                err.setHeaderText(null);
+                err.showAndWait();
+                return;
+            }
+
+            LocalTime debut = LocalTime.parse(debutStr, java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+            LocalTime fin   = LocalTime.parse(finStr,   java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+
+            if (!fin.isAfter(debut)) {
+                Alert err = new Alert(Alert.AlertType.WARNING, "L'heure de fin doit être après l'heure de début.");
+                err.setHeaderText(null);
+                err.showAndWait();
+                return;
+            }
+
+            // Construire un CoursDisplay temporaire (visuel uniquement, pas de BDD)
+            CoursDisplay nouveau = new CoursDisplay(
+                    null,
+                    nom,
+                    TypeCours.fromString(type),
+                    comboGroupe.getValue(),
+                    null,
+                    comboSalle.getValue(),
+                    date,
+                    debut,
+                    fin
+            );
+
+            afficherCoursTemporaire(nouveau);
+        });
+    }
+
+    /**
+     * Tente d'afficher un cours temporaire.
+     * Retourne false et affiche une erreur si le créneau est déjà occupé.
+     */
+    private boolean afficherCoursTemporaire(CoursDisplay c) {
+        LocalDate vendredi = currentMonday.plusDays(4);
+        if (c.jour().isBefore(currentMonday) || c.jour().isAfter(vendredi)) {
+            Alert info = new Alert(Alert.AlertType.INFORMATION,
+                    "Le cours a été créé mais la date est hors de la semaine affichée.\nNaviguez vers la bonne semaine pour le voir.");
+            info.setHeaderText(null);
+            info.showAndWait();
+            return false;
+        }
+        int dayIndex = c.jour().getDayOfWeek().getValue() - 1;
+        if (dayIndex < 0 || dayIndex > 4) return false;
+
+        List<CoursDisplay> existing = coursParJour.getOrDefault(dayIndex, List.of());
+        for (CoursDisplay other : existing) {
+            if (seChevauche(c, other)) {
+                Alert err = new Alert(Alert.AlertType.WARNING);
+                err.setTitle("Créneau occupé");
+                err.setHeaderText("Conflit d'horaire");
+                err.setContentText("Le créneau " + c.heureDebut() + " – " + c.heureFin()
+                        + " est déjà occupé par « " + other.nom() + " ».\nChoisissez un autre horaire.");
+                err.showAndWait();
+                return false;
+            }
+        }
+        coursParJour.computeIfAbsent(dayIndex, k -> new java.util.ArrayList<>()).add(c);
+        renderDay(dayIndex);
+        return true;
+    }
+
+    /** Retire un cours de la liste interne et re-rend le jour. */
+    private void retirerCours(CoursDisplay c) {
+        int dayIndex = c.jour().getDayOfWeek().getValue() - 1;
+        if (dayIndex < 0 || dayIndex > 4) return;
+        List<CoursDisplay> liste = coursParJour.get(dayIndex);
+        if (liste != null) liste.removeIf(x -> x == c);
+        renderDay(dayIndex);
+    }
+
+    // -------------------------------------------------------------------------
+    //  US15 — Modifier un cours (gestionnaire, front uniquement)
+    // -------------------------------------------------------------------------
+
+    private void onModifierCours(CoursDisplay c, VBox block) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Modifier le cours");
+        dialog.setHeaderText("Modifier « " + c.nom() + " »");
+
+        ButtonType btnValider = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnValider, ButtonType.CANCEL);
+
+        GridPane form = new GridPane();
+        form.setHgap(12);
+        form.setVgap(10);
+        form.setPadding(new javafx.geometry.Insets(16));
+
+        // Pré-rempli avec les valeurs actuelles
+        TextField fieldNom = new TextField(c.nom() != null ? c.nom() : "");
+        fieldNom.setPromptText("Nom du cours");
+
+        ComboBox<String> comboType = new ComboBox<>();
+        comboType.getItems().addAll("CM", "TD", "TP", "EXAMEN");
+        comboType.setValue(c.typeCours() != null ? c.typeCours().name() : "CM");
+        comboType.setPrefWidth(120);
+
+        DatePicker datePicker = new DatePicker(c.jour());
+
+        List<String> slots = java.util.stream.Stream
+                .iterate(LocalTime.of(7, 30), t -> !t.isAfter(LocalTime.of(19, 0)), t -> t.plusMinutes(30))
+                .map(t -> t.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")))
+                .toList();
+
+        ComboBox<String> comboDebut = new ComboBox<>();
+        comboDebut.getItems().addAll(slots);
+        comboDebut.setValue(c.heureDebut().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")));
+        comboDebut.setPrefWidth(120);
+
+        ComboBox<String> comboFin = new ComboBox<>();
+        comboFin.getItems().addAll(slots);
+        comboFin.setValue(c.heureFin().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")));
+        comboFin.setPrefWidth(120);
+
+        ComboBox<String> comboSalle = new ComboBox<>();
+        try {
+            salleController.getAllSalles().forEach(s -> comboSalle.getItems().add(s.getNom()));
+        } catch (Exception ignored) {}
+        comboSalle.setValue(c.nomSalle());
+        comboSalle.setPromptText("Salle (optionnel)");
+
+        ComboBox<String> comboGroupe = new ComboBox<>();
+        try {
+            groupeController.getAllGroupes().forEach(g -> comboGroupe.getItems().add(g.getNom()));
+        } catch (Exception ignored) {}
+        comboGroupe.setValue(c.nomGroupe());
+        comboGroupe.setPromptText("Groupe (optionnel)");
+
+        form.add(new Label("Nom du cours *"), 0, 0); form.add(fieldNom,    1, 0);
+        form.add(new Label("Type *"),          0, 1); form.add(comboType,   1, 1);
+        form.add(new Label("Date *"),          0, 2); form.add(datePicker,  1, 2);
+        form.add(new Label("Heure début *"),   0, 3); form.add(comboDebut,  1, 3);
+        form.add(new Label("Heure fin *"),     0, 4); form.add(comboFin,    1, 4);
+        form.add(new Label("Salle"),           0, 5); form.add(comboSalle,  1, 5);
+        form.add(new Label("Groupe"),          0, 6); form.add(comboGroupe, 1, 6);
+
+        form.getChildren().stream()
+                .filter(n -> n instanceof Label)
+                .forEach(n -> ((Label) n).getStyleClass().add("form-label"));
+
+        dialog.getDialogPane().setContent(form);
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource("/projet/M1/css/main.css").toExternalForm());
+
+        dialog.showAndWait().ifPresent(result -> {
+            if (result != btnValider) return;
+
+            String nom     = fieldNom.getText().trim();
+            String type    = comboType.getValue();
+            LocalDate date = datePicker.getValue();
+            String debutStr = comboDebut.getValue();
+            String finStr   = comboFin.getValue();
+
+            if (nom.isEmpty() || type == null || date == null || debutStr == null || finStr == null) {
+                Alert err = new Alert(Alert.AlertType.WARNING, "Veuillez remplir tous les champs obligatoires (*).");
+                err.setHeaderText(null);
+                err.showAndWait();
+                return;
+            }
+
+            LocalTime debut = LocalTime.parse(debutStr, java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+            LocalTime fin   = LocalTime.parse(finStr,   java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+
+            if (!fin.isAfter(debut)) {
+                Alert err = new Alert(Alert.AlertType.WARNING, "L'heure de fin doit être après l'heure de début.");
+                err.setHeaderText(null);
+                err.showAndWait();
+                return;
+            }
+
+            CoursDisplay modifie = new CoursDisplay(
+                    c.id(),
+                    nom,
+                    TypeCours.fromString(type),
+                    comboGroupe.getValue(),
+                    c.nomProf(),
+                    comboSalle.getValue(),
+                    date,
+                    debut,
+                    fin
+            );
+
+            retirerCours(c);
+            if (!afficherCoursTemporaire(modifie)) {
+                // Créneau refusé — on remet l'ancien cours
+                afficherCoursTemporaire(c);
+            }
+        });
     }
 
     // -------------------------------------------------------------------------

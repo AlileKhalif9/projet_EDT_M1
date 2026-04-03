@@ -827,6 +827,199 @@
 }
 
 /* =============================================================================
+   US16 — GROUPES
+============================================================================= */
+
+.groupe-card {
+    -fx-background-color: white;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 8, 0, 0, 2);
+    -fx-padding: 16;
+    -fx-cursor: hand;
+}
+.groupe-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.14), 14, 0, 0, 4);
+    -fx-border-color: #93C5FD;
+}
+.groupe-card-nom {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E3A5F;
+}
+.groupe-card-stats {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6B7280;
+}
+.avatar-small {
+    -fx-background-color: #1E3A5F;
+    -fx-text-fill: white;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 50;
+    -fx-min-width: 32;
+    -fx-min-height: 32;
+    -fx-max-width: 32;
+    -fx-max-height: 32;
+    -fx-alignment: CENTER;
+    -fx-border-color: white;
+    -fx-border-width: 2;
+    -fx-border-radius: 50;
+}
+.avatar-more {
+    -fx-background-color: #E5E7EB;
+    -fx-text-fill: #6B7280;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 50;
+    -fx-min-width: 32;
+    -fx-min-height: 32;
+    -fx-max-width: 32;
+    -fx-max-height: 32;
+    -fx-alignment: CENTER;
+    -fx-border-color: white;
+    -fx-border-width: 2;
+    -fx-border-radius: 50;
+}
+.groupe-tableau {
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+.groupe-tableau-header {
+    -fx-background-color: #F3F4F6;
+    -fx-padding: 10 16 10 16;
+    -fx-background-radius: 8 8 0 0;
+}
+.groupe-col-header {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6B7280;
+}
+.groupe-tableau-row {
+    -fx-background-color: white;
+    -fx-padding: 10 16 10 16;
+}
+.groupe-tableau-row-alt {
+    -fx-background-color: #F9FAFB;
+    -fx-padding: 10 16 10 16;
+}
+.groupe-etudiant-nom {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F2937;
+}
+.groupe-etudiant-login {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6B7280;
+}
+.text-muted {
+    -fx-font-size: 13px;
+    -fx-text-fill: #9CA3AF;
+    -fx-font-style: italic;
+}
+
+/* =============================================================================
+   US18 — SALLES
+============================================================================= */
+
+.salle-card-us18 {
+    -fx-background-color: white;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 8, 0, 0, 2);
+    -fx-padding: 16;
+    -fx-cursor: hand;
+}
+.salle-card-us18:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.14), 14, 0, 0, 4);
+    -fx-border-color: #93C5FD;
+}
+.salle-tag {
+    -fx-background-color: #EFF6FF;
+    -fx-text-fill: #1D4ED8;
+    -fx-font-size: 11px;
+    -fx-background-radius: 4;
+    -fx-padding: 2 7 2 7;
+}
+.salle-tag-more {
+    -fx-background-color: #F3F4F6;
+    -fx-text-fill: #6B7280;
+    -fx-font-size: 11px;
+    -fx-background-radius: 4;
+    -fx-padding: 2 7 2 7;
+}
+
+/* ---- US11 — Bouton EDT croisés ------------------------------------------ */
+.btn-edt-croise {
+    -fx-background-color: #EFF6FF;
+    -fx-border-color: #93C5FD;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-text-fill: #1D4ED8;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-padding: 6 14 6 14;
+}
+.btn-edt-croise:hover {
+    -fx-background-color: #DBEAFE;
+    -fx-border-color: #60A5FA;
+}
+
+/* ---- US11 — Panneau EDT croisés ----------------------------------------- */
+.edt-croise-panel {
+    -fx-background-color: #F8FAFC;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 16;
+}
+.edt-croise-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+}
+.edt-croise-col {
+    -fx-background-color: white;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 12;
+}
+.edt-croise-col-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E3A5F;
+}
+.edt-croise-empty {
+    -fx-font-size: 12px;
+    -fx-text-fill: #9CA3AF;
+    -fx-font-style: italic;
+}
+.edt-croise-row {
+    -fx-background-color: #F1F5F9;
+    -fx-background-radius: 6;
+    -fx-padding: 6 10 6 10;
+}
+.edt-croise-cours-nom {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F2937;
+}
+.edt-croise-cours-info {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6B7280;
+}
+
+/* =============================================================================
    US6 — LISTE DES SALLES
 ============================================================================= */
 
