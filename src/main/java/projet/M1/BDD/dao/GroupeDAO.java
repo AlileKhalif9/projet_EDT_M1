@@ -8,16 +8,22 @@ import java.util.List;
 
 /**
  * DAO pour les groupes d'étudiants.
- * Utilisé pour remplir la ComboBox "EDT classe" dans TimetableController.
+ * Utilise JOIN FETCH pour charger les étudiants de chaque groupe en une seule requête,
+ * évitant les LazyInitializationException après fermeture de l'EntityManager.
  */
 public class GroupeDAO {
 
-    /** Tous les groupes triés par nom. */
+    /**
+     * Tous les groupes avec leurs étudiants chargés, triés par nom.
+     * Le DISTINCT évite les doublons causés par le JOIN FETCH.
+     */
     public List<GroupeEtudiantEntity> findAll() {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             return em.createQuery(
-                            "SELECT g FROM GroupeEtudiantEntity g ORDER BY g.nom",
+                            "SELECT DISTINCT g FROM GroupeEtudiantEntity g " +
+                                    "LEFT JOIN FETCH g.list_etudiant " +
+                                    "ORDER BY g.nom",
                             GroupeEtudiantEntity.class)
                     .getResultList();
         } finally {

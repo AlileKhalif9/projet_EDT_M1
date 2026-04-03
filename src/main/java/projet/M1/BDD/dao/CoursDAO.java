@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import projet.M1.BDD.JPAUtil;
 import projet.M1.BDD.entity.CoursEntity;
+import projet.M1.BDD.entity.GroupeEtudiantEntity;
 import projet.M1.BDD.entity.HoraireEntity;
 import projet.M1.BDD.entity.SalleEntity;
 import projet.M1.BDD.entity.UserEntity;
@@ -14,17 +15,9 @@ import java.util.List;
 
 /**
  * DAO pour les cours.
- * Remplace MockDataService pour la récupération des emplois du temps.
- *
- * Toutes les méthodes créent leur propre EntityManager et le ferment après usage
- * pour éviter les fuites de connexions (pattern "EntityManager par opération").
  */
 public class CoursDAO {
 
-    /**
-     * Cours d'un étudiant pour la semaine contenant la date donnée.
-     * Utilisé dans TimetableController (onglet "Mon EDT") quand l'utilisateur est ETUDIANT.
-     */
     public List<CoursEntity> findByEtudiantAndSemaine(UserEntity etudiant, LocalDate semaine) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
@@ -32,8 +25,8 @@ public class CoursDAO {
             LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
             return em.createQuery(
                             "SELECT c FROM CoursEntity c JOIN c.list_etudiant e " +
-                            "WHERE e = :etudiant AND c.horaire.jour BETWEEN :lundi AND :vendredi " +
-                            "ORDER BY c.horaire.jour, c.horaire.heureDebut",
+                                    "WHERE e = :etudiant AND c.horaire.jour BETWEEN :lundi AND :vendredi " +
+                                    "ORDER BY c.horaire.jour, c.horaire.heureDebut",
                             CoursEntity.class)
                     .setParameter("etudiant", em.merge(etudiant))
                     .setParameter("lundi",    lundi)
@@ -44,10 +37,6 @@ public class CoursDAO {
         }
     }
 
-    /**
-     * Cours d'un professeur pour la semaine contenant la date donnée.
-     * Utilisé dans TimetableController (onglet "Mon EDT") quand l'utilisateur est PROFESSEUR.
-     */
     public List<CoursEntity> findByProfesseurAndSemaine(UserEntity professeur, LocalDate semaine) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
@@ -55,8 +44,8 @@ public class CoursDAO {
             LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
             return em.createQuery(
                             "SELECT c FROM CoursEntity c JOIN c.list_professeur p " +
-                            "WHERE p = :professeur AND c.horaire.jour BETWEEN :lundi AND :vendredi " +
-                            "ORDER BY c.horaire.jour, c.horaire.heureDebut",
+                                    "WHERE p = :professeur AND c.horaire.jour BETWEEN :lundi AND :vendredi " +
+                                    "ORDER BY c.horaire.jour, c.horaire.heureDebut",
                             CoursEntity.class)
                     .setParameter("professeur", em.merge(professeur))
                     .setParameter("lundi",      lundi)
@@ -67,10 +56,6 @@ public class CoursDAO {
         }
     }
 
-    /**
-     * EDT d'un groupe d'étudiants pour une semaine.
-     * Utilisé dans TimetableController (onglet "EDT classe" / "Tiers").
-     */
     public List<CoursEntity> findByGroupeAndSemaine(String nomGroupe, LocalDate semaine) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
@@ -78,22 +63,60 @@ public class CoursDAO {
             LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
             return em.createQuery(
                             "SELECT c FROM CoursEntity c JOIN c.list_etudiant e " +
-                            "WHERE e.groupe.nom = :groupe AND c.horaire.jour BETWEEN :lundi AND :vendredi " +
-                            "ORDER BY c.horaire.jour, c.horaire.heureDebut",
+                                    "WHERE e.groupe.nom = :groupe AND c.horaire.jour BETWEEN :lundi AND :vendredi " +
+                                    "ORDER BY c.horaire.jour, c.horaire.heureDebut",
                             CoursEntity.class)
-                    .setParameter("groupe",  nomGroupe)
-                    .setParameter("lundi",   lundi)
-                    .setParameter("vendredi",vendredi)
+                    .setParameter("groupe",   nomGroupe)
+                    .setParameter("lundi",    lundi)
+                    .setParameter("vendredi", vendredi)
                     .getResultList().stream().distinct().toList();
         } finally {
             em.close();
         }
     }
 
+    public List<CoursEntity> findBySalleAndSemaine(SalleEntity salle, LocalDate semaine) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            LocalDate lundi    = semaine.with(DayOfWeek.MONDAY);
+            LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
+            return em.createQuery(
+                            "SELECT c FROM CoursEntity c " +
+                                    "WHERE c.salle.id = :salleId AND c.horaire.jour BETWEEN :lundi AND :vendredi " +
+                                    "ORDER BY c.horaire.jour, c.horaire.heureDebut",
+                            CoursEntity.class)
+                    .setParameter("salleId",  salle.getId())
+                    .setParameter("lundi",    lundi)
+                    .setParameter("vendredi", vendredi)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
     /**
-     * Applique une demande approuvée : déplace le cours vers le nouvel horaire
-     * et/ou la nouvelle salle. Appelé par ModificationRequestController.onApprouver().
+     * Tous les cours d'une semaine, tous groupes et profs confondus.
+     * Utilisé par le gestionnaire dans l'onglet "Mon EDT" pour voir l'intégralité
+     * des cours de la semaine, y compris ceux qu'il vient d'ajouter.
      */
+    public List<CoursEntity> findAllBySemaine(LocalDate semaine) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            LocalDate lundi    = semaine.with(DayOfWeek.MONDAY);
+            LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
+            return em.createQuery(
+                            "SELECT c FROM CoursEntity c " +
+                                    "WHERE c.horaire.jour BETWEEN :lundi AND :vendredi " +
+                                    "ORDER BY c.horaire.jour, c.horaire.heureDebut",
+                            CoursEntity.class)
+                    .setParameter("lundi",    lundi)
+                    .setParameter("vendredi", vendredi)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
     public void applyModification(Long coursId, HoraireEntity newHoraire, SalleEntity newSalle) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -116,23 +139,154 @@ public class CoursDAO {
     }
 
     /**
-     * EDT d'une salle pour une semaine.
-     * Utilisé dans TimetableController (onglet "Salle").
+     * US13 — Annule un cours : passe son typeCours à "ANNULE" en BDD.
+     * Retourne le typeCours précédent pour permettre une réactivation ultérieure.
      */
-    public List<CoursEntity> findBySalleAndSemaine(SalleEntity salle, LocalDate semaine) {
+    public String annulerCours(Long coursId) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        EntityTransaction tx = em.getTransaction();
         try {
-            LocalDate lundi    = semaine.with(DayOfWeek.MONDAY);
-            LocalDate vendredi = semaine.with(DayOfWeek.FRIDAY);
-            return em.createQuery(
-                            "SELECT c FROM CoursEntity c " +
-                                    "WHERE c.salle.id = :salleId AND c.horaire.jour BETWEEN :lundi AND :vendredi " +
-                                    "ORDER BY c.horaire.jour, c.horaire.heureDebut",
-                            CoursEntity.class)
-                    .setParameter("salleId",  salle.getId())
-                    .setParameter("lundi",    lundi)
-                    .setParameter("vendredi", vendredi)
-                    .getResultList();
+            tx.begin();
+            CoursEntity cours = em.find(CoursEntity.class, coursId);
+            String ancienType = (cours != null && cours.getTypeCours() != null)
+                    ? cours.getTypeCours() : "CM";
+            if (cours != null) cours.setTypeCours("ANNULE");
+            tx.commit();
+            return ancienType;
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Réactive un cours annulé : restaure son typeCours d'origine en BDD.
+     */
+    public void reactiverCours(Long coursId, String typeCours) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            CoursEntity cours = em.find(CoursEntity.class, coursId);
+            if (cours != null) cours.setTypeCours(typeCours);
+            tx.commit();
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * US14 — Crée un nouveau cours en BDD.
+     */
+    public CoursEntity ajouterCours(String nom, String typeCours,
+                                    java.time.LocalDate jour,
+                                    java.time.LocalTime heureDebut,
+                                    java.time.LocalTime heureFin,
+                                    String nomSalle,
+                                    String nomGroupe) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+
+            HoraireEntity horaire = new HoraireEntity();
+            horaire.setJour(jour);
+            horaire.setHeureDebut(heureDebut);
+            horaire.setHeureFin(heureFin);
+            em.persist(horaire);
+
+            SalleEntity salle = null;
+            if (nomSalle != null && !nomSalle.isBlank()) {
+                List<SalleEntity> salles = em.createQuery(
+                                "SELECT s FROM SalleEntity s WHERE s.nom = :nom", SalleEntity.class)
+                        .setParameter("nom", nomSalle).getResultList();
+                if (!salles.isEmpty()) salle = salles.get(0);
+            }
+
+            List<UserEntity> etudiants = List.of();
+            if (nomGroupe != null && !nomGroupe.isBlank()) {
+                List<GroupeEtudiantEntity> groupes = em.createQuery(
+                                "SELECT g FROM GroupeEtudiantEntity g WHERE g.nom = :nom",
+                                GroupeEtudiantEntity.class)
+                        .setParameter("nom", nomGroupe).getResultList();
+                if (!groupes.isEmpty() && groupes.get(0).getList_etudiant() != null)
+                    etudiants = groupes.get(0).getList_etudiant();
+            }
+
+            CoursEntity cours = new CoursEntity();
+            cours.setNom(nom);
+            cours.setTypeCours(typeCours);
+            cours.setHoraire(horaire);
+            cours.setSalle(salle);
+            cours.setList_etudiant(etudiants);
+            cours.setList_professeur(List.of());
+            em.persist(cours);
+
+            tx.commit();
+            return cours;
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * US15 — Modifie un cours existant en BDD.
+     */
+    public CoursEntity modifierCours(Long coursId, String nom, String typeCours,
+                                     java.time.LocalDate jour,
+                                     java.time.LocalTime heureDebut,
+                                     java.time.LocalTime heureFin,
+                                     String nomSalle,
+                                     String nomGroupe) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+
+            CoursEntity cours = em.find(CoursEntity.class, coursId);
+            if (cours == null) throw new IllegalArgumentException("Cours introuvable : " + coursId);
+
+            cours.setNom(nom);
+            cours.setTypeCours(typeCours);
+
+            HoraireEntity horaire = cours.getHoraire();
+            if (horaire == null) { horaire = new HoraireEntity(); em.persist(horaire); }
+            horaire.setJour(jour);
+            horaire.setHeureDebut(heureDebut);
+            horaire.setHeureFin(heureFin);
+            cours.setHoraire(horaire);
+
+            if (nomSalle != null && !nomSalle.isBlank()) {
+                List<SalleEntity> salles = em.createQuery(
+                                "SELECT s FROM SalleEntity s WHERE s.nom = :nom", SalleEntity.class)
+                        .setParameter("nom", nomSalle).getResultList();
+                cours.setSalle(salles.isEmpty() ? null : salles.get(0));
+            } else {
+                cours.setSalle(null);
+            }
+
+            if (nomGroupe != null && !nomGroupe.isBlank()) {
+                List<GroupeEtudiantEntity> groupes = em.createQuery(
+                                "SELECT g FROM GroupeEtudiantEntity g WHERE g.nom = :nom",
+                                GroupeEtudiantEntity.class)
+                        .setParameter("nom", nomGroupe).getResultList();
+                if (!groupes.isEmpty() && groupes.get(0).getList_etudiant() != null)
+                    cours.setList_etudiant(groupes.get(0).getList_etudiant());
+            }
+
+            tx.commit();
+            return cours;
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            throw e;
         } finally {
             em.close();
         }

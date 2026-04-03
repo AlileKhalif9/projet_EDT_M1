@@ -9,16 +9,23 @@ import java.util.Optional;
 
 /**
  * DAO pour les salles.
- * Utilisé pour remplir les ComboBox de salles dans ModificationRequestController
- * et TimetableController (onglet "Salle").
+ * Utilise JOIN FETCH pour charger liste_materiel en une seule requête,
+ * évitant les LazyInitializationException après fermeture de l'EntityManager.
  */
 public class SalleDAO {
 
-    /** Toutes les salles triées par nom. */
+    /**
+     * Toutes les salles avec leur matériel chargé, triées par nom.
+     * Le DISTINCT évite les doublons causés par le JOIN FETCH.
+     */
     public List<SalleEntity> findAll() {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
-            return em.createQuery("SELECT s FROM SalleEntity s ORDER BY s.nom", SalleEntity.class)
+            return em.createQuery(
+                            "SELECT DISTINCT s FROM SalleEntity s " +
+                                    "LEFT JOIN FETCH s.liste_materiel " +
+                                    "ORDER BY s.nom",
+                            SalleEntity.class)
                     .getResultList();
         } finally {
             em.close();
@@ -30,7 +37,10 @@ public class SalleDAO {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
             List<SalleEntity> r = em.createQuery(
-                            "SELECT s FROM SalleEntity s WHERE s.nom = :nom", SalleEntity.class)
+                            "SELECT s FROM SalleEntity s " +
+                                    "LEFT JOIN FETCH s.liste_materiel " +
+                                    "WHERE s.nom = :nom",
+                            SalleEntity.class)
                     .setParameter("nom", nom)
                     .getResultList();
             return r.isEmpty() ? Optional.empty() : Optional.of(r.get(0));
