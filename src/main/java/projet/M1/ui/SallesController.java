@@ -77,6 +77,7 @@ public class SallesController {
         card.getStyleClass().add("salle-card-us18");
         card.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         card.setMaxWidth(Double.MAX_VALUE);
+        card.setMinHeight(48);
         card.setOnMouseClicked(e -> ouvrirDetail(s));
 
         Label nomLabel = new Label(s.getNom() != null ? s.getNom() : "—");
@@ -87,24 +88,11 @@ public class SallesController {
         Label capLabel = new Label("👥 " + s.getPlace() + " places");
         capLabel.getStyleClass().add("groupe-card-stats");
 
-        List<String> materiel = s.getListe_materiel() != null ? s.getListe_materiel() : List.of();
-        HBox equipBox = new HBox(6);
-        int shown = Math.min(materiel.size(), 2);
-        for (int i = 0; i < shown; i++) {
-            Label tag = new Label(materiel.get(i));
-            tag.getStyleClass().add("salle-tag");
-            equipBox.getChildren().add(tag);
-        }
-        if (materiel.size() > 2) {
-            Label more = new Label("+" + (materiel.size() - 2));
-            more.getStyleClass().add("salle-tag-more");
-            equipBox.getChildren().add(more);
-        }
-
+        // Équipements — on évite getListe_materiel() (lazy) dans le card
         Label chevron = new Label("›");
         chevron.getStyleClass().add("quick-action-chevron");
 
-        card.getChildren().addAll(nomLabel, capLabel, equipBox, chevron);
+        card.getChildren().addAll(nomLabel, capLabel, chevron);
         return card;
     }
 
@@ -129,8 +117,11 @@ public class SallesController {
         capBox.setMaxWidth(Double.MAX_VALUE);
         stats.getChildren().add(capBox);
 
-        // Équipements
-        List<String> materiel = s.getListe_materiel() != null ? s.getListe_materiel() : List.of();
+        // Équipements — accès protégé contre lazy loading
+        List<String> materiel = List.of();
+        try { materiel = s.getListe_materiel() != null ? s.getListe_materiel() : List.of(); }
+        catch (Exception ignored) {}
+
         Label equipTitre = new Label("Équipements");
         equipTitre.getStyleClass().add("form-step-title");
 

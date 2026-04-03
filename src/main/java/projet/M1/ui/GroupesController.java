@@ -81,6 +81,7 @@ public class GroupesController {
         card.getStyleClass().add("groupe-card");
         card.setAlignment(Pos.CENTER_LEFT);
         card.setMaxWidth(Double.MAX_VALUE);
+        card.setMinHeight(48);
         card.setOnMouseClicked(e -> ouvrirDetail(g));
 
         Label nomLabel = new Label(g.getNom() != null ? g.getNom() : "—");
@@ -88,7 +89,9 @@ public class GroupesController {
         HBox.setHgrow(nomLabel, Priority.ALWAYS);
         nomLabel.setMaxWidth(Double.MAX_VALUE);
 
-        int nbEtudiants = g.getList_etudiant() != null ? g.getList_etudiant().size() : 0;
+        int nbEtudiants = 0;
+        try { nbEtudiants = g.getList_etudiant() != null ? g.getList_etudiant().size() : 0; }
+        catch (Exception ignored) {}
         Label nbLabel = new Label("👥 " + nbEtudiants + " étudiant" + (nbEtudiants > 1 ? "s" : ""));
         nbLabel.getStyleClass().add("groupe-card-stats");
 
@@ -125,8 +128,11 @@ public class GroupesController {
         Label titre = new Label(g.getNom());
         titre.getStyleClass().add("page-title");
 
-        List<UserEntity> etudiants = g.getList_etudiant() != null ? g.getList_etudiant() : List.of();
-        Label sousTitre = new Label(etudiants.size() + " étudiant" + (etudiants.size() > 1 ? "s" : ""));
+        List<UserEntity> etudiants = List.of();
+        try { etudiants = g.getList_etudiant() != null ? g.getList_etudiant() : List.of(); }
+        catch (Exception ignored) {}
+        final List<UserEntity> etudiantsFinal = etudiants;
+        Label sousTitre = new Label(etudiantsFinal.size() + " étudiant" + (etudiantsFinal.size() > 1 ? "s" : ""));
         sousTitre.getStyleClass().add("page-subtitle");
 
         // Tableau étudiants
@@ -141,14 +147,14 @@ public class GroupesController {
         headerRow.getChildren().addAll(hNom, hLogin);
         tableau.getChildren().add(headerRow);
 
-        if (etudiants.isEmpty()) {
+        if (etudiantsFinal.isEmpty()) {
             Label vide = new Label("Aucun étudiant dans ce groupe.");
             vide.getStyleClass().add("text-muted");
             vide.setStyle("-fx-padding: 12 16 12 16;");
             tableau.getChildren().add(vide);
         } else {
-            for (int i = 0; i < etudiants.size(); i++) {
-                UserEntity u = etudiants.get(i);
+            for (int i = 0; i < etudiantsFinal.size(); i++) {
+                UserEntity u = etudiantsFinal.get(i);
                 HBox row = new HBox();
                 row.getStyleClass().add(i % 2 == 0 ? "groupe-tableau-row" : "groupe-tableau-row-alt");
 
