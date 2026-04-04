@@ -17,10 +17,11 @@ import java.io.IOException;
 /**
  * Controller du layout principal (sidebar + zone centrale).
  *
- * La sidebar reste fixe, seule la zone centrale change à chaque navigation.
- *
- * Intégration BDD : utilise UserEntity (via SessionManager) au lieu du modèle Utilisateur.
- * Les vérifications de rôle passent par UserEntity.getRole() (enum Role).
+ * Visibilité des boutons selon le rôle :
+ *   ETUDIANT              → Dashboard, EDT
+ *   PROFESSEUR            → Dashboard, EDT, Demande modification, Salles
+ *   INVITE                → Dashboard, EDT, Salles
+ *   GESTIONNAIRE_PLANNING → Dashboard, EDT, Demande modification, Groupes, Salles
  */
 public class MainLayoutController {
 
@@ -59,19 +60,26 @@ public class MainLayoutController {
     private void applyRoleVisibility() {
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
         if (u == null) return;
+
+        // Demande de modification : professeur et gestionnaire uniquement (pas l'invité)
         boolean canRequest = u.getRole() == Role.PROFESSEUR
-                          || u.getRole() == Role.GESTIONNAIRE_PLANNING;
+                || u.getRole() == Role.GESTIONNAIRE_PLANNING;
         btnRoomSelection.setVisible(canRequest);
         btnRoomSelection.setManaged(canRequest);
 
+        // Groupes : gestionnaire uniquement
         boolean isGestionnaire = u.getRole() == Role.GESTIONNAIRE_PLANNING;
         btnGroupes.setVisible(isGestionnaire);
         btnGroupes.setManaged(isGestionnaire);
-        btnSalles.setVisible(isGestionnaire);
-        btnSalles.setManaged(isGestionnaire);
+
+        // Salles : gestionnaire, professeur et invité
+        boolean canSeeSalles = u.getRole() == Role.GESTIONNAIRE_PLANNING
+                || u.getRole() == Role.PROFESSEUR
+                || u.getRole() == Role.INVITE;
+        btnSalles.setVisible(canSeeSalles);
+        btnSalles.setManaged(canSeeSalles);
     }
 
-    /** Charge une page dans la zone centrale (remplace le contenu précédent). */
     public void navigateTo(View view) {
         if (view == activeView) return;
         try {
@@ -113,12 +121,11 @@ public class MainLayoutController {
         }
     }
 
-    // "Jean Martin" → "JM"
     private String initiales(UserEntity u) {
         String p = u.getPrenom() != null ? u.getPrenom() : "";
         String n = u.getNom()    != null ? u.getNom()    : "";
         return (p.isEmpty() ? "" : String.valueOf(p.charAt(0)).toUpperCase())
-             + (n.isEmpty() ? "" : String.valueOf(n.charAt(0)).toUpperCase());
+                + (n.isEmpty() ? "" : String.valueOf(n.charAt(0)).toUpperCase());
     }
 
     private String roleLabel(UserEntity u) {

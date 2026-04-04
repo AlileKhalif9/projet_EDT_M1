@@ -29,8 +29,8 @@ import java.util.stream.Stream;
  * Controller de la page "Demandes de modification".
  * Passe par les back-end controllers — jamais les DAOs directement.
  *
- * Mode PROFESSEUR  → formulaire 3 étapes (US6–9)
- * Mode GESTIONNAIRE → liste PENDING avec Approuver / Rejeter (US10–12)
+ * Mode PROFESSEUR   → formulaire 3 étapes (US6–9)
+ * Mode GESTIONNAIRE → liste PENDING avec Approuver / Rejeter / EDT croisés (US10–12)
  */
 public class ModificationRequestController {
 
@@ -64,13 +64,13 @@ public class ModificationRequestController {
     @FXML private VBox   formPanel;
     @FXML private VBox   requestsContainer;
 
-    @FXML private DatePicker       datePickerActuel;
-    @FXML private ComboBox<String> comboHeureActuelle;
-    @FXML private Label            labelCoursFound;
+    @FXML private DatePicker        datePickerActuel;
+    @FXML private ComboBox<String>  comboHeureActuelle;
+    @FXML private Label             labelCoursFound;
 
-    @FXML private DatePicker           datePickerNouveau;
-    @FXML private ComboBox<String>     comboHeureDebutNouveau;
-    @FXML private ComboBox<String>     comboHeureFinNouveau;
+    @FXML private DatePicker            datePickerNouveau;
+    @FXML private ComboBox<String>      comboHeureDebutNouveau;
+    @FXML private ComboBox<String>      comboHeureFinNouveau;
     @FXML private ComboBox<SalleEntity> comboSalle;
 
     @FXML private ComboBox<String> comboRaison;
@@ -139,7 +139,7 @@ public class ModificationRequestController {
 
     private void searchCours(UserEntity u) {
         coursSelectionne = null;
-        LocalDate date    = datePickerActuel.getValue();
+        LocalDate date     = datePickerActuel.getValue();
         String    heureStr = comboHeureActuelle.getValue();
 
         if (date == null || heureStr == null) {
@@ -168,10 +168,10 @@ public class ModificationRequestController {
                         ? coursSelectionne.getSalle().getNom() : "salle inconnue";
                 setCoursLabel("ok",
                         "Cours trouvé : " + coursSelectionne.getNom()
-                        + " (" + coursSelectionne.getTypeCours() + ")"
-                        + "  ·  " + h.getHeureDebut().format(FMT_TIME)
-                        + " – " + h.getHeureFin().format(FMT_TIME)
-                        + "  ·  " + salle);
+                                + " (" + coursSelectionne.getTypeCours() + ")"
+                                + "  ·  " + h.getHeureDebut().format(FMT_TIME)
+                                + " – " + h.getHeureFin().format(FMT_TIME)
+                                + "  ·  " + salle);
             } else {
                 setCoursLabel("error", "Aucun cours à ce créneau — vérifiez la date et l'heure");
             }
@@ -208,7 +208,7 @@ public class ModificationRequestController {
         if (coursSelectionne == null) {
             showAlert(Alert.AlertType.WARNING, "Cours non identifié",
                     "Aucun cours n'a été trouvé au créneau sélectionné.\n"
-                    + "Corrigez la date ou l'heure à l'étape 1.");
+                            + "Corrigez la date ou l'heure à l'étape 1.");
             return;
         }
 
@@ -374,7 +374,6 @@ public class ModificationRequestController {
             Button btnEdtCroise = new Button("Voir les EDT croisés");
             btnEdtCroise.getStyleClass().add("btn-edt-croise");
 
-            // Panneau EDT croisés — masqué par défaut, affiché au clic
             VBox edtCroisePanel = new VBox(12);
             edtCroisePanel.getStyleClass().add("edt-croise-panel");
             edtCroisePanel.setVisible(false);
@@ -502,7 +501,7 @@ public class ModificationRequestController {
                         ? edtController.getEmploiDuTempsGroupe(nomGroupe, semaine)
                         : List.of();
 
-                String nomProf   = prof != null ? prof.getPrenom() + " " + prof.getNom() : "Professeur inconnu";
+                String nomProf    = prof != null ? prof.getPrenom() + " " + prof.getNom() : "Professeur inconnu";
                 String nomGroupe2 = nomGroupe != null ? nomGroupe : "Groupe inconnu";
 
                 Platform.runLater(() -> {
@@ -511,10 +510,8 @@ public class ModificationRequestController {
                     btn.setDisable(false);
                 });
             } catch (Exception ex) {
-                ex.printStackTrace();
-                String msg = ex.getClass().getSimpleName() + ": " + ex.getMessage();
                 Platform.runLater(() -> {
-                    Label err = new Label("Erreur : " + msg);
+                    Label err = new Label("Erreur : " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
                     err.getStyleClass().add("cours-found-error");
                     err.setWrapText(true);
                     panel.getChildren().add(err);
@@ -536,7 +533,7 @@ public class ModificationRequestController {
 
         HBox grilles = new HBox(16);
 
-        VBox colProf = buildEdtMiniGrid(nomProf, coursProfList);
+        VBox colProf   = buildEdtMiniGrid(nomProf,   coursProfList);
         VBox colGroupe = buildEdtMiniGrid(nomGroupe, coursGroupeList);
         HBox.setHgrow(colProf,   Priority.ALWAYS);
         HBox.setHgrow(colGroupe, Priority.ALWAYS);
@@ -571,7 +568,7 @@ public class ModificationRequestController {
             row.getStyleClass().add("edt-croise-row");
             row.setAlignment(Pos.CENTER_LEFT);
 
-            String jour = h.getJour().format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.FRENCH));
+            String jour  = h.getJour().format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.FRENCH));
             String heure = h.getHeureDebut().format(FMT_TIME) + " – " + h.getHeureFin().format(FMT_TIME);
 
             Label nomLabel = new Label(c.getNom() != null ? c.getNom() : "—");

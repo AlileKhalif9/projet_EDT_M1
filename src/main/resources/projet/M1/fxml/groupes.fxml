@@ -18,12 +18,14 @@
             </VBox>
         </HBox>
 
-        <!-- Barre de recherche -->
+        <!-- Barre de recherche + filtre taille -->
         <HBox spacing="12" alignment="CENTER_LEFT">
             <TextField fx:id="fieldRecherche"
                        promptText="Rechercher un groupe…"
-                       prefWidth="320"
+                       prefWidth="260"
                        styleClass="login-field"/>
+            <ComboBox fx:id="comboFiltreTaille"
+                      prefWidth="160"/>
         </HBox>
 
         <!-- Liste des groupes (remplie dynamiquement) -->
