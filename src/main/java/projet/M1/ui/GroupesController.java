@@ -31,7 +31,6 @@ import java.util.List;
 public class GroupesController {
 
     @FXML private TextField          fieldRecherche;
-    @FXML private ComboBox<String>   comboFiltreType;
     @FXML private ComboBox<String>   comboFiltreTaille;
     @FXML private ProgressIndicator  loadingIndicator;
     @FXML private VBox               groupesContainer;
@@ -42,17 +41,12 @@ public class GroupesController {
 
     @FXML
     public void initialize() {
-        // Filtre par type d'utilisateur — les groupes ne contiennent que des étudiants
-        comboFiltreType.getItems().setAll("Étudiants");
-        comboFiltreType.setValue("Étudiants");
-
         // Filtre par taille
         comboFiltreTaille.getItems().setAll("Toutes tailles", "Petit (< 10)", "Moyen (10–30)", "Grand (> 30)");
         comboFiltreTaille.setValue("Toutes tailles");
 
         // Listeners filtres
         fieldRecherche.textProperty().addListener((obs, o, n) -> appliquerFiltres());
-        comboFiltreType.setOnAction(e -> appliquerFiltres());
         comboFiltreTaille.setOnAction(e -> appliquerFiltres());
 
         // Chargement BDD en arrière-plan
@@ -84,8 +78,7 @@ public class GroupesController {
     private void appliquerFiltres() {
         if (tousLesGroupes.isEmpty()) return;
 
-        String recherche = fieldRecherche.getText().trim().toLowerCase();
-        String filtreType = comboFiltreType.getValue();
+        String recherche    = fieldRecherche.getText().trim().toLowerCase();
         String filtreTaille = comboFiltreTaille.getValue();
 
         List<GroupeEtudiantEntity> filtres = tousLesGroupes.stream()
@@ -104,7 +97,6 @@ public class GroupesController {
                             case "Grand (> 30)"   -> { if (nb <= 30) return false; }
                         }
                     }
-                    // Filtre type — toujours Étudiants, pas de logique à appliquer
                     return true;
                 })
                 .toList();
