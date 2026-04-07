@@ -25,6 +25,25 @@ public class NoteController {
     }
 
     // -------------------------------------------------------------------------
+    //  UC11 — Professeur : sélection par promotion
+    // -------------------------------------------------------------------------
+
+    /** Promotions auxquelles le professeur est rattaché. */
+    public List<projet.M1.BDD.entity.PromotionEntity> getPromotionsProfesseur(Long profId) {
+        return moduleDAO.findPromotionsByProfesseur(profId);
+    }
+
+    /** Modules enseignés par le prof pour une promotion donnée. */
+    public List<ModuleEntity> getModulesProfesseurEtPromotion(Long profId, Long promotionId) {
+        return moduleDAO.findByProfesseurAndPromotion(profId, promotionId);
+    }
+
+    /** Étudiants d'une promotion inscrits à un module donné. */
+    public List<UserEntity> getEtudiantsDuModuleEtPromotion(Long moduleId, Long promotionId) {
+        return moduleDAO.findEtudiantsByModuleAndPromotion(moduleId, promotionId);
+    }
+
+    // -------------------------------------------------------------------------
     //  UC11 — Professeur : consulter les notes d'un module
     // -------------------------------------------------------------------------
 

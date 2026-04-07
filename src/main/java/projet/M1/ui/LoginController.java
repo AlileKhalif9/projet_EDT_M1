@@ -52,6 +52,7 @@ public class LoginController {
             }
 
         } catch (Exception e) {
+            e.printStackTrace(); // à ajouter temporairement
             showError("Impossible de joindre la base de données.");
         }
     }
