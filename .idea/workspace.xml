@@ -5,13 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c8e6b128-748e-466d-ae8c-b44faf5488e4" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/ModuleDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/ModuleDAO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/NoteController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/NoteController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/LoginController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/NotesController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/NotesController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/main-layout.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/main-layout.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/notes.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/notes.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
