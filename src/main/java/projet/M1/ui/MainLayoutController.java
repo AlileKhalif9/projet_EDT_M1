@@ -18,8 +18,8 @@ import java.io.IOException;
  * Controller du layout principal (sidebar + zone centrale).
  *
  * Visibilité des boutons selon le rôle :
- *   ETUDIANT              → Dashboard, EDT
- *   PROFESSEUR            → Dashboard, EDT, Demande modification, Salles
+ *   ETUDIANT              → Dashboard, EDT, Notes
+ *   PROFESSEUR            → Dashboard, EDT, Demande modification, Salles, Notes
  *   INVITE                → Dashboard, EDT, Salles
  *   GESTIONNAIRE_PLANNING → Dashboard, EDT, Demande modification, Groupes, Salles
  */
@@ -31,6 +31,7 @@ public class MainLayoutController {
     @FXML private Button    btnRoomSelection;
     @FXML private Button    btnGroupes;
     @FXML private Button    btnSalles;
+    @FXML private Button    btnNotes;
     @FXML private Circle    avatarCircle;
     @FXML private Label     labelAvatarInitials;
     @FXML private Label     labelUserName;
@@ -50,7 +51,6 @@ public class MainLayoutController {
     private void populateUserInfo() {
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
         if (u == null) return;
-
         labelAvatarInitials.setText(initiales(u));
         labelUserName.setText(u.getPrenom() + " " + u.getNom());
         labelUserRole.setText(roleLabel(u));
@@ -61,23 +61,26 @@ public class MainLayoutController {
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
         if (u == null) return;
 
-        // Demande de modification : professeur et gestionnaire uniquement (pas l'invité)
         boolean canRequest = u.getRole() == Role.PROFESSEUR
                 || u.getRole() == Role.GESTIONNAIRE_PLANNING;
         btnRoomSelection.setVisible(canRequest);
         btnRoomSelection.setManaged(canRequest);
 
-        // Groupes : gestionnaire uniquement
         boolean isGestionnaire = u.getRole() == Role.GESTIONNAIRE_PLANNING;
         btnGroupes.setVisible(isGestionnaire);
         btnGroupes.setManaged(isGestionnaire);
 
-        // Salles : gestionnaire, professeur et invité
         boolean canSeeSalles = u.getRole() == Role.GESTIONNAIRE_PLANNING
                 || u.getRole() == Role.PROFESSEUR
                 || u.getRole() == Role.INVITE;
         btnSalles.setVisible(canSeeSalles);
         btnSalles.setManaged(canSeeSalles);
+
+        // Notes : professeur et étudiant
+        boolean canSeeNotes = u.getRole() == Role.PROFESSEUR
+                || u.getRole() == Role.ETUDIANT;
+        btnNotes.setVisible(canSeeNotes);
+        btnNotes.setManaged(canSeeNotes);
     }
 
     public void navigateTo(View view) {
@@ -99,6 +102,7 @@ public class MainLayoutController {
     @FXML private void onRoomSelection() { navigateTo(View.MODIFICATION_REQUEST); }
     @FXML private void onGroupes()       { navigateTo(View.GROUPES); }
     @FXML private void onSalles()        { navigateTo(View.SALLES); }
+    @FXML private void onNotes()         { navigateTo(View.NOTES); }
 
     @FXML
     private void onLogout() {
@@ -112,12 +116,14 @@ public class MainLayoutController {
         btnRoomSelection.getStyleClass().remove("sidebar-nav-item-active");
         btnGroupes.getStyleClass().remove("sidebar-nav-item-active");
         btnSalles.getStyleClass().remove("sidebar-nav-item-active");
+        btnNotes.getStyleClass().remove("sidebar-nav-item-active");
         switch (view) {
             case DASHBOARD            -> btnDashboard.getStyleClass().add("sidebar-nav-item-active");
             case TIMETABLE            -> btnTimetable.getStyleClass().add("sidebar-nav-item-active");
             case MODIFICATION_REQUEST -> btnRoomSelection.getStyleClass().add("sidebar-nav-item-active");
             case GROUPES              -> btnGroupes.getStyleClass().add("sidebar-nav-item-active");
             case SALLES               -> btnSalles.getStyleClass().add("sidebar-nav-item-active");
+            case NOTES                -> btnNotes.getStyleClass().add("sidebar-nav-item-active");
         }
     }
 

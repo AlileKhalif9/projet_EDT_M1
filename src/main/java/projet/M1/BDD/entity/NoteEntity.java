@@ -10,6 +10,9 @@ public class NoteEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Intitulé du contrôle : ex "DS1", "TP noté", "Examen final" */
+    private String intitule;
+
     private float valeur;
     private float coefficient;
 
@@ -17,13 +20,15 @@ public class NoteEntity {
     @JoinColumn(name = "module_id")
     private ModuleEntity module;
 
-    // Lien vers l'étudiant — manquait dans Note.java du model
     @ManyToOne
     @JoinColumn(name = "etudiant_id")
     private UserEntity etudiant;
 
     // Getters et Setters
     public Long getId() { return id; }
+
+    public String getIntitule() { return intitule; }
+    public void setIntitule(String intitule) { this.intitule = intitule; }
 
     public float getValeur() { return valeur; }
     public void setValeur(float valeur) { this.valeur = valeur; }

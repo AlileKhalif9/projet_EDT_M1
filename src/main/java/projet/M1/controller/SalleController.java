@@ -23,4 +23,12 @@ public class SalleController {
         if (!cached.isEmpty()) return cached;
         return salleDAO.findAll();
     }
+
+    /**
+     * UC10/US19 — Modifie les équipements d'une salle en BDD.
+     * Met aussi à jour l'objet en mémoire pour refléter le changement immédiatement.
+     */
+    public void modifierEquipements(Long salleId, List<String> equipements) {
+        salleDAO.modifierEquipements(salleId, equipements);
+    }
 }

@@ -63,11 +63,12 @@ public class EmploiDuTempsController {
 
     /**
      * US14 — Crée un nouveau cours en BDD (rôle GESTIONNAIRE).
+     * profId obligatoire — le prof doit enseigner le module correspondant au nom du cours.
      */
     public CoursEntity ajouterCours(String nom, String typeCours,
                                     LocalDate jour, LocalTime heureDebut, LocalTime heureFin,
-                                    String nomSalle, String nomGroupe) {
-        return coursDAO.ajouterCours(nom, typeCours, jour, heureDebut, heureFin, nomSalle, nomGroupe);
+                                    String nomSalle, String nomGroupe, Long profId) {
+        return coursDAO.ajouterCours(nom, typeCours, jour, heureDebut, heureFin, nomSalle, nomGroupe, profId);
     }
 
     /**

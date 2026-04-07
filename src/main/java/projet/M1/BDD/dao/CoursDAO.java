@@ -182,13 +182,15 @@ public class CoursDAO {
 
     /**
      * US14 — Crée un nouveau cours en BDD.
+     * Le profId est obligatoire — le prof est rattaché à list_professeur du cours.
      */
     public CoursEntity ajouterCours(String nom, String typeCours,
                                     java.time.LocalDate jour,
                                     java.time.LocalTime heureDebut,
                                     java.time.LocalTime heureFin,
                                     String nomSalle,
-                                    String nomGroupe) {
+                                    String nomGroupe,
+                                    Long profId) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         EntityTransaction tx = em.getTransaction();
         try {
@@ -208,14 +210,21 @@ public class CoursDAO {
                 if (!salles.isEmpty()) salle = salles.get(0);
             }
 
-            List<UserEntity> etudiants = List.of();
+            List<UserEntity> etudiants = new java.util.ArrayList<>();
             if (nomGroupe != null && !nomGroupe.isBlank()) {
                 List<GroupeEtudiantEntity> groupes = em.createQuery(
                                 "SELECT g FROM GroupeEtudiantEntity g WHERE g.nom = :nom",
                                 GroupeEtudiantEntity.class)
                         .setParameter("nom", nomGroupe).getResultList();
                 if (!groupes.isEmpty() && groupes.get(0).getList_etudiant() != null)
-                    etudiants = groupes.get(0).getList_etudiant();
+                    etudiants.addAll(groupes.get(0).getList_etudiant());
+            }
+
+            // Rattacher le professeur
+            List<UserEntity> profs = List.of();
+            if (profId != null) {
+                UserEntity prof = em.find(UserEntity.class, profId);
+                if (prof != null) profs = List.of(prof);
             }
 
             CoursEntity cours = new CoursEntity();
@@ -224,7 +233,7 @@ public class CoursDAO {
             cours.setHoraire(horaire);
             cours.setSalle(salle);
             cours.setList_etudiant(etudiants);
-            cours.setList_professeur(List.of());
+            cours.setList_professeur(profs);
             em.persist(cours);
 
             tx.commit();
