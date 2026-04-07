@@ -276,7 +276,7 @@ public class NotesController {
 
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
 
-        Button btnAjouter = new Button("+ Ajouter un contrôle");
+        Button btnAjouter = new Button("+ Ajouter une note");
         btnAjouter.getStyleClass().add("btn-secondary");
         btnAjouter.setOnAction(e ->
                 ouvrirDialogAjouterControle(module, promo, etudiantsCourants, intitules, u));
