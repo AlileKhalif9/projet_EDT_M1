@@ -3,6 +3,7 @@ package projet.M1.BDD.dao;
 import jakarta.persistence.EntityManager;
 import projet.M1.BDD.JPAUtil;
 import projet.M1.BDD.entity.ModuleEntity;
+import projet.M1.BDD.entity.PromotionEntity;
 import projet.M1.BDD.entity.UserEntity;
 
 import java.util.List;
@@ -51,6 +52,66 @@ public class ModuleDAO {
                                     "WHERE m.id = :moduleId ORDER BY e.nom, e.prenom",
                             UserEntity.class)
                     .setParameter("moduleId", moduleId)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Promotions auxquelles un professeur est rattaché (via table professeur_promotion).
+     */
+    public List<PromotionEntity> findPromotionsByProfesseur(Long profId) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            return em.createQuery(
+                            "SELECT DISTINCT p FROM PromotionEntity p " +
+                                    "JOIN FETCH p.list_etudiant " +
+                                    "JOIN p.list_professeur prof " +
+                                    "WHERE prof.id = :profId ORDER BY p.nom",
+                            PromotionEntity.class)
+                    .setParameter("profId", profId)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Modules enseignés par un professeur pour une promotion donnée.
+     */
+    public List<ModuleEntity> findByProfesseurAndPromotion(Long profId, Long promotionId) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            return em.createQuery(
+                            "SELECT m FROM ModuleEntity m " +
+                                    "JOIN m.list_professeur p " +
+                                    "JOIN m.list_promotion pr " +
+                                    "WHERE p.id = :profId AND pr.id = :promotionId " +
+                                    "ORDER BY m.nom",
+                            ModuleEntity.class)
+                    .setParameter("profId",      profId)
+                    .setParameter("promotionId", promotionId)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Étudiants d'une promotion inscrits à un module donné.
+     */
+    public List<UserEntity> findEtudiantsByModuleAndPromotion(Long moduleId, Long promotionId) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            return em.createQuery(
+                            "SELECT e FROM UserEntity e " +
+                                    "JOIN e.list_module m " +
+                                    "WHERE m.id = :moduleId AND e.promotion.id = :promotionId " +
+                                    "ORDER BY e.nom, e.prenom",
+                            UserEntity.class)
+                    .setParameter("moduleId",    moduleId)
+                    .setParameter("promotionId", promotionId)
                     .getResultList();
         } finally {
             em.close();

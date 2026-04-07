@@ -55,6 +55,12 @@
                         onAction="#onSalles"
                         visible="false" managed="false"/>
 
+                <Button fx:id="btnNotes"
+                        text="📝  Notes"
+                        styleClass="sidebar-nav-item"
+                        onAction="#onNotes"
+                        visible="false" managed="false"/>
+
             </VBox>
 
             <!-- Section utilisateur (en bas) -->

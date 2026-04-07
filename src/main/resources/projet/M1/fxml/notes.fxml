@@ -13,22 +13,33 @@
         <!-- En-tête -->
         <HBox alignment="CENTER_LEFT" spacing="16">
             <VBox HBox.hgrow="ALWAYS" spacing="4">
-                <Label fx:id="labelTitle" text="Notes" styleClass="page-title"/>
-                <Label fx:id="labelSubtitle" text="" styleClass="page-subtitle"/>
+                <Label fx:id="labelTitle"    text="Notes" styleClass="page-title"/>
+                <Label fx:id="labelSubtitle" text=""      styleClass="page-subtitle"/>
             </VBox>
         </HBox>
 
-        <!-- Sélecteur de module -->
-        <HBox spacing="12" alignment="CENTER_LEFT">
+        <!-- Sélecteurs — affichage conditionnel selon le rôle -->
+        <!-- Professeur : Promotion + Module -->
+        <HBox fx:id="selectorBarProf" spacing="12" alignment="CENTER_LEFT"
+              visible="false" managed="false">
+            <Label text="Promotion :" styleClass="form-label"/>
+            <ComboBox fx:id="comboPromotion" prefWidth="220"/>
             <Label text="Module :" styleClass="form-label"/>
-            <ComboBox fx:id="comboModule" prefWidth="280"/>
+            <ComboBox fx:id="comboModuleProf" prefWidth="220"/>
+        </HBox>
+
+        <!-- Étudiant : Module uniquement -->
+        <HBox fx:id="selectorBarEtu" spacing="12" alignment="CENTER_LEFT"
+              visible="false" managed="false">
+            <Label text="Module :" styleClass="form-label"/>
+            <ComboBox fx:id="comboModuleEtu" prefWidth="280"/>
         </HBox>
 
         <!-- Spinner de chargement -->
         <ProgressIndicator fx:id="loadingIndicator" prefWidth="32" prefHeight="32"
                            visible="true" managed="true"/>
 
-        <!-- Contenu dynamique (tableau de notes) -->
+        <!-- Contenu dynamique -->
         <VBox fx:id="notesContainer" spacing="12"/>
 
     </VBox>
