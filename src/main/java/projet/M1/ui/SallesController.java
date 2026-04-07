@@ -9,15 +9,19 @@ import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.dao.SalleDAO;
 import projet.M1.BDD.entity.CoursEntity;
 import projet.M1.BDD.entity.HoraireEntity;
+import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.SalleEntity;
+import projet.M1.BDD.entity.UserEntity;
 import projet.M1.controller.EmploiDuTempsController;
 import projet.M1.controller.SalleController;
+import projet.M1.session.SessionManager;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import javafx.scene.control.ButtonBar;
 
 /**
  * UC9/US18 — Consulter les salles (Gestionnaire et Professeur).
@@ -200,18 +204,19 @@ public class SallesController {
 
         VBox equipList = new VBox(6);
         List<String> materiel = safeMateriel(s);
-        if (materiel.isEmpty()) {
-            Label vide = new Label("Aucun équipement renseigné.");
-            vide.getStyleClass().add("text-muted");
-            equipList.getChildren().add(vide);
-        } else {
-            for (String item : materiel) {
-                Label l = new Label("• " + item);
-                l.getStyleClass().add("cours-block-detail");
-                equipList.getChildren().add(l);
-            }
-        }
+        rafraichirEquipList(equipList, materiel);
 
+        // UC10/US19 — Bouton modifier équipements, visible uniquement pour le gestionnaire
+        UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
+        if (u != null && u.getRole() == Role.GESTIONNAIRE_PLANNING) {
+            Button btnModifierEquip = new Button("Modifier les équipements");
+            btnModifierEquip.getStyleClass().add("btn-secondary");
+            btnModifierEquip.setOnAction(e ->
+                    ouvrirDialogModifierEquipements(s, equipList));
+            content.getChildren().addAll(titre, stats, equipTitre, equipList, btnModifierEquip);
+        } else {
+            content.getChildren().addAll(titre, stats, equipTitre, equipList);
+        }
         // EDT de la salle — semaine courante, chargé en arrière-plan
         Label edtTitre = new Label("EDT de la salle — semaine courante");
         edtTitre.getStyleClass().add("form-step-title");
@@ -222,7 +227,7 @@ public class SallesController {
         VBox edtList = new VBox(6);
         edtList.getChildren().add(spinner);
 
-        content.getChildren().addAll(titre, stats, equipTitre, equipList, edtTitre, edtList);
+        content.getChildren().addAll(edtTitre, edtList);
         dialog.getDialogPane().setContent(content);
 
         // Charger l'EDT en arrière-plan une fois le dialog ouvert
@@ -252,6 +257,153 @@ public class SallesController {
         t.start();
 
         dialog.showAndWait();
+    }
+
+    // -------------------------------------------------------------------------
+    //  UC10/US19 — Modifier les équipements d'une salle (Gestionnaire)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Remplit le VBox d'affichage des équipements à partir d'une liste.
+     * Utilisé à l'affichage initial et après modification.
+     */
+    private void rafraichirEquipList(VBox equipList, List<String> materiel) {
+        equipList.getChildren().clear();
+        if (materiel.isEmpty()) {
+            Label vide = new Label("Aucun équipement renseigné.");
+            vide.getStyleClass().add("text-muted");
+            equipList.getChildren().add(vide);
+        } else {
+            for (String item : materiel) {
+                Label l = new Label("• " + item);
+                l.getStyleClass().add("cours-block-detail");
+                equipList.getChildren().add(l);
+            }
+        }
+    }
+
+    /**
+     * Ouvre un dialog permettant au gestionnaire de modifier la liste des équipements.
+     * Chaque équipement est affiché sur une ligne éditable avec un bouton de suppression.
+     * Un champ permet d'en ajouter de nouveaux.
+     * La validation persiste en BDD et rafraîchit l'affichage.
+     */
+    private void ouvrirDialogModifierEquipements(SalleEntity s, VBox equipListParent) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Modifier les équipements");
+        dialog.setHeaderText("Équipements de " + s.getNom());
+
+        ButtonType btnValider = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnValider, ButtonType.CANCEL);
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource("/projet/M1/css/main.css").toExternalForm());
+        dialog.getDialogPane().setPrefWidth(420);
+
+        VBox content = new VBox(12);
+        content.setPadding(new javafx.geometry.Insets(16));
+
+        // Liste éditable
+        List<String> copie = new java.util.ArrayList<>(safeMateriel(s));
+        VBox lignesEquip = new VBox(8);
+        rebuildLignesEquip(lignesEquip, copie);
+
+        // Champ + bouton pour ajouter un nouvel équipement
+        TextField fieldNouvel = new TextField();
+        fieldNouvel.setPromptText("Nouvel équipement…");
+        HBox.setHgrow(fieldNouvel, Priority.ALWAYS);
+
+        Button btnAjouter = new Button("+ Ajouter");
+        btnAjouter.getStyleClass().add("btn-secondary");
+        btnAjouter.setOnAction(e -> {
+            String val = fieldNouvel.getText().trim();
+            if (val.isEmpty()) return;
+            copie.add(val);
+            fieldNouvel.clear();
+            rebuildLignesEquip(lignesEquip, copie);
+        });
+
+        HBox ajoutRow = new HBox(8, fieldNouvel, btnAjouter);
+        ajoutRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        content.getChildren().addAll(lignesEquip, new Separator(), ajoutRow);
+        dialog.getDialogPane().setContent(content);
+
+        dialog.showAndWait().ifPresent(result -> {
+            if (result != btnValider) return;
+
+            // Lire les valeurs actuelles des TextFields (au cas où l'utilisateur a édité sans cliquer ailleurs)
+            List<String> nouvellesList = lignesEquip.getChildren().stream()
+                    .filter(n -> n instanceof HBox)
+                    .flatMap(n -> ((HBox) n).getChildren().stream())
+                    .filter(n -> n instanceof TextField)
+                    .map(n -> ((TextField) n).getText().trim())
+                    .filter(v -> !v.isEmpty())
+                    .toList();
+
+            // Persistance BDD
+            try {
+                salleController.modifierEquipements(s.getId(), nouvellesList);
+            } catch (Exception ex) {
+                new Alert(Alert.AlertType.ERROR,
+                        "Impossible de sauvegarder les équipements.").showAndWait();
+                return;
+            }
+
+            // Mise à jour en mémoire + rafraîchissement visuel
+            s.setListe_materiel(nouvellesList);
+            rafraichirEquipList(equipListParent, nouvellesList);
+
+            // Mise à jour du résumé sur la carte dans la liste principale
+            sallesContainer.getChildren().stream()
+                    .filter(n -> n instanceof HBox)
+                    .map(n -> (HBox) n)
+                    .forEach(card -> {
+                        boolean matchNom = card.getChildren().stream()
+                                .filter(n -> n instanceof Label)
+                                .map(n -> (Label) n)
+                                .anyMatch(l -> l.getStyleClass().contains("groupe-card-nom")
+                                        && l.getText().equals(s.getNom() != null ? s.getNom() : "—"));
+                        if (matchNom) {
+                            String resume = nouvellesList.isEmpty() ? "Aucun équipement"
+                                    : nouvellesList.size() + " équipement"
+                                    + (nouvellesList.size() > 1 ? "s" : "");
+                            card.getChildren().stream()
+                                    .filter(n -> n instanceof Label)
+                                    .map(n -> (Label) n)
+                                    .filter(l -> l.getStyleClass().contains("groupe-card-stats")
+                                            && l.getText().startsWith("🔧"))
+                                    .findFirst()
+                                    .ifPresent(l -> l.setText("🔧 " + resume));
+                        }
+                    });
+        });
+    }
+
+    /**
+     * Reconstruit le VBox des lignes éditables à partir de la liste courante.
+     * Chaque ligne = TextField éditable + bouton ✕ de suppression.
+     * La suppression retire l'élément de la liste et reconstruit les lignes.
+     */
+    private void rebuildLignesEquip(VBox lignesEquip, List<String> copie) {
+        lignesEquip.getChildren().clear();
+        for (int i = 0; i < copie.size(); i++) {
+            final int idx = i;
+            TextField tf = new TextField(copie.get(idx));
+            tf.setPromptText("Nom de l'équipement");
+            tf.textProperty().addListener((obs, o, n) -> copie.set(idx, n));
+            HBox.setHgrow(tf, Priority.ALWAYS);
+
+            Button btnSuppr = new Button("✕");
+            btnSuppr.getStyleClass().add("btn-reject");
+            btnSuppr.setOnAction(e -> {
+                copie.remove(idx);
+                rebuildLignesEquip(lignesEquip, copie);
+            });
+
+            HBox row = new HBox(8, tf, btnSuppr);
+            row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            lignesEquip.getChildren().add(row);
+        }
     }
 
     private HBox buildEdtRow(CoursEntity c) {

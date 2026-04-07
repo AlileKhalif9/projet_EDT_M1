@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true" fitToHeight="false"
+            style="-fx-background-color: #F8FAFC; -fx-background: #F8FAFC; -fx-border-color: transparent;"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="projet.M1.ui.NotesController">
+
+    <VBox styleClass="page-container" spacing="24">
+
+        <!-- En-tête -->
+        <HBox alignment="CENTER_LEFT" spacing="16">
+            <VBox HBox.hgrow="ALWAYS" spacing="4">
+                <Label fx:id="labelTitle" text="Notes" styleClass="page-title"/>
+                <Label fx:id="labelSubtitle" text="" styleClass="page-subtitle"/>
+            </VBox>
+        </HBox>
+
+        <!-- Sélecteur de module -->
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="Module :" styleClass="form-label"/>
+            <ComboBox fx:id="comboModule" prefWidth="280"/>
+        </HBox>
+
+        <!-- Spinner de chargement -->
+        <ProgressIndicator fx:id="loadingIndicator" prefWidth="32" prefHeight="32"
+                           visible="true" managed="true"/>
+
+        <!-- Contenu dynamique (tableau de notes) -->
+        <VBox fx:id="notesContainer" spacing="12"/>
+
+    </VBox>
+
+</ScrollPane>

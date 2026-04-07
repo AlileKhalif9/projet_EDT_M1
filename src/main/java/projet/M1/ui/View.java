@@ -2,15 +2,14 @@ package projet.M1.ui;
 
 /**
  * Liste des pages de l'appli. Chaque valeur = un fichier FXML dans resources/fxml/.
- *
- * Pour ajouter une page : ajouter une valeur ici + créer le FXML + le controller.
  */
 public enum View {
     DASHBOARD            ("dashboard"),
     TIMETABLE            ("timetable"),
     MODIFICATION_REQUEST ("modification-request"),
     GROUPES              ("groupes"),
-    SALLES               ("salles");
+    SALLES               ("salles"),
+    NOTES                ("notes");
 
     private final String fxmlName;
 

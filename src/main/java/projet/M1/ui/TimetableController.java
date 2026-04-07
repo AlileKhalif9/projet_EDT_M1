@@ -12,6 +12,7 @@ import javafx.scene.layout.StackPane;
 import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.dao.GroupeDAO;
 import projet.M1.BDD.dao.SalleDAO;
+import projet.M1.BDD.dao.UserDAO;
 import projet.M1.BDD.entity.CoursEntity;
 import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.SalleEntity;
@@ -78,6 +79,7 @@ public class TimetableController {
             new EmploiDuTempsController(new CoursDAO());
     private final SalleController  salleController  = new SalleController(new SalleDAO());
     private final GroupeController groupeController = new GroupeController(new GroupeDAO());
+    private final UserDAO          userDAO          = new UserDAO();
 
     // -------------------------------------------------------------------------
     //  État interne
@@ -614,6 +616,7 @@ public class TimetableController {
         ComboBox<String> comboFin    = (ComboBox<String>) lookup(form, 4);
         ComboBox<String> comboSalle  = (ComboBox<String>) lookup(form, 5);
         ComboBox<String> comboGroupe = (ComboBox<String>) lookup(form, 6);
+        ComboBox<String> comboProf   = (ComboBox<String>) lookup(form, 7);
 
         dialog.showAndWait().ifPresent(result -> {
             if (result != btnValider) return;
@@ -625,18 +628,25 @@ public class TimetableController {
             String finStr   = comboFin.getValue();
             String salle    = comboSalle.getValue();
             String groupe   = comboGroupe.getValue();
+            String profNom  = comboProf.getValue();
 
-            if (!validerChamps(nom, type, date, debutStr, finStr, salle, groupe)) return;
+            if (!validerChamps(nom, type, date, debutStr, finStr, salle, groupe, profNom)) return;
 
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
             LocalTime debut = LocalTime.parse(debutStr, fmt);
             LocalTime fin   = LocalTime.parse(finStr,   fmt);
             if (!validerHeures(debut, fin)) return;
 
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Long> profNomToId =
+                    (java.util.Map<String, Long>) comboProf.getProperties().get("profNomToId");
+            Long profId = profNomToId != null ? profNomToId.get(profNom) : null;
+
             CoursEntity saved;
             try {
-                saved = edtController.ajouterCours(nom, type, date, debut, fin, salle, groupe);
+                saved = edtController.ajouterCours(nom, type, date, debut, fin, salle, groupe, profId);
             } catch (Exception e) {
+                e.printStackTrace();
                 new Alert(Alert.AlertType.ERROR,
                         "Impossible d'enregistrer le cours en base de données.").showAndWait();
                 return;
@@ -644,7 +654,7 @@ public class TimetableController {
 
             CoursDisplay nouveau = new CoursDisplay(
                     saved.getId(), nom, TypeCours.fromString(type),
-                    groupe, null, salle, date, debut, fin);
+                    groupe, profNom, salle, date, debut, fin);
             afficherCoursTemporaire(nouveau);
         });
     }
@@ -673,6 +683,7 @@ public class TimetableController {
         ComboBox<String> comboFin    = (ComboBox<String>) lookup(form, 4);
         ComboBox<String> comboSalle  = (ComboBox<String>) lookup(form, 5);
         ComboBox<String> comboGroupe = (ComboBox<String>) lookup(form, 6);
+        ComboBox<String> comboProf   = (ComboBox<String>) lookup(form, 7);
 
         dialog.showAndWait().ifPresent(result -> {
             if (result != btnValider) return;
@@ -684,8 +695,9 @@ public class TimetableController {
             String finStr   = comboFin.getValue();
             String salle    = comboSalle.getValue();
             String groupe   = comboGroupe.getValue();
+            String profNom  = comboProf.getValue();
 
-            if (!validerChamps(nom, type, date, debutStr, finStr, salle, groupe)) return;
+            if (!validerChamps(nom, type, date, debutStr, finStr, salle, groupe, profNom)) return;
 
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
             LocalTime debut = LocalTime.parse(debutStr, fmt);
@@ -707,7 +719,7 @@ public class TimetableController {
 
             CoursDisplay modifie = new CoursDisplay(
                     saved.getId(), nom, TypeCours.fromString(type),
-                    groupe, c.nomProf(), salle, date, debut, fin);
+                    groupe, profNom, salle, date, debut, fin);
 
             retirerCours(c);
             if (!afficherCoursTemporaire(modifie)) afficherCoursTemporaire(c);
@@ -720,9 +732,8 @@ public class TimetableController {
 
     /**
      * Construit le formulaire ajouter/modifier.
-     * @param prefill           cours à pré-remplir (null = formulaire vide)
+     * @param prefill              cours à pré-remplir (null = formulaire vide)
      * @param groupePreselectionne groupe à pré-sélectionner quand prefill est null
-     *                             (typiquement le groupe sélectionné dans le comboSelector)
      */
     private GridPane buildFormulaireCours(CoursDisplay prefill, String groupePreselectionne) {
         GridPane form = new GridPane();
@@ -766,7 +777,7 @@ public class TimetableController {
         comboSalle.setValue(prefill != null ? prefill.nomSalle() : null);
         comboSalle.setPromptText("Choisir une salle");
 
-        // Groupe — obligatoire, pré-sélectionné si un groupe est actif dans l'onglet EDT classe
+        // Groupe — obligatoire
         ComboBox<String> comboGroupe = new ComboBox<>();
         try { groupeController.getAllGroupes().forEach(g -> comboGroupe.getItems().add(g.getNom())); }
         catch (Exception ignored) {}
@@ -777,7 +788,22 @@ public class TimetableController {
         }
         comboGroupe.setPromptText("Choisir un groupe");
 
-        // Labels — * sur tous les champs obligatoires dont salle et groupe
+        // Professeur — obligatoire, liste tous les profs
+        // La map nom→id est stockée dans les properties pour récupérer l'id à la validation
+        ComboBox<String> comboProf = new ComboBox<>();
+        comboProf.setPromptText("Choisir un professeur");
+        java.util.Map<String, Long> profNomToId = new java.util.HashMap<>();
+        try {
+            userDAO.findByRole(Role.PROFESSEUR).forEach(p -> {
+                String label = p.getPrenom() + " " + p.getNom();
+                comboProf.getItems().add(label);
+                profNomToId.put(label, p.getId());
+            });
+        } catch (Exception ignored) {}
+        comboProf.setValue(prefill != null ? prefill.nomProf() : null);
+        comboProf.getProperties().put("profNomToId", profNomToId);
+
+        // Labels — * sur tous les champs obligatoires
         form.add(new Label("Nom du cours *"), 0, 0); form.add(fieldNom,    1, 0);
         form.add(new Label("Type *"),          0, 1); form.add(comboType,   1, 1);
         form.add(new Label("Date *"),          0, 2); form.add(datePicker,  1, 2);
@@ -785,6 +811,7 @@ public class TimetableController {
         form.add(new Label("Heure fin *"),     0, 4); form.add(comboFin,    1, 4);
         form.add(new Label("Salle *"),         0, 5); form.add(comboSalle,  1, 5);
         form.add(new Label("Groupe *"),        0, 6); form.add(comboGroupe, 1, 6);
+        form.add(new Label("Professeur *"),    0, 7); form.add(comboProf,   1, 7);
 
         form.getChildren().stream()
                 .filter(n -> n instanceof Label)
@@ -848,13 +875,14 @@ public class TimetableController {
 
     private boolean validerChamps(String nom, String type, LocalDate date,
                                   String debutStr, String finStr,
-                                  String salle, String groupe) {
+                                  String salle, String groupe, String profNom) {
         if (nom.isEmpty() || type == null || date == null || debutStr == null || finStr == null
                 || salle == null || salle.isBlank()
-                || groupe == null || groupe.isBlank()) {
+                || groupe == null || groupe.isBlank()
+                || profNom == null || profNom.isBlank()) {
             new Alert(Alert.AlertType.WARNING,
                     "Veuillez remplir tous les champs obligatoires (*) :\n"
-                            + "nom, type, date, horaires, salle et groupe.").showAndWait();
+                            + "nom, type, date, horaires, salle, groupe et professeur.").showAndWait();
             return false;
         }
         return true;

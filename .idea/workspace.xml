@@ -4,7 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c8e6b128-748e-466d-ae8c-b44faf5488e4" name="Changes" comment="" />
+    <list default="true" id="c8e6b128-748e-466d-ae8c-b44faf5488e4" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/ModuleDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/NoteDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/NotesController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/notes.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/CoursDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/CoursDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/SalleDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/SalleDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/NoteEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/NoteEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/EmploiDuTempsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/EmploiDuTempsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/SalleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/SalleController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/MainLayoutController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/MainLayoutController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/SallesController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/SallesController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/TimetableController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/TimetableController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/View.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/View.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
