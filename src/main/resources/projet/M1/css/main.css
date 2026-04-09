@@ -1180,3 +1180,75 @@
     -fx-text-fill: #9CA3AF;
     -fx-padding: 0 8 0 8;
 }
+
+/* =============================================================================
+   NOTES (UC11 / UC12 / UC13)
+============================================================================= */
+
+.notes-grid {
+    -fx-hgap: 1;
+    -fx-vgap: 1;
+    -fx-background-color: #E5E7EB;
+    -fx-padding: 1;
+}
+
+.notes-cell {
+    -fx-background-color: white;
+    -fx-padding: 8 12;
+    -fx-min-width: 90;
+    -fx-alignment: center;
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+}
+
+.notes-cell-alt {
+    -fx-background-color: #F9FAFB;
+    -fx-padding: 8 12;
+    -fx-min-width: 90;
+    -fx-alignment: center;
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+}
+
+.notes-cell-header {
+    -fx-background-color: #1E3A5F;
+    -fx-padding: 10 12;
+    -fx-min-width: 90;
+    -fx-alignment: center;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.notes-cell-nom {
+    -fx-background-color: #EFF6FF;
+    -fx-padding: 8 12;
+    -fx-min-width: 160;
+    -fx-alignment: center-left;
+    -fx-font-size: 13px;
+    -fx-text-fill: #1E3A5F;
+    -fx-font-weight: bold;
+}
+
+.notes-cell-moyenne {
+    -fx-background-color: #ECFDF5;
+    -fx-padding: 8 12;
+    -fx-min-width: 90;
+    -fx-alignment: center;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #065F46;
+}
+
+/* Bouton danger (rouge) */
+.btn-danger {
+    -fx-background-color: #EF4444;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 6 14;
+    -fx-cursor: hand;
+}
+.btn-danger:hover {
+    -fx-background-color: #DC2626;
+}

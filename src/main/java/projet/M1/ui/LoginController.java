@@ -52,8 +52,9 @@ public class LoginController {
             }
 
         } catch (Exception e) {
-            e.printStackTrace(); // à ajouter temporairement
-            showError("Impossible de joindre la base de données.");
+            e.printStackTrace();
+            String cause = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+            showError("Erreur BDD : " + cause);
         }
     }
 

@@ -30,6 +30,7 @@ public class MainLayoutController {
     @FXML private Button    btnRoomSelection;
     @FXML private Button    btnGroupes;
     @FXML private Button    btnSalles;
+    @FXML private Button    btnNotes;
     @FXML private Circle    avatarCircle;
     @FXML private Label     labelAvatarInitials;
     @FXML private Label     labelUserName;
@@ -64,12 +65,16 @@ public class MainLayoutController {
         btnRoomSelection.setVisible(canRequest);
         btnRoomSelection.setManaged(canRequest);
 
-        boolean isGestionnaire = u.getRole() == Role.GESTIONNAIRE_PLANNING;
-        boolean isProfOrGest   = isGestionnaire || u.getRole() == Role.PROFESSEUR;
+        boolean isGestionnaire  = u.getRole() == Role.GESTIONNAIRE_PLANNING;
+        boolean isProfOrGest    = isGestionnaire || u.getRole() == Role.PROFESSEUR;
+        boolean isProfOrEtu     = u.getRole() == Role.PROFESSEUR || u.getRole() == Role.ETUDIANT;
+        boolean canSeeSalles    = isProfOrGest || u.getRole() == Role.INVITE;
         btnGroupes.setVisible(isGestionnaire);
         btnGroupes.setManaged(isGestionnaire);
-        btnSalles.setVisible(isProfOrGest);
-        btnSalles.setManaged(isProfOrGest);
+        btnSalles.setVisible(canSeeSalles);
+        btnSalles.setManaged(canSeeSalles);
+        btnNotes.setVisible(isProfOrEtu);
+        btnNotes.setManaged(isProfOrEtu);
     }
 
     /** Charge une page dans la zone centrale (remplace le contenu précédent). */
@@ -92,6 +97,7 @@ public class MainLayoutController {
     @FXML private void onRoomSelection() { navigateTo(View.MODIFICATION_REQUEST); }
     @FXML private void onGroupes()       { navigateTo(View.GROUPES); }
     @FXML private void onSalles()        { navigateTo(View.SALLES); }
+    @FXML private void onNotes()         { navigateTo(View.NOTES); }
 
     @FXML
     private void onLogout() {
@@ -105,12 +111,14 @@ public class MainLayoutController {
         btnRoomSelection.getStyleClass().remove("sidebar-nav-item-active");
         btnGroupes.getStyleClass().remove("sidebar-nav-item-active");
         btnSalles.getStyleClass().remove("sidebar-nav-item-active");
+        btnNotes.getStyleClass().remove("sidebar-nav-item-active");
         switch (view) {
             case DASHBOARD            -> btnDashboard.getStyleClass().add("sidebar-nav-item-active");
             case TIMETABLE            -> btnTimetable.getStyleClass().add("sidebar-nav-item-active");
             case MODIFICATION_REQUEST -> btnRoomSelection.getStyleClass().add("sidebar-nav-item-active");
             case GROUPES              -> btnGroupes.getStyleClass().add("sidebar-nav-item-active");
             case SALLES               -> btnSalles.getStyleClass().add("sidebar-nav-item-active");
+            case NOTES                -> btnNotes.getStyleClass().add("sidebar-nav-item-active");
         }
     }
 
