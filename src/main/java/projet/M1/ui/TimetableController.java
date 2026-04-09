@@ -102,20 +102,25 @@ public class TimetableController {
 
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
         boolean isGestionnaire = u != null && u.getRole() == Role.GESTIONNAIRE_PLANNING;
+        boolean isInvite       = u != null && u.getRole() == Role.INVITE;
 
         // US14 — bouton "Ajouter un cours" visible uniquement pour le gestionnaire
         btnAjouterCours.setVisible(isGestionnaire);
         btnAjouterCours.setManaged(isGestionnaire);
 
-        // Le gestionnaire n'a pas d'EDT personnel : on masque l'onglet "Mon EDT"
-        if (isGestionnaire) {
+        // Gestionnaire : pas d'EDT personnel, démarre sur EDT classe
+        // Invité : uniquement EDT classe, pas de Mon EDT, pas de salle
+        if (isGestionnaire || isInvite) {
             tabMonEDT.setVisible(false);
             tabMonEDT.setManaged(false);
-            // Démarrer directement sur l'onglet "EDT classe"
             currentTab = TabMode.TIERS;
         }
+        if (isInvite) {
+            tabSalle.setVisible(false);
+            tabSalle.setManaged(false);
+        }
 
-        setupTabs(isGestionnaire);
+        setupTabs(isGestionnaire || isInvite);
         updateWeekLabel();
         buildGrid();
         loadCours();
