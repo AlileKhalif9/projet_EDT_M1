@@ -1,7 +1,9 @@
 package projet.M1.controller;
 
 import projet.M1.BDD.dao.CoursDAO;
+import projet.M1.BDD.dao.UserDAO;
 import projet.M1.BDD.entity.CoursEntity;
+import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.SalleEntity;
 import projet.M1.BDD.entity.UserEntity;
 
@@ -79,5 +81,10 @@ public class EmploiDuTempsController {
                                      String nomSalle, String nomGroupe) {
         if (coursId == null) throw new IllegalArgumentException("Ce cours n'a pas d'identifiant BDD.");
         return coursDAO.modifierCours(coursId, nom, typeCours, jour, heureDebut, heureFin, nomSalle, nomGroupe);
+    }
+
+    /** Retourne tous les professeurs (pour le sélecteur de tiers dans TimetableController). */
+    public List<UserEntity> getProfesseurs() {
+        return new UserDAO().findByRole(Role.PROFESSEUR);
     }
 }

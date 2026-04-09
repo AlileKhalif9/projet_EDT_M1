@@ -20,7 +20,7 @@
 
         <properties>
             <!-- PostgreSQL Neon -->
-            <property name="jakarta.persistence.jdbc.url"      value="jdbc:postgresql://ep-bold-dust-ab4se8tq-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&amp;channel_binding=require"/>
+            <property name="jakarta.persistence.jdbc.url"      value="jdbc:postgresql://ep-bold-dust-ab4se8tq-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"/>
             <property name="jakarta.persistence.jdbc.user"     value="neondb_owner"/>
             <property name="jakarta.persistence.jdbc.password" value="npg_Di5XcIw4fQOo"/>
             <property name="jakarta.persistence.jdbc.driver"   value="org.postgresql.Driver"/>

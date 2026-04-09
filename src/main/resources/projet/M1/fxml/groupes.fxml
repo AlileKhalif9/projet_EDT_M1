@@ -10,12 +10,14 @@
 
     <VBox styleClass="page-container" spacing="24">
 
-        <!-- En-tête -->
+        <!-- En-tête avec bouton créer -->
         <HBox alignment="CENTER_LEFT" spacing="16">
             <VBox HBox.hgrow="ALWAYS" spacing="4">
                 <Label text="Gestion des groupes" styleClass="page-title"/>
                 <Label text="Consultez les groupes d'étudiants et leurs membres" styleClass="page-subtitle"/>
             </VBox>
+            <Button fx:id="btnNouveauGroupe" text="+ Nouveau groupe"
+                    styleClass="btn-primary" onAction="#onNouveauGroupe"/>
         </HBox>
 
         <!-- Barre de recherche + filtre taille -->

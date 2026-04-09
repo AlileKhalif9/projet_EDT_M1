@@ -33,4 +33,7 @@ public class DataCache {
 
     public List<SalleEntity>          getSalles()  { return salles;  }
     public List<GroupeEtudiantEntity> getGroupes() { return groupes; }
+
+    /** Invalide le cache groupes — prochain appel ira en BDD. */
+    public void invalidateGroupes() { groupes = List.of(); }
 }

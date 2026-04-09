@@ -9,7 +9,6 @@ import projet.M1.BDD.dao.ModuleDAO;
 import projet.M1.BDD.dao.NoteDAO;
 import projet.M1.BDD.entity.ModuleEntity;
 import projet.M1.BDD.entity.NoteEntity;
-import projet.M1.BDD.entity.PromotionEntity;
 import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.UserEntity;
 import projet.M1.controller.NoteController;
@@ -37,11 +36,9 @@ public class NotesController {
     private final NoteController noteController =
             new NoteController(new NoteDAO(), new ModuleDAO());
 
-    private final Map<String, PromotionEntity> promotionMap = new LinkedHashMap<>();
-    private final Map<String, ModuleEntity>    moduleMap    = new LinkedHashMap<>();
+    private final Map<String, ModuleEntity> moduleMap = new LinkedHashMap<>();
 
-    private PromotionEntity      promotionCourante;
-    private List<UserEntity>     etudiantsCourants = new ArrayList<>();
+    private List<UserEntity> etudiantsCourants = new ArrayList<>();
 
     // -------------------------------------------------------------------------
     //  Initialisation
@@ -52,14 +49,12 @@ public class NotesController {
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
         if (u == null) return;
 
-        boolean isProf = u.getRole() == Role.PROFESSEUR;
-
-        if (isProf) {
+        if (u.getRole() == Role.PROFESSEUR) {
             labelTitle.setText("Notes des étudiants");
-            labelSubtitle.setText("Sélectionnez une promotion puis un module");
+            labelSubtitle.setText("Sélectionnez un module parmi vos matières");
             selectorBarProf.setVisible(true);
             selectorBarProf.setManaged(true);
-            chargerPromotions(u);
+            chargerModulesProf(u);
         } else {
             labelTitle.setText("Mes notes");
             labelSubtitle.setText("Consultez vos notes et vos moyennes par module");
@@ -70,65 +65,24 @@ public class NotesController {
     }
 
     // -------------------------------------------------------------------------
-    //  Professeur — chargement promotions
+    //  Professeur — chargement modules (uniquement ses matières)
     // -------------------------------------------------------------------------
 
-    private void chargerPromotions(UserEntity u) {
-        Thread t = new Thread(() -> {
-            List<PromotionEntity> promotions;
-            try {
-                promotions = noteController.getPromotionsProfesseur(u.getId());
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                promotions = List.of();
-            }
-            final List<PromotionEntity> result = promotions;
-            Platform.runLater(() -> {
-                loadingIndicator.setVisible(false);
-                loadingIndicator.setManaged(false);
-                if (result.isEmpty()) {
-                    Label vide = new Label("Aucune promotion trouvée.");
-                    vide.getStyleClass().add("text-muted");
-                    notesContainer.getChildren().add(vide);
-                    return;
-                }
-                for (PromotionEntity p : result) {
-                    promotionMap.put(p.getNom(), p);
-                    comboPromotion.getItems().add(p.getNom());
-                }
-                comboPromotion.setOnAction(e -> onPromotionSelectionnee(u));
-                comboPromotion.getSelectionModel().selectFirst();
-                onPromotionSelectionnee(u);
-            });
-        });
-        t.setDaemon(true);
-        t.start();
-    }
-
-    private void onPromotionSelectionnee(UserEntity u) {
-        String nomPromo = comboPromotion.getValue();
-        if (nomPromo == null) return;
-        PromotionEntity promo = promotionMap.get(nomPromo);
-        if (promo == null) return;
-
-        promotionCourante = promo;
-        comboModuleProf.getItems().clear();
-        comboModuleProf.setOnAction(null);
-        moduleMap.clear();
-        notesContainer.getChildren().clear();
-
+    private void chargerModulesProf(UserEntity u) {
         Thread t = new Thread(() -> {
             List<ModuleEntity> modules;
             try {
-                modules = noteController.getModulesProfesseurEtPromotion(u.getId(), promo.getId());
+                modules = noteController.getModulesProfesseur(u.getId());
             } catch (Exception ex) {
                 ex.printStackTrace();
                 modules = List.of();
             }
             final List<ModuleEntity> result = modules;
             Platform.runLater(() -> {
+                loadingIndicator.setVisible(false);
+                loadingIndicator.setManaged(false);
                 if (result.isEmpty()) {
-                    Label vide = new Label("Aucun module trouvé pour cette promotion.");
+                    Label vide = new Label("Aucun module trouvé pour ce professeur.");
                     vide.getStyleClass().add("text-muted");
                     notesContainer.getChildren().add(vide);
                     return;
@@ -137,16 +91,16 @@ public class NotesController {
                     moduleMap.put(m.getNom(), m);
                     comboModuleProf.getItems().add(m.getNom());
                 }
-                comboModuleProf.setOnAction(e -> onModuleProfSelectionne(u, promo));
+                comboModuleProf.setOnAction(e -> onModuleProfSelectionne(u));
                 comboModuleProf.getSelectionModel().selectFirst();
-                onModuleProfSelectionne(u, promo);
+                onModuleProfSelectionne(u);
             });
         });
         t.setDaemon(true);
         t.start();
     }
 
-    private void onModuleProfSelectionne(UserEntity u, PromotionEntity promo) {
+    private void onModuleProfSelectionne(UserEntity u) {
         String nomModule = comboModuleProf.getValue();
         if (nomModule == null) return;
         ModuleEntity module = moduleMap.get(nomModule);
@@ -159,7 +113,7 @@ public class NotesController {
         Thread t = new Thread(() -> {
             try {
                 List<UserEntity> etudiants =
-                        noteController.getEtudiantsDuModuleEtPromotion(module.getId(), promo.getId());
+                        noteController.getEtudiantsDuModule(module.getId());
                 List<String> intitules =
                         noteController.getIntitulesControles(module.getId());
                 Map<Long, Map<String, NoteEntity>> notesMap =
@@ -172,7 +126,7 @@ public class NotesController {
                 Platform.runLater(() -> {
                     loadingIndicator.setVisible(false);
                     loadingIndicator.setManaged(false);
-                    afficherTableauProfesseur(module, promo, etudiants, intitules, notesMap, toutesNotes);
+                    afficherTableauProfesseur(module, etudiants, intitules, notesMap, toutesNotes);
                 });
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -240,7 +194,7 @@ public class NotesController {
                 List<NoteEntity> mesNotes =
                         noteController.getNotesEtudiantModule(u.getId(), module.getId());
                 List<NoteEntity> toutesNotes =
-                        new NoteDAO().findByModule(module.getId());
+                        noteController.getNotesModule(module.getId());
 
                 Platform.runLater(() -> {
                     loadingIndicator.setVisible(false);
@@ -267,7 +221,6 @@ public class NotesController {
     // -------------------------------------------------------------------------
 
     private void afficherTableauProfesseur(ModuleEntity module,
-                                           PromotionEntity promo,
                                            List<UserEntity> etudiants,
                                            List<String> intitules,
                                            Map<Long, Map<String, NoteEntity>> notesMap,
@@ -279,7 +232,7 @@ public class NotesController {
         Button btnAjouter = new Button("+ Ajouter une note");
         btnAjouter.getStyleClass().add("btn-secondary");
         btnAjouter.setOnAction(e ->
-                ouvrirDialogAjouterControle(module, promo, etudiantsCourants, intitules, u));
+                ouvrirDialogAjouterControle(module, etudiantsCourants, intitules, u));
 
         HBox toolbar = new HBox(12, btnAjouter);
         toolbar.setAlignment(Pos.CENTER_LEFT);
@@ -324,7 +277,7 @@ public class NotesController {
 
                 final int finalCol = col;
                 cellLbl.setOnMouseClicked(ev ->
-                        ouvrirDialogSaisirNote(module, etu, intitules.get(finalCol), note, cellLbl, u, promo));
+                        ouvrirDialogSaisirNote(module, etu, intitules.get(finalCol), note, cellLbl, u));
                 grid.add(cellLbl, col + 1, row + 1);
             }
 
@@ -462,7 +415,7 @@ public class NotesController {
 
     private void ouvrirDialogSaisirNote(ModuleEntity module, UserEntity etu,
                                         String intitule, NoteEntity noteExistante,
-                                        Label cellLbl, UserEntity prof, PromotionEntity promo) {
+                                        Label cellLbl, UserEntity prof) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Note — " + intitule);
         dialog.setHeaderText(etu.getPrenom() + " " + etu.getNom() + " · " + module.getNom());
@@ -499,7 +452,7 @@ public class NotesController {
                 float coeff  = Float.parseFloat(fieldCoeff.getText().trim().replace(",", "."));
                 noteController.sauvegarderNote(etu.getId(), module.getId(), intitule, valeur, coeff);
                 cellLbl.setText(String.format("%.1f", valeur));
-                onModuleProfSelectionne(prof, promo);
+                onModuleProfSelectionne(prof);
             } catch (NumberFormatException ex) {
                 new Alert(Alert.AlertType.WARNING,
                         "Valeurs invalides. Utilisez des nombres (ex: 14.5, 2.0).").showAndWait();
@@ -517,14 +470,12 @@ public class NotesController {
     // -------------------------------------------------------------------------
 
     private void ouvrirDialogAjouterControle(ModuleEntity module,
-                                             PromotionEntity promo,
                                              List<UserEntity> etudiants,
                                              List<String> intitulesExistants,
                                              UserEntity prof) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Nouveau contrôle");
-        dialog.setHeaderText("Ajouter un contrôle — " + module.getNom()
-                + " · " + promo.getNom());
+        dialog.setHeaderText("Ajouter un contrôle — " + module.getNom());
 
         ButtonType btnValider = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnValider, ButtonType.CANCEL);
@@ -637,7 +588,7 @@ public class NotesController {
                         "Certaines notes n'ont pas pu être enregistrées.").showAndWait();
             }
 
-            onModuleProfSelectionne(prof, promo);
+            onModuleProfSelectionne(prof);
         });
     }
 }

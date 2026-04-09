@@ -12,7 +12,6 @@ import javafx.scene.layout.StackPane;
 import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.dao.GroupeDAO;
 import projet.M1.BDD.dao.SalleDAO;
-import projet.M1.BDD.dao.UserDAO;
 import projet.M1.BDD.entity.CoursEntity;
 import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.SalleEntity;
@@ -79,7 +78,6 @@ public class TimetableController {
             new EmploiDuTempsController(new CoursDAO());
     private final SalleController  salleController  = new SalleController(new SalleDAO());
     private final GroupeController groupeController = new GroupeController(new GroupeDAO());
-    private final UserDAO          userDAO          = new UserDAO();
 
     // -------------------------------------------------------------------------
     //  État interne
@@ -104,20 +102,25 @@ public class TimetableController {
 
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
         boolean isGestionnaire = u != null && u.getRole() == Role.GESTIONNAIRE_PLANNING;
+        boolean isInvite       = u != null && u.getRole() == Role.INVITE;
 
         // US14 — bouton "Ajouter un cours" visible uniquement pour le gestionnaire
         btnAjouterCours.setVisible(isGestionnaire);
         btnAjouterCours.setManaged(isGestionnaire);
 
-        // Le gestionnaire n'a pas d'EDT personnel : on masque l'onglet "Mon EDT"
-        if (isGestionnaire) {
+        // Gestionnaire : pas d'EDT personnel, démarre sur EDT classe
+        // Invité : uniquement EDT classe, pas de Mon EDT, pas de salle
+        if (isGestionnaire || isInvite) {
             tabMonEDT.setVisible(false);
             tabMonEDT.setManaged(false);
-            // Démarrer directement sur l'onglet "EDT classe"
             currentTab = TabMode.TIERS;
         }
+        if (isInvite) {
+            tabSalle.setVisible(false);
+            tabSalle.setManaged(false);
+        }
 
-        setupTabs(isGestionnaire);
+        setupTabs(isGestionnaire || isInvite);
         updateWeekLabel();
         buildGrid();
         loadCours();
@@ -794,7 +797,7 @@ public class TimetableController {
         comboProf.setPromptText("Choisir un professeur");
         java.util.Map<String, Long> profNomToId = new java.util.HashMap<>();
         try {
-            userDAO.findByRole(Role.PROFESSEUR).forEach(p -> {
+            edtController.getProfesseurs().forEach(p -> {
                 String label = p.getPrenom() + " " + p.getNom();
                 comboProf.getItems().add(label);
                 profNomToId.put(label, p.getId());

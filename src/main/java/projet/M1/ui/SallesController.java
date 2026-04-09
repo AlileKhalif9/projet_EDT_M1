@@ -8,7 +8,6 @@ import javafx.scene.layout.*;
 import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.dao.SalleDAO;
 import projet.M1.BDD.entity.CoursEntity;
-import projet.M1.BDD.entity.HoraireEntity;
 import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.SalleEntity;
 import projet.M1.BDD.entity.UserEntity;
@@ -21,54 +20,39 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-import javafx.scene.control.ButtonBar;
 
 /**
- * UC9/US18 — Consulter les salles (Gestionnaire et Professeur).
- *
- * Affiche la liste des salles avec :
- *   - nom, capacité, résumé des équipements
- *
- * Filtrage disponible :
- *   - par nom (champ texte)
- *   - par capacité (Toutes / Petite <20 / Moyenne 20-40 / Grande >40)
- *   - par équipement (champ texte sur le matériel)
- *
- * Clic sur une salle → dialog avec capacité, matériel et EDT de la salle (semaine courante).
+ * UC9/US18 — Consulter les salles (Gestionnaire + Professeur).
+ * Filtres : nom, capacité min, équipement.
+ * Clic sur une salle → dialog avec équipements + EDT hebdomadaire de la salle.
  */
 public class SallesController {
 
-    @FXML private TextField          fieldRecherche;
-    @FXML private ComboBox<String>   comboFiltreCapacite;
-    @FXML private TextField          fieldFiltreEquipement;
-    @FXML private ProgressIndicator  loadingIndicator;
-    @FXML private VBox               sallesContainer;
+    @FXML private TextField fieldRecherche;
+    @FXML private TextField fieldCapaciteMin;
+    @FXML private TextField fieldEquipement;
+    @FXML private ProgressIndicator loadingIndicator;
+    @FXML private VBox sallesContainer;
 
-    private final SalleController         salleController = new SalleController(new SalleDAO());
-    private final EmploiDuTempsController edtController   = new EmploiDuTempsController(new CoursDAO());
+    private final SalleController          salleController = new SalleController(new SalleDAO());
+    private final EmploiDuTempsController  edtController   = new EmploiDuTempsController(new CoursDAO());
 
     private List<SalleEntity> toutesLesSalles = List.of();
 
-    private static final DateTimeFormatter FMT_DATE  = DateTimeFormatter.ofPattern("EEE d MMM", Locale.FRENCH);
-    private static final DateTimeFormatter FMT_TIME  = DateTimeFormatter.ofPattern("HH'h'mm");
+    private static final DateTimeFormatter FMT_JOUR =
+            DateTimeFormatter.ofPattern("d MMM", Locale.FRENCH);
+    private static final String[] JOURS = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"};
 
     @FXML
     public void initialize() {
-        comboFiltreCapacite.getItems().setAll(
-                "Toutes capacités", "Petite (< 20)", "Moyenne (20–40)", "Grande (> 40)");
-        comboFiltreCapacite.setValue("Toutes capacités");
-
-        fieldRecherche.textProperty().addListener((obs, o, n) -> appliquerFiltres());
-        comboFiltreCapacite.setOnAction(e -> appliquerFiltres());
-        fieldFiltreEquipement.textProperty().addListener((obs, o, n) -> appliquerFiltres());
+        fieldRecherche.textProperty().addListener((obs, o, n) -> applyFilters());
+        fieldCapaciteMin.textProperty().addListener((obs, o, n) -> applyFilters());
+        fieldEquipement.textProperty().addListener((obs, o, n) -> applyFilters());
 
         Thread t = new Thread(() -> {
             List<SalleEntity> salles;
-            try {
-                salles = salleController.getAllSalles();
-            } catch (Exception e) {
-                salles = List.of();
-            }
+            try { salles = salleController.getAllSalles(); }
+            catch (Exception e) { salles = List.of(); }
             final List<SalleEntity> result = salles;
             Platform.runLater(() -> {
                 toutesLesSalles = result;
@@ -83,52 +67,29 @@ public class SallesController {
         t.start();
     }
 
-    // -------------------------------------------------------------------------
-    //  Filtrage UC9
-    // -------------------------------------------------------------------------
-
-    private void appliquerFiltres() {
+    private void applyFilters() {
         if (toutesLesSalles.isEmpty()) return;
-
-        String recherche  = fieldRecherche.getText().trim().toLowerCase();
-        String capacite   = comboFiltreCapacite.getValue();
-        String equipement = fieldFiltreEquipement.getText().trim().toLowerCase();
+        String nom = fieldRecherche.getText().trim().toLowerCase();
+        String equip = fieldEquipement.getText().trim().toLowerCase();
+        int capMin = 0;
+        try { capMin = Integer.parseInt(fieldCapaciteMin.getText().trim()); }
+        catch (NumberFormatException ignored) {}
+        final int capMinFinal = capMin;
 
         List<SalleEntity> filtres = toutesLesSalles.stream()
+                .filter(s -> nom.isEmpty() || (s.getNom() != null && s.getNom().toLowerCase().contains(nom)))
+                .filter(s -> capMinFinal == 0 || s.getPlace() >= capMinFinal)
                 .filter(s -> {
-                    // Filtre nom
-                    if (!recherche.isEmpty() && (s.getNom() == null
-                            || !s.getNom().toLowerCase().contains(recherche)))
-                        return false;
-
-                    // Filtre capacité
-                    int places = s.getPlace();
-                    if (capacite != null) {
-                        switch (capacite) {
-                            case "Petite (< 20)"   -> { if (places >= 20) return false; }
-                            case "Moyenne (20–40)" -> { if (places < 20 || places > 40) return false; }
-                            case "Grande (> 40)"   -> { if (places <= 40) return false; }
-                        }
-                    }
-
-                    // Filtre équipement
-                    if (!equipement.isEmpty()) {
-                        List<String> mat = safeMateriel(s);
-                        boolean found = mat.stream()
-                                .anyMatch(m -> m.toLowerCase().contains(equipement));
-                        if (!found) return false;
-                    }
-
-                    return true;
+                    if (equip.isEmpty()) return true;
+                    try {
+                        return s.getListe_materiel() != null
+                                && s.getListe_materiel().stream()
+                                        .anyMatch(m -> m.toLowerCase().contains(equip));
+                    } catch (Exception e) { return false; }
                 })
                 .toList();
-
         afficherSalles(filtres);
     }
-
-    // -------------------------------------------------------------------------
-    //  Affichage liste
-    // -------------------------------------------------------------------------
 
     private void afficherSalles(List<SalleEntity> salles) {
         sallesContainer.getChildren().clear();
@@ -138,9 +99,7 @@ public class SallesController {
             sallesContainer.getChildren().add(vide);
             return;
         }
-        for (SalleEntity s : salles) {
-            sallesContainer.getChildren().add(buildSalleCard(s));
-        }
+        for (SalleEntity s : salles) sallesContainer.getChildren().add(buildSalleCard(s));
     }
 
     private HBox buildSalleCard(SalleEntity s) {
@@ -159,23 +118,12 @@ public class SallesController {
         Label capLabel = new Label("👥 " + s.getPlace() + " places");
         capLabel.getStyleClass().add("groupe-card-stats");
 
-        // Résumé équipements
-        List<String> mat = safeMateriel(s);
-        String equipResume = mat.isEmpty() ? "Aucun équipement"
-                : mat.size() + " équipement" + (mat.size() > 1 ? "s" : "");
-        Label equipLabel = new Label("🔧 " + equipResume);
-        equipLabel.getStyleClass().add("groupe-card-stats");
-
         Label chevron = new Label("›");
         chevron.getStyleClass().add("quick-action-chevron");
 
-        card.getChildren().addAll(nomLabel, capLabel, equipLabel, chevron);
+        card.getChildren().addAll(nomLabel, capLabel, chevron);
         return card;
     }
-
-    // -------------------------------------------------------------------------
-    //  Dialog détail salle (capacité + matériel + EDT semaine courante)
-    // -------------------------------------------------------------------------
 
     private void ouvrirDetail(SalleEntity s) {
         Dialog<Void> dialog = new Dialog<>();
@@ -183,15 +131,15 @@ public class SallesController {
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
         dialog.getDialogPane().getStylesheets().add(
                 getClass().getResource("/projet/M1/css/main.css").toExternalForm());
-        dialog.getDialogPane().setPrefWidth(560);
+        dialog.getDialogPane().setPrefWidth(600);
 
-        VBox content = new VBox(16);
+        VBox content = new VBox(20);
         content.getStyleClass().add("page-container");
 
         Label titre = new Label(s.getNom() != null ? s.getNom() : "—");
         titre.getStyleClass().add("page-title");
 
-        // Stats capacité
+        // Capacité
         HBox stats = new HBox(16);
         VBox capBox = buildStatBox("Capacité", s.getPlace() + " places");
         HBox.setHgrow(capBox, Priority.ALWAYS);
@@ -199,76 +147,14 @@ public class SallesController {
         stats.getChildren().add(capBox);
 
         // Équipements
+        List<String> materiel = List.of();
+        try { materiel = s.getListe_materiel() != null ? s.getListe_materiel() : List.of(); }
+        catch (Exception ignored) {}
+
         Label equipTitre = new Label("Équipements");
         equipTitre.getStyleClass().add("form-step-title");
 
         VBox equipList = new VBox(6);
-        List<String> materiel = safeMateriel(s);
-        rafraichirEquipList(equipList, materiel);
-
-        // UC10/US19 — Bouton modifier équipements, visible uniquement pour le gestionnaire
-        UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
-        if (u != null && u.getRole() == Role.GESTIONNAIRE_PLANNING) {
-            Button btnModifierEquip = new Button("Modifier les équipements");
-            btnModifierEquip.getStyleClass().add("btn-secondary");
-            btnModifierEquip.setOnAction(e ->
-                    ouvrirDialogModifierEquipements(s, equipList));
-            content.getChildren().addAll(titre, stats, equipTitre, equipList, btnModifierEquip);
-        } else {
-            content.getChildren().addAll(titre, stats, equipTitre, equipList);
-        }
-        // EDT de la salle — semaine courante, chargé en arrière-plan
-        Label edtTitre = new Label("EDT de la salle — semaine courante");
-        edtTitre.getStyleClass().add("form-step-title");
-
-        ProgressIndicator spinner = new ProgressIndicator();
-        spinner.setPrefSize(24, 24);
-
-        VBox edtList = new VBox(6);
-        edtList.getChildren().add(spinner);
-
-        content.getChildren().addAll(edtTitre, edtList);
-        dialog.getDialogPane().setContent(content);
-
-        // Charger l'EDT en arrière-plan une fois le dialog ouvert
-        LocalDate semaine = LocalDate.now().with(DayOfWeek.MONDAY);
-        Thread t = new Thread(() -> {
-            List<CoursEntity> cours;
-            try {
-                cours = edtController.getEmploiDuTempsSalle(s, semaine);
-            } catch (Exception e) {
-                cours = List.of();
-            }
-            final List<CoursEntity> result = cours;
-            Platform.runLater(() -> {
-                edtList.getChildren().clear();
-                if (result.isEmpty()) {
-                    Label vide = new Label("Aucun cours cette semaine.");
-                    vide.getStyleClass().add("text-muted");
-                    edtList.getChildren().add(vide);
-                } else {
-                    for (CoursEntity c : result) {
-                        edtList.getChildren().add(buildEdtRow(c));
-                    }
-                }
-            });
-        });
-        t.setDaemon(true);
-        t.start();
-
-        dialog.showAndWait();
-    }
-
-    // -------------------------------------------------------------------------
-    //  UC10/US19 — Modifier les équipements d'une salle (Gestionnaire)
-    // -------------------------------------------------------------------------
-
-    /**
-     * Remplit le VBox d'affichage des équipements à partir d'une liste.
-     * Utilisé à l'affichage initial et après modification.
-     */
-    private void rafraichirEquipList(VBox equipList, List<String> materiel) {
-        equipList.getChildren().clear();
         if (materiel.isEmpty()) {
             Label vide = new Label("Aucun équipement renseigné.");
             vide.getStyleClass().add("text-muted");
@@ -280,156 +166,211 @@ public class SallesController {
                 equipList.getChildren().add(l);
             }
         }
+
+        // EDT de la salle
+        Label edtTitre = new Label("Emploi du temps de la salle");
+        edtTitre.getStyleClass().add("form-step-title");
+
+        VBox edtPanel = buildEdtPanel(s, LocalDate.now().with(DayOfWeek.MONDAY));
+
+        // US19 — Bouton "Modifier les équipements" visible uniquement pour le gestionnaire
+        UserEntity moi = SessionManager.getInstance().getUtilisateurConnecte();
+        if (moi != null && moi.getRole() == Role.GESTIONNAIRE_PLANNING) {
+            Button btnModifEquip = new Button("Modifier les équipements");
+            btnModifEquip.getStyleClass().add("btn-secondary");
+            btnModifEquip.setOnAction(ev -> ouvrirDialogModifierEquipements(s, equipList));
+            content.getChildren().addAll(titre, stats, equipTitre, equipList, btnModifEquip, edtTitre, edtPanel);
+        } else {
+            content.getChildren().addAll(titre, stats, equipTitre, equipList, edtTitre, edtPanel);
+        }
+
+        dialog.getDialogPane().setContent(content);
+        dialog.showAndWait();
     }
 
     /**
-     * Ouvre un dialog permettant au gestionnaire de modifier la liste des équipements.
-     * Chaque équipement est affiché sur une ligne éditable avec un bouton de suppression.
-     * Un champ permet d'en ajouter de nouveaux.
-     * La validation persiste en BDD et rafraîchit l'affichage.
+     * US19 — Dialog pour modifier la liste des équipements d'une salle.
+     * Ouvre une TextArea pré-remplie (un équipement par ligne).
+     * À la validation, persiste en BDD et rafraîchit equipList dans le dialog parent.
      */
-    private void ouvrirDialogModifierEquipements(SalleEntity s, VBox equipListParent) {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Modifier les équipements");
-        dialog.setHeaderText("Équipements de " + s.getNom());
+    private void ouvrirDialogModifierEquipements(SalleEntity salle, VBox equipList) {
+        List<String> actuel;
+        try { actuel = salle.getListe_materiel() != null ? salle.getListe_materiel() : List.of(); }
+        catch (Exception e) { actuel = List.of(); }
 
-        ButtonType btnValider = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(btnValider, ButtonType.CANCEL);
+        Dialog<List<String>> dialog = new Dialog<>();
+        dialog.setTitle("Modifier les équipements — " + salle.getNom());
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         dialog.getDialogPane().getStylesheets().add(
                 getClass().getResource("/projet/M1/css/main.css").toExternalForm());
-        dialog.getDialogPane().setPrefWidth(420);
 
-        VBox content = new VBox(12);
-        content.setPadding(new javafx.geometry.Insets(16));
+        TextArea area = new TextArea(String.join("\n", actuel));
+        area.setPromptText("Un équipement par ligne…");
+        area.setPrefRowCount(8);
+        area.setWrapText(true);
 
-        // Liste éditable
-        List<String> copie = new java.util.ArrayList<>(safeMateriel(s));
-        VBox lignesEquip = new VBox(8);
-        rebuildLignesEquip(lignesEquip, copie);
+        Label hint = new Label("Saisissez un équipement par ligne.");
+        hint.getStyleClass().add("text-muted");
 
-        // Champ + bouton pour ajouter un nouvel équipement
-        TextField fieldNouvel = new TextField();
-        fieldNouvel.setPromptText("Nouvel équipement…");
-        HBox.setHgrow(fieldNouvel, Priority.ALWAYS);
-
-        Button btnAjouter = new Button("+ Ajouter");
-        btnAjouter.getStyleClass().add("btn-secondary");
-        btnAjouter.setOnAction(e -> {
-            String val = fieldNouvel.getText().trim();
-            if (val.isEmpty()) return;
-            copie.add(val);
-            fieldNouvel.clear();
-            rebuildLignesEquip(lignesEquip, copie);
-        });
-
-        HBox ajoutRow = new HBox(8, fieldNouvel, btnAjouter);
-        ajoutRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-
-        content.getChildren().addAll(lignesEquip, new Separator(), ajoutRow);
+        VBox content = new VBox(8, hint, area);
+        content.getStyleClass().add("page-container");
         dialog.getDialogPane().setContent(content);
 
-        dialog.showAndWait().ifPresent(result -> {
-            if (result != btnValider) return;
+        dialog.setResultConverter(bt -> {
+            if (bt != ButtonType.OK) return null;
+            return java.util.Arrays.stream(area.getText().split("\n"))
+                    .map(String::trim).filter(s -> !s.isEmpty())
+                    .collect(java.util.stream.Collectors.toList());
+        });
 
-            // Lire les valeurs actuelles des TextFields (au cas où l'utilisateur a édité sans cliquer ailleurs)
-            List<String> nouvellesList = lignesEquip.getChildren().stream()
-                    .filter(n -> n instanceof HBox)
-                    .flatMap(n -> ((HBox) n).getChildren().stream())
-                    .filter(n -> n instanceof TextField)
-                    .map(n -> ((TextField) n).getText().trim())
-                    .filter(v -> !v.isEmpty())
-                    .toList();
-
-            // Persistance BDD
+        dialog.showAndWait().ifPresent(newList -> {
             try {
-                salleController.modifierEquipements(s.getId(), nouvellesList);
-            } catch (Exception ex) {
-                new Alert(Alert.AlertType.ERROR,
-                        "Impossible de sauvegarder les équipements.").showAndWait();
-                return;
+                salleController.modifierEquipements(salle.getId(), newList);
+                salle.setListe_materiel(newList);
+                // Rafraîchir la liste affichée dans le dialog parent
+                equipList.getChildren().clear();
+                if (newList.isEmpty()) {
+                    Label vide = new Label("Aucun équipement renseigné.");
+                    vide.getStyleClass().add("text-muted");
+                    equipList.getChildren().add(vide);
+                } else {
+                    for (String item : newList) {
+                        Label l = new Label("• " + item);
+                        l.getStyleClass().add("cours-block-detail");
+                        equipList.getChildren().add(l);
+                    }
+                }
+            } catch (Exception e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Erreur"); alert.setHeaderText(null);
+                alert.setContentText("Impossible de sauvegarder : " + e.getMessage());
+                alert.getDialogPane().getStylesheets().add(
+                        getClass().getResource("/projet/M1/css/main.css").toExternalForm());
+                alert.showAndWait();
             }
-
-            // Mise à jour en mémoire + rafraîchissement visuel
-            s.setListe_materiel(nouvellesList);
-            rafraichirEquipList(equipListParent, nouvellesList);
-
-            // Mise à jour du résumé sur la carte dans la liste principale
-            sallesContainer.getChildren().stream()
-                    .filter(n -> n instanceof HBox)
-                    .map(n -> (HBox) n)
-                    .forEach(card -> {
-                        boolean matchNom = card.getChildren().stream()
-                                .filter(n -> n instanceof Label)
-                                .map(n -> (Label) n)
-                                .anyMatch(l -> l.getStyleClass().contains("groupe-card-nom")
-                                        && l.getText().equals(s.getNom() != null ? s.getNom() : "—"));
-                        if (matchNom) {
-                            String resume = nouvellesList.isEmpty() ? "Aucun équipement"
-                                    : nouvellesList.size() + " équipement"
-                                    + (nouvellesList.size() > 1 ? "s" : "");
-                            card.getChildren().stream()
-                                    .filter(n -> n instanceof Label)
-                                    .map(n -> (Label) n)
-                                    .filter(l -> l.getStyleClass().contains("groupe-card-stats")
-                                            && l.getText().startsWith("🔧"))
-                                    .findFirst()
-                                    .ifPresent(l -> l.setText("🔧 " + resume));
-                        }
-                    });
         });
     }
 
-    /**
-     * Reconstruit le VBox des lignes éditables à partir de la liste courante.
-     * Chaque ligne = TextField éditable + bouton ✕ de suppression.
-     * La suppression retire l'élément de la liste et reconstruit les lignes.
-     */
-    private void rebuildLignesEquip(VBox lignesEquip, List<String> copie) {
-        lignesEquip.getChildren().clear();
-        for (int i = 0; i < copie.size(); i++) {
-            final int idx = i;
-            TextField tf = new TextField(copie.get(idx));
-            tf.setPromptText("Nom de l'équipement");
-            tf.textProperty().addListener((obs, o, n) -> copie.set(idx, n));
-            HBox.setHgrow(tf, Priority.ALWAYS);
+    /** Construit le panel EDT navigable par semaine pour une salle. */
+    private VBox buildEdtPanel(SalleEntity salle, LocalDate initMonday) {
+        VBox panel = new VBox(8);
 
-            Button btnSuppr = new Button("✕");
-            btnSuppr.getStyleClass().add("btn-reject");
-            btnSuppr.setOnAction(e -> {
-                copie.remove(idx);
-                rebuildLignesEquip(lignesEquip, copie);
+        // Référence mutable sur la semaine courante
+        final LocalDate[] monday = {initMonday};
+
+        Label labelSemaine = new Label(formatSemaine(initMonday));
+        labelSemaine.getStyleClass().add("schedule-panel-label");
+        labelSemaine.setStyle("-fx-font-weight: bold;");
+
+        Button btnPrev = new Button("‹");
+        btnPrev.getStyleClass().add("btn-secondary");
+        Button btnNext = new Button("›");
+        btnNext.getStyleClass().add("btn-secondary");
+
+        HBox navBar = new HBox(8, btnPrev, labelSemaine, btnNext);
+        navBar.setAlignment(Pos.CENTER_LEFT);
+
+        VBox listeCours = new VBox(4);
+        ProgressIndicator loading = new ProgressIndicator();
+        loading.setPrefSize(24, 24);
+        listeCours.getChildren().add(loading);
+
+        panel.getChildren().addAll(navBar, listeCours);
+
+        // Charge les cours pour la semaine donnée
+        Runnable charger = () -> {
+            listeCours.getChildren().setAll(new ProgressIndicator());
+            Thread t = new Thread(() -> {
+                List<CoursEntity> cours;
+                try { cours = edtController.getEmploiDuTempsSalle(salle, monday[0]); }
+                catch (Exception e) { cours = List.of(); }
+                final List<CoursEntity> result = cours;
+                final LocalDate m = monday[0];
+                Platform.runLater(() -> {
+                    listeCours.getChildren().clear();
+                    fillListeCours(listeCours, result, m);
+                    labelSemaine.setText(formatSemaine(m));
+                });
             });
+            t.setDaemon(true);
+            t.start();
+        };
 
-            HBox row = new HBox(8, tf, btnSuppr);
-            row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-            lignesEquip.getChildren().add(row);
+        btnPrev.setOnAction(e -> { monday[0] = monday[0].minusWeeks(1); charger.run(); });
+        btnNext.setOnAction(e -> { monday[0] = monday[0].plusWeeks(1);  charger.run(); });
+
+        // Charge la semaine initiale
+        charger.run();
+
+        return panel;
+    }
+
+    private void fillListeCours(VBox list, List<CoursEntity> cours, LocalDate monday) {
+        if (cours.isEmpty()) {
+            Label vide = new Label("Aucun cours cette semaine.");
+            vide.getStyleClass().add("text-muted");
+            list.getChildren().add(vide);
+            return;
+        }
+        for (int d = 0; d < 5; d++) {
+            final LocalDate date = monday.plusDays(d);
+            List<CoursEntity> duJour = cours.stream()
+                    .filter(c -> {
+                        try { return c.getHoraire() != null && date.equals(c.getHoraire().getJour()); }
+                        catch (Exception e) { return false; }
+                    })
+                    .toList();
+            if (duJour.isEmpty()) continue;
+
+            Label jourLabel = new Label(JOURS[d] + " " + date.format(FMT_JOUR));
+            jourLabel.getStyleClass().add("groupe-col-header");
+            jourLabel.setStyle("-fx-padding: 6 0 2 0;");
+            list.getChildren().add(jourLabel);
+
+            for (CoursEntity c : duJour) {
+                HBox row = new HBox(12);
+                row.getStyleClass().add("groupe-tableau-row");
+                row.setAlignment(Pos.CENTER_LEFT);
+                row.setStyle("-fx-padding: 6 10 6 10; -fx-background-radius: 6;");
+
+                String heure = "";
+                try {
+                    if (c.getHoraire() != null)
+                        heure = c.getHoraire().getHeureDebut() + " – " + c.getHoraire().getHeureFin();
+                } catch (Exception ignored) {}
+
+                String nomCours = "—";
+                try { if (c.getNom() != null) nomCours = c.getNom(); } catch (Exception ignored) {}
+
+                String nomGroupe = "";
+                try {
+                    if (c.getList_etudiant() != null && !c.getList_etudiant().isEmpty()) {
+                        var grp = c.getList_etudiant().get(0).getGroupe();
+                        if (grp != null && grp.getNom() != null) nomGroupe = grp.getNom();
+                    }
+                } catch (Exception ignored) {}
+
+                Label heureLabel = new Label(heure);
+                heureLabel.getStyleClass().add("cours-block-time");
+                heureLabel.setPrefWidth(140);
+
+                Label nomLabel = new Label(nomCours);
+                nomLabel.getStyleClass().add("cours-block-title");
+                HBox.setHgrow(nomLabel, Priority.ALWAYS);
+
+                Label grpLabel = new Label(nomGroupe);
+                grpLabel.getStyleClass().add("groupe-etudiant-login");
+
+                row.getChildren().addAll(heureLabel, nomLabel, grpLabel);
+                list.getChildren().add(row);
+            }
         }
     }
 
-    private HBox buildEdtRow(CoursEntity c) {
-        HBox row = new HBox(12);
-        row.getStyleClass().add("edt-croise-row");
-        row.setAlignment(Pos.CENTER_LEFT);
-
-        HoraireEntity h = c.getHoraire();
-        String jour  = h != null ? h.getJour().format(FMT_DATE) : "—";
-        String heure = h != null
-                ? h.getHeureDebut().format(FMT_TIME) + " – " + h.getHeureFin().format(FMT_TIME)
-                : "—";
-
-        Label nomLbl = new Label(c.getNom() != null ? c.getNom() : "Cours");
-        nomLbl.getStyleClass().add("edt-croise-cours-nom");
-        HBox.setHgrow(nomLbl, Priority.ALWAYS);
-        nomLbl.setMaxWidth(Double.MAX_VALUE);
-
-        Label typeLbl = new Label(c.getTypeCours() != null ? "[" + c.getTypeCours() + "]" : "");
-        typeLbl.getStyleClass().add("groupe-card-stats");
-
-        Label infoLbl = new Label(jour + "  " + heure);
-        infoLbl.getStyleClass().add("edt-croise-cours-info");
-
-        row.getChildren().addAll(nomLbl, typeLbl, infoLbl);
-        return row;
+    private String formatSemaine(LocalDate monday) {
+        return "Semaine du " + monday.format(FMT_JOUR)
+                + " – " + monday.plusDays(4).format(FMT_JOUR)
+                + " " + monday.getYear();
     }
 
     private VBox buildStatBox(String label, String valeur) {
@@ -442,13 +383,5 @@ public class SallesController {
         val.setStyle("-fx-font-size: 15px; -fx-font-weight: bold;");
         box.getChildren().addAll(lbl, val);
         return box;
-    }
-
-    private List<String> safeMateriel(SalleEntity s) {
-        try {
-            return s.getListe_materiel() != null ? s.getListe_materiel() : List.of();
-        } catch (Exception ignored) {
-            return List.of();
-        }
     }
 }

@@ -220,11 +220,12 @@ public class CoursDAO {
                     etudiants.addAll(groupes.get(0).getList_etudiant());
             }
 
-            // Rattacher le professeur
+            // Rattacher le professeur au cours
+            UserEntity profEntity = null;
             List<UserEntity> profs = List.of();
             if (profId != null) {
-                UserEntity prof = em.find(UserEntity.class, profId);
-                if (prof != null) profs = List.of(prof);
+                profEntity = em.find(UserEntity.class, profId);
+                if (profEntity != null) profs = List.of(profEntity);
             }
 
             CoursEntity cours = new CoursEntity();
@@ -235,6 +236,27 @@ public class CoursDAO {
             cours.setList_etudiant(etudiants);
             cours.setList_professeur(profs);
             em.persist(cours);
+
+            // Rattacher aussi le professeur au module correspondant (professeur_module)
+            // pour que les notes du prof soient accessibles dans NotesController.
+            if (profEntity != null) {
+                List<ModuleEntity> modules = em.createQuery(
+                                "SELECT m FROM ModuleEntity m WHERE m.nom = :nom",
+                                ModuleEntity.class)
+                        .setParameter("nom", nom).getResultList();
+                for (ModuleEntity module : modules) {
+                    List<UserEntity> profsModule = module.getList_professeur();
+                    if (profsModule == null) profsModule = new java.util.ArrayList<>();
+                    final UserEntity pFinal = profEntity;
+                    boolean dejaPresent = profsModule.stream()
+                            .anyMatch(p -> p.getId().equals(pFinal.getId()));
+                    if (!dejaPresent) {
+                        profsModule = new java.util.ArrayList<>(profsModule);
+                        profsModule.add(profEntity);
+                        module.setList_professeur(profsModule);
+                    }
+                }
+            }
 
             tx.commit();
             return cours;

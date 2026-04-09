@@ -70,6 +70,7 @@
                 <Label text="Professeur   →  profmartin / prof123"        styleClass="demo-item"/>
                 <Label text="Professeur   →  profdupont / prof123"        styleClass="demo-item"/>
                 <Label text="Gestionnaire →  gestionnaire / gest123"      styleClass="demo-item"/>
+                <Label text="Invité       →  invite / invite123"          styleClass="demo-item"/>
             </VBox>
 
         </VBox>
