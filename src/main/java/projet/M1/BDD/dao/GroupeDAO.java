@@ -1,8 +1,10 @@
 package projet.M1.BDD.dao;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 import projet.M1.BDD.JPAUtil;
 import projet.M1.BDD.entity.GroupeEtudiantEntity;
+import projet.M1.BDD.entity.UserEntity;
 
 import java.util.List;
 
@@ -26,6 +28,80 @@ public class GroupeDAO {
                                     "ORDER BY g.nom",
                             GroupeEtudiantEntity.class)
                     .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    /** UC8/US17 — Crée et persiste un nouveau groupe vide. */
+    public GroupeEtudiantEntity save(String nom) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            GroupeEtudiantEntity g = new GroupeEtudiantEntity();
+            g.setNom(nom);
+            em.persist(g);
+            tx.commit();
+            return g;
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    /** UC8/US17 — Renomme un groupe existant. */
+    public void updateNom(Long groupeId, String nom) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            GroupeEtudiantEntity g = em.find(GroupeEtudiantEntity.class, groupeId);
+            if (g != null) g.setNom(nom);
+            tx.commit();
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * UC8/US17 — Affecte un étudiant à un groupe (met à jour user.groupe en BDD).
+     * Un étudiant ne peut appartenir qu'à un seul groupe à la fois.
+     */
+    public void addMembre(Long groupeId, Long etudiantId) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            UserEntity u = em.find(UserEntity.class, etudiantId);
+            GroupeEtudiantEntity g = em.find(GroupeEtudiantEntity.class, groupeId);
+            if (u != null && g != null) u.setGroupe(g);
+            tx.commit();
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    /** UC8/US17 — Retire un étudiant de son groupe (user.groupe → null). */
+    public void removeMembre(Long etudiantId) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            UserEntity u = em.find(UserEntity.class, etudiantId);
+            if (u != null) u.setGroupe(null);
+            tx.commit();
+        } catch (Exception e) {
+            if (tx.isActive()) tx.rollback();
+            throw e;
         } finally {
             em.close();
         }

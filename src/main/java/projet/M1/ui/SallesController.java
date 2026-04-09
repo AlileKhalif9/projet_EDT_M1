@@ -8,8 +8,11 @@ import javafx.scene.layout.*;
 import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.dao.SalleDAO;
 import projet.M1.BDD.entity.CoursEntity;
+import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.SalleEntity;
+import projet.M1.BDD.entity.UserEntity;
 import projet.M1.controller.SalleController;
+import projet.M1.session.SessionManager;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -169,9 +172,82 @@ public class SallesController {
 
         VBox edtPanel = buildEdtPanel(s, LocalDate.now().with(DayOfWeek.MONDAY));
 
-        content.getChildren().addAll(titre, stats, equipTitre, equipList, edtTitre, edtPanel);
+        // US19 — Bouton "Modifier les équipements" visible uniquement pour le gestionnaire
+        UserEntity moi = SessionManager.getInstance().getUtilisateurConnecte();
+        if (moi != null && moi.getRole() == Role.GESTIONNAIRE_PLANNING) {
+            Button btnModifEquip = new Button("Modifier les équipements");
+            btnModifEquip.getStyleClass().add("btn-secondary");
+            btnModifEquip.setOnAction(ev -> ouvrirDialogModifierEquipements(s, equipList));
+            content.getChildren().addAll(titre, stats, equipTitre, equipList, btnModifEquip, edtTitre, edtPanel);
+        } else {
+            content.getChildren().addAll(titre, stats, equipTitre, equipList, edtTitre, edtPanel);
+        }
+
         dialog.getDialogPane().setContent(content);
         dialog.showAndWait();
+    }
+
+    /**
+     * US19 — Dialog pour modifier la liste des équipements d'une salle.
+     * Ouvre une TextArea pré-remplie (un équipement par ligne).
+     * À la validation, persiste en BDD et rafraîchit equipList dans le dialog parent.
+     */
+    private void ouvrirDialogModifierEquipements(SalleEntity salle, VBox equipList) {
+        List<String> actuel;
+        try { actuel = salle.getListe_materiel() != null ? salle.getListe_materiel() : List.of(); }
+        catch (Exception e) { actuel = List.of(); }
+
+        Dialog<List<String>> dialog = new Dialog<>();
+        dialog.setTitle("Modifier les équipements — " + salle.getNom());
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource("/projet/M1/css/main.css").toExternalForm());
+
+        TextArea area = new TextArea(String.join("\n", actuel));
+        area.setPromptText("Un équipement par ligne…");
+        area.setPrefRowCount(8);
+        area.setWrapText(true);
+
+        Label hint = new Label("Saisissez un équipement par ligne.");
+        hint.getStyleClass().add("text-muted");
+
+        VBox content = new VBox(8, hint, area);
+        content.getStyleClass().add("page-container");
+        dialog.getDialogPane().setContent(content);
+
+        dialog.setResultConverter(bt -> {
+            if (bt != ButtonType.OK) return null;
+            return java.util.Arrays.stream(area.getText().split("\n"))
+                    .map(String::trim).filter(s -> !s.isEmpty())
+                    .collect(java.util.stream.Collectors.toList());
+        });
+
+        dialog.showAndWait().ifPresent(newList -> {
+            try {
+                salleController.modifierEquipements(salle.getId(), newList);
+                salle.setListe_materiel(newList);
+                // Rafraîchir la liste affichée dans le dialog parent
+                equipList.getChildren().clear();
+                if (newList.isEmpty()) {
+                    Label vide = new Label("Aucun équipement renseigné.");
+                    vide.getStyleClass().add("text-muted");
+                    equipList.getChildren().add(vide);
+                } else {
+                    for (String item : newList) {
+                        Label l = new Label("• " + item);
+                        l.getStyleClass().add("cours-block-detail");
+                        equipList.getChildren().add(l);
+                    }
+                }
+            } catch (Exception e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Erreur"); alert.setHeaderText(null);
+                alert.setContentText("Impossible de sauvegarder : " + e.getMessage());
+                alert.getDialogPane().getStylesheets().add(
+                        getClass().getResource("/projet/M1/css/main.css").toExternalForm());
+                alert.showAndWait();
+            }
+        });
     }
 
     /** Construit le panel EDT navigable par semaine pour une salle. */

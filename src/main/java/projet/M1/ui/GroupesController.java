@@ -78,11 +78,14 @@ public class GroupesController {
             if (tousLesGroupes.stream().anyMatch(gg -> nomTrim.equalsIgnoreCase(gg.getNom()))) {
                 showAlert("Nom déjà utilisé", "Un groupe avec ce nom existe déjà."); return;
             }
-            GroupeEtudiantEntity nouveau = new GroupeEtudiantEntity();
-            nouveau.setNom(nomTrim);
-            nouveau.setList_etudiant(new ArrayList<>());
-            tousLesGroupes.add(nouveau);
-            appliquerFiltres();
+            try {
+                GroupeEtudiantEntity nouveau = groupeController.creerGroupe(nomTrim);
+                nouveau.setList_etudiant(new ArrayList<>());
+                tousLesGroupes.add(nouveau);
+                appliquerFiltres();
+            } catch (Exception e) {
+                showAlert("Erreur", "Impossible de créer le groupe : " + e.getMessage());
+            }
         });
     }
 
@@ -185,10 +188,16 @@ public class GroupesController {
             inp.getDialogPane().getStylesheets().add(getClass().getResource("/projet/M1/css/main.css").toExternalForm());
             inp.showAndWait().ifPresent(nv -> {
                 String nom = nv.trim(); if (nom.isEmpty()) return;
+                String ancienNom = g.getNom();
+                try {
+                    if (g.getId() != null) groupeController.renommerGroupe(g.getId(), nom);
+                } catch (Exception ex) {
+                    showAlert("Erreur", "Impossible de renommer le groupe : " + ex.getMessage()); return;
+                }
                 titre.setText(nom); dialog.setTitle("Groupe " + nom);
                 groupesContainer.getChildren().stream().filter(n -> n instanceof HBox).map(n -> (HBox) n)
                         .forEach(card -> card.getChildren().stream().filter(n -> n instanceof Label).map(n -> (Label) n)
-                                .filter(l -> l.getStyleClass().contains("groupe-card-nom") && l.getText().equals(g.getNom()))
+                                .filter(l -> l.getStyleClass().contains("groupe-card-nom") && l.getText().equals(ancienNom))
                                 .findFirst().ifPresent(l -> l.setText(nom)));
                 g.setNom(nom);
             });
@@ -238,7 +247,15 @@ public class GroupesController {
         Label roleLbl = new Label(roleLabel(u)); roleLbl.setPrefWidth(100); roleLbl.getStyleClass().add("groupe-etudiant-login");
 
         Button btnRetirer = new Button("Retirer"); btnRetirer.getStyleClass().add("btn-danger"); btnRetirer.setPrefWidth(68);
-        btnRetirer.setOnAction(e -> { membres.remove(u); Platform.runLater(() -> remplirTableau(tableau, membres, sousTitre, g)); });
+        btnRetirer.setOnAction(e -> {
+            try {
+                if (u.getId() != null) groupeController.retirerMembre(u.getId());
+            } catch (Exception ex) {
+                showAlert("Erreur", "Impossible de retirer le membre : " + ex.getMessage()); return;
+            }
+            membres.remove(u);
+            Platform.runLater(() -> remplirTableau(tableau, membres, sousTitre, g));
+        });
 
         row.getChildren().addAll(cellNom, loginLbl, roleLbl, btnRetirer);
         return row;
@@ -280,7 +297,16 @@ public class GroupesController {
         VBox pickerContent = new VBox(12, searchField, listView); pickerContent.getStyleClass().add("page-container");
         picker.getDialogPane().setContent(pickerContent);
         picker.setResultConverter(bt -> bt == ButtonType.OK ? listView.getSelectionModel().getSelectedItem() : null);
-        picker.showAndWait().ifPresent(etudiant -> { membres.add(etudiant); Platform.runLater(() -> remplirTableau(tableau, membres, sousTitre, g)); });
+        picker.showAndWait().ifPresent(etudiant -> {
+            try {
+                if (g.getId() != null && etudiant.getId() != null)
+                    groupeController.ajouterMembre(g.getId(), etudiant.getId());
+            } catch (Exception ex) {
+                showAlert("Erreur", "Impossible d'ajouter le membre : " + ex.getMessage()); return;
+            }
+            membres.add(etudiant);
+            Platform.runLater(() -> remplirTableau(tableau, membres, sousTitre, g));
+        });
     }
 
     private void rafraichirCarte(GroupeEtudiantEntity g, int nb) {
