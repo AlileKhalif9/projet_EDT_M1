@@ -213,6 +213,9 @@ public class GroupesController {
     }
 
     private void remplirTableau(VBox tableau, List<UserEntity> membres, Label sousTitre, GroupeEtudiantEntity g) {
+        // Synchronise l'entité en mémoire pour que la prochaine ouverture du dialog soit à jour
+        g.setList_etudiant(new ArrayList<>(membres));
+
         if (tableau.getChildren().size() > 1)
             tableau.getChildren().subList(1, tableau.getChildren().size()).clear();
         sousTitre.setText(membres.size() + " membre" + (membres.size() > 1 ? "s" : "") + "  ·  " + resumeTypes(g));
