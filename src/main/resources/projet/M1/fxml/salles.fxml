@@ -14,7 +14,7 @@
         <HBox alignment="CENTER_LEFT" spacing="16">
             <VBox HBox.hgrow="ALWAYS" spacing="4">
                 <Label text="Gestion des salles" styleClass="page-title"/>
-                <Label text="Consultez les salles, leur capacité, leurs équipements et leur EDT" styleClass="page-subtitle"/>
+                <Label text="Consultez les salles et leurs équipements" styleClass="page-subtitle"/>
             </VBox>
         </HBox>
 
@@ -24,15 +24,17 @@
                        promptText="Rechercher une salle…"
                        prefWidth="220"
                        styleClass="login-field"/>
-            <ComboBox fx:id="comboFiltreCapacite"
-                      prefWidth="180"/>
-            <TextField fx:id="fieldFiltreEquipement"
-                       promptText="Filtrer par équipement…"
-                       prefWidth="200"
+            <TextField fx:id="fieldCapaciteMin"
+                       promptText="Capacité min."
+                       prefWidth="120"
+                       styleClass="login-field"/>
+            <TextField fx:id="fieldEquipement"
+                       promptText="Équipement…"
+                       prefWidth="180"
                        styleClass="login-field"/>
         </HBox>
 
-        <!-- Liste des salles (remplie dynamiquement) -->
+        <!-- Liste des salles -->
         <ProgressIndicator fx:id="loadingIndicator" prefWidth="32" prefHeight="32"
                            visible="true" managed="true"/>
         <VBox fx:id="sallesContainer" spacing="12"
