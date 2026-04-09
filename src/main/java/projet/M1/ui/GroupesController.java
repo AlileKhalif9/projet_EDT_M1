@@ -6,9 +6,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import projet.M1.BDD.dao.GroupeDAO;
-import projet.M1.BDD.dao.UserDAO;
 import projet.M1.BDD.entity.GroupeEtudiantEntity;
-import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.UserEntity;
 import projet.M1.controller.GroupeController;
 
@@ -30,7 +28,6 @@ public class GroupesController {
     @FXML private Button             btnNouveauGroupe;
 
     private final GroupeController groupeController = new GroupeController(new GroupeDAO());
-    private final UserDAO userDAO = new UserDAO();
 
     private List<GroupeEtudiantEntity> tousLesGroupes = new ArrayList<>();
     private List<UserEntity> tousLesEtudiants = List.of();
@@ -47,7 +44,7 @@ public class GroupesController {
             List<GroupeEtudiantEntity> groupes;
             List<UserEntity> etudiants;
             try { groupes = groupeController.getAllGroupes(); } catch (Exception e) { groupes = List.of(); }
-            try { etudiants = userDAO.findByRole(Role.ETUDIANT); } catch (Exception e) { etudiants = List.of(); }
+            try { etudiants = groupeController.getEtudiants(); } catch (Exception e) { etudiants = List.of(); }
             final List<GroupeEtudiantEntity> g = groupes;
             final List<UserEntity> e = etudiants;
             Platform.runLater(() -> {

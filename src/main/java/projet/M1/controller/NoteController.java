@@ -97,6 +97,11 @@ public class NoteController {
         return noteDAO.findByEtudiantAndModule(etudiantId, moduleId);
     }
 
+    /** Toutes les notes d'un module (tous étudiants) — pour calculer la moyenne de classe. */
+    public List<NoteEntity> getNotesModule(Long moduleId) {
+        return noteDAO.findByModule(moduleId);
+    }
+
     /** Toutes les notes d'un étudiant, tous modules confondus. */
     public List<NoteEntity> getToutesNotesEtudiant(Long etudiantId) {
         return noteDAO.findByEtudiant(etudiantId);

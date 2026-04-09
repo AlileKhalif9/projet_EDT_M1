@@ -11,6 +11,7 @@ import projet.M1.BDD.entity.CoursEntity;
 import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.SalleEntity;
 import projet.M1.BDD.entity.UserEntity;
+import projet.M1.controller.EmploiDuTempsController;
 import projet.M1.controller.SalleController;
 import projet.M1.session.SessionManager;
 
@@ -33,8 +34,8 @@ public class SallesController {
     @FXML private ProgressIndicator loadingIndicator;
     @FXML private VBox sallesContainer;
 
-    private final SalleController salleController = new SalleController(new SalleDAO());
-    private final CoursDAO coursDAO = new CoursDAO();
+    private final SalleController          salleController = new SalleController(new SalleDAO());
+    private final EmploiDuTempsController  edtController   = new EmploiDuTempsController(new CoursDAO());
 
     private List<SalleEntity> toutesLesSalles = List.of();
 
@@ -281,7 +282,7 @@ public class SallesController {
             listeCours.getChildren().setAll(new ProgressIndicator());
             Thread t = new Thread(() -> {
                 List<CoursEntity> cours;
-                try { cours = coursDAO.findBySalleAndSemaine(salle, monday[0]); }
+                try { cours = edtController.getEmploiDuTempsSalle(salle, monday[0]); }
                 catch (Exception e) { cours = List.of(); }
                 final List<CoursEntity> result = cours;
                 final LocalDate m = monday[0];

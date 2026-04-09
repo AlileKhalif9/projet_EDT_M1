@@ -240,7 +240,7 @@ public class NotesController {
                 List<NoteEntity> mesNotes =
                         noteController.getNotesEtudiantModule(u.getId(), module.getId());
                 List<NoteEntity> toutesNotes =
-                        new NoteDAO().findByModule(module.getId());
+                        noteController.getNotesModule(module.getId());
 
                 Platform.runLater(() -> {
                     loadingIndicator.setVisible(false);

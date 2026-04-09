@@ -2,7 +2,10 @@ package projet.M1.controller;
 
 import projet.M1.BDD.DataCache;
 import projet.M1.BDD.dao.GroupeDAO;
+import projet.M1.BDD.dao.UserDAO;
 import projet.M1.BDD.entity.GroupeEtudiantEntity;
+import projet.M1.BDD.entity.Role;
+import projet.M1.BDD.entity.UserEntity;
 
 import java.util.List;
 
@@ -46,5 +49,10 @@ public class GroupeController {
     /** UC8/US17 — Retire un étudiant de son groupe. */
     public void retirerMembre(Long etudiantId) {
         groupeDAO.removeMembre(etudiantId);
+    }
+
+    /** Retourne tous les étudiants (pour le picker d'ajout de membre). */
+    public List<UserEntity> getEtudiants() {
+        return new UserDAO().findByRole(Role.ETUDIANT);
     }
 }

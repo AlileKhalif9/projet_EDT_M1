@@ -12,7 +12,6 @@ import javafx.scene.layout.StackPane;
 import projet.M1.BDD.dao.CoursDAO;
 import projet.M1.BDD.dao.GroupeDAO;
 import projet.M1.BDD.dao.SalleDAO;
-import projet.M1.BDD.dao.UserDAO;
 import projet.M1.BDD.entity.CoursEntity;
 import projet.M1.BDD.entity.Role;
 import projet.M1.BDD.entity.SalleEntity;
@@ -79,7 +78,6 @@ public class TimetableController {
             new EmploiDuTempsController(new CoursDAO());
     private final SalleController  salleController  = new SalleController(new SalleDAO());
     private final GroupeController groupeController = new GroupeController(new GroupeDAO());
-    private final UserDAO          userDAO          = new UserDAO();
 
     // -------------------------------------------------------------------------
     //  État interne
@@ -794,7 +792,7 @@ public class TimetableController {
         comboProf.setPromptText("Choisir un professeur");
         java.util.Map<String, Long> profNomToId = new java.util.HashMap<>();
         try {
-            userDAO.findByRole(Role.PROFESSEUR).forEach(p -> {
+            edtController.getProfesseurs().forEach(p -> {
                 String label = p.getPrenom() + " " + p.getNom();
                 comboProf.getItems().add(label);
                 profNomToId.put(label, p.getId());
