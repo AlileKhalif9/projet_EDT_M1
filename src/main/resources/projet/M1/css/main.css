@@ -1241,6 +1241,20 @@
 }
 
 /* Bouton danger (rouge) */
+/* Labels dans les lignes d'EDT salle */
+.cours-block-time {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6B7280;
+    -fx-min-width: 110;
+}
+
+.cours-block-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F2937;
+    HBox.hgrow: ALWAYS;
+}
+
 .btn-danger {
     -fx-background-color: #EF4444;
     -fx-text-fill: white;
