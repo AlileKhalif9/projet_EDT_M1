@@ -31,7 +31,9 @@ public class GroupeController {
     public GroupeEtudiantEntity creerGroupe(String nom) {
         if (nom == null || nom.isBlank())
             throw new IllegalArgumentException("Le nom du groupe ne peut pas être vide.");
-        return groupeDAO.save(nom);
+        GroupeEtudiantEntity g = groupeDAO.save(nom);
+        DataCache.getInstance().invalidateGroupes();
+        return g;
     }
 
     /** UC8/US17 — Renomme un groupe existant en BDD. */
@@ -39,16 +41,19 @@ public class GroupeController {
         if (nom == null || nom.isBlank())
             throw new IllegalArgumentException("Le nom du groupe ne peut pas être vide.");
         groupeDAO.updateNom(groupeId, nom);
+        DataCache.getInstance().invalidateGroupes();
     }
 
     /** UC8/US17 — Affecte un étudiant à un groupe. */
     public void ajouterMembre(Long groupeId, Long etudiantId) {
         groupeDAO.addMembre(groupeId, etudiantId);
+        DataCache.getInstance().invalidateGroupes();
     }
 
     /** UC8/US17 — Retire un étudiant de son groupe. */
     public void retirerMembre(Long etudiantId) {
         groupeDAO.removeMembre(etudiantId);
+        DataCache.getInstance().invalidateGroupes();
     }
 
     /** Retourne tous les étudiants (pour le picker d'ajout de membre). */
