@@ -18,12 +18,13 @@
             </VBox>
         </HBox>
 
-        <!-- Sélecteurs — affichage conditionnel selon le rôle -->
-        <!-- Professeur : Module uniquement (filtré selon ses matières) -->
+        <!-- Professeur : Promotion + Module -->
         <HBox fx:id="selectorBarProf" spacing="12" alignment="CENTER_LEFT"
               visible="false" managed="false">
+            <Label text="Promotion :" styleClass="form-label"/>
+            <ComboBox fx:id="comboPromotion" prefWidth="220"/>
             <Label text="Module :" styleClass="form-label"/>
-            <ComboBox fx:id="comboModuleProf" prefWidth="280"/>
+            <ComboBox fx:id="comboModuleProf" prefWidth="220"/>
         </HBox>
 
         <!-- Étudiant : Module uniquement -->
