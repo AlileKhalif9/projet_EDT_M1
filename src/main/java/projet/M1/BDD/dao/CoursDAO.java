@@ -8,6 +8,7 @@ import projet.M1.BDD.entity.GroupeEtudiantEntity;
 import projet.M1.BDD.entity.HoraireEntity;
 import projet.M1.BDD.entity.SalleEntity;
 import projet.M1.BDD.entity.UserEntity;
+import projet.M1.BDD.entity.ModuleEntity;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

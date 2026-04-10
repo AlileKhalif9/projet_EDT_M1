@@ -72,9 +72,12 @@
                     <Label text="Demandez ou approuvez des changements d'EDT" styleClass="quick-action-desc" wrapText="true"/>
                 </VBox>
 
-                <!-- Notes -->
-                <VBox styleClass="quick-action-card" spacing="14"
-                      HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <!-- Notes (prof et étudiant seulement) -->
+                <VBox fx:id="cardNotes"
+                      styleClass="quick-action-card" spacing="14"
+                      HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                      onMouseClicked="#goToNotes"
+                      visible="false" managed="false">
                     <HBox alignment="TOP_LEFT">
                         <StackPane styleClass="quick-action-icon quick-action-icon-green">
                             <Label text="A+" styleClass="quick-action-icon-text"/>

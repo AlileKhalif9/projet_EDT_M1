@@ -61,14 +61,14 @@ public class MainLayoutController {
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
         if (u == null) return;
         boolean canRequest = u.getRole() == Role.PROFESSEUR
-                          || u.getRole() == Role.GESTIONNAIRE_PLANNING;
+                || u.getRole() == Role.GESTIONNAIRE_PLANNING;
         btnRoomSelection.setVisible(canRequest);
         btnRoomSelection.setManaged(canRequest);
 
         boolean isGestionnaire  = u.getRole() == Role.GESTIONNAIRE_PLANNING;
         boolean isProfOrGest    = isGestionnaire || u.getRole() == Role.PROFESSEUR;
         boolean isProfOrEtu     = u.getRole() == Role.PROFESSEUR || u.getRole() == Role.ETUDIANT;
-        boolean canSeeSalles    = isProfOrGest || u.getRole() == Role.INVITE;
+        boolean canSeeSalles    = isProfOrGest;
         btnGroupes.setVisible(isGestionnaire);
         btnGroupes.setManaged(isGestionnaire);
         btnSalles.setVisible(canSeeSalles);
@@ -127,7 +127,7 @@ public class MainLayoutController {
         String p = u.getPrenom() != null ? u.getPrenom() : "";
         String n = u.getNom()    != null ? u.getNom()    : "";
         return (p.isEmpty() ? "" : String.valueOf(p.charAt(0)).toUpperCase())
-             + (n.isEmpty() ? "" : String.valueOf(n.charAt(0)).toUpperCase());
+                + (n.isEmpty() ? "" : String.valueOf(n.charAt(0)).toUpperCase());
     }
 
     private String roleLabel(UserEntity u) {

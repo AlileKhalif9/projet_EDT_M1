@@ -30,6 +30,7 @@ public class DashboardController {
     @FXML private Label             labelCoursAujourdHui;
     @FXML private Label             labelCoursSemaine;
     @FXML private VBox              cardDemandeModif;
+    @FXML private VBox              cardNotes;
     @FXML private VBox              todayCoursContainer;
     @FXML private ProgressIndicator loadingIndicator;
 
@@ -120,18 +121,24 @@ public class DashboardController {
         if (c.typeCours() != null) {
             card.setStyle(
                     "-fx-border-color: " + c.typeCours().getCouleurBordure()
-                  + "; -fx-border-width: 0 0 0 4; -fx-border-radius: 0;"
-                  + "-fx-background-color: " + c.typeCours().getCouleurFond()
-                  + "; -fx-background-radius: 6; -fx-padding: 10 12 10 12;");
+                            + "; -fx-border-width: 0 0 0 4; -fx-border-radius: 0;"
+                            + "-fx-background-color: " + c.typeCours().getCouleurFond()
+                            + "; -fx-background-radius: 6; -fx-padding: 10 12 10 12;");
         }
         return card;
     }
 
     private void applyRoleVisibility(UserEntity u) {
         boolean canRequest = u.getRole() == Role.PROFESSEUR
-                          || u.getRole() == Role.GESTIONNAIRE_PLANNING;
+                || u.getRole() == Role.GESTIONNAIRE_PLANNING;
         cardDemandeModif.setVisible(canRequest);
         cardDemandeModif.setManaged(canRequest);
+
+        // Notes : professeur et étudiant uniquement
+        boolean canSeeNotes = u.getRole() == Role.PROFESSEUR
+                || u.getRole() == Role.ETUDIANT;
+        cardNotes.setVisible(canSeeNotes);
+        cardNotes.setManaged(canSeeNotes);
     }
 
     @FXML private void goToTimetable() {
@@ -140,5 +147,9 @@ public class DashboardController {
 
     @FXML private void goToRoomSelection() {
         SceneManager.getInstance().getMainLayoutController().navigateTo(View.MODIFICATION_REQUEST);
+    }
+
+    @FXML private void goToNotes() {
+        SceneManager.getInstance().getMainLayoutController().navigateTo(View.NOTES);
     }
 }
