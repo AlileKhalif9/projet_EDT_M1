@@ -17,7 +17,7 @@ public class SceneManager {
 
     private static SceneManager instance;
     private Stage primaryStage;
-    private MainLayoutController mainLayoutController;
+    private MainLayoutUI mainLayoutController;
 
     private SceneManager() {}
 
@@ -63,9 +63,9 @@ public class SceneManager {
         }
     }
 
-    public MainLayoutController getMainLayoutController() { return mainLayoutController; }
+    public MainLayoutUI getMainLayoutController() { return mainLayoutController; }
 
-    void setMainLayoutController(MainLayoutController c) { this.mainLayoutController = c; }
+    void setMainLayoutController(MainLayoutUI c) { this.mainLayoutController = c; }
 
     public Stage getPrimaryStage() { return primaryStage; }
 

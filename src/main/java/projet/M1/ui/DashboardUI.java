@@ -21,17 +21,17 @@ import java.util.Objects;
 
 /**
  * Controller du tableau de bord.
- * Passe par EmploiDuTempsController (back-end) — jamais CoursDAO directement.
+ * Passe par EmploiDuTempsController (back-end) : jamais CoursDAO directement.
  */
-public class DashboardController {
+public class DashboardUI {
 
-    @FXML private Label             labelWelcome;
-    @FXML private Label             labelDate;
-    @FXML private Label             labelCoursAujourdHui;
-    @FXML private Label             labelCoursSemaine;
-    @FXML private VBox              cardDemandeModif;
-    @FXML private VBox              cardNotes;
-    @FXML private VBox              todayCoursContainer;
+    @FXML private Label labelWelcome;
+    @FXML private Label labelDate;
+    @FXML private Label labelCoursAujourdHui;
+    @FXML private Label labelCoursSemaine;
+    @FXML private VBox cardDemandeModif;
+    @FXML private VBox cardNotes;
+    @FXML private VBox todayCoursContainer;
     @FXML private ProgressIndicator loadingIndicator;
 
     // Passe par le back-end, pas directement par le DAO
@@ -106,7 +106,7 @@ public class DashboardController {
 
     private VBox buildCoursMini(CoursDisplay c) {
         VBox card = new VBox(4);
-        String type  = c.typeCours() != null ? c.typeCours().getLibelle() : "?";
+        String type = c.typeCours() != null ? c.typeCours().getLibelle() : "?";
         String heure = c.heureDebut() + " – " + c.heureFin();
 
         Label titre = new Label(c.nom() != null ? c.nom() : "Cours");

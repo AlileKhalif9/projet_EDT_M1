@@ -12,13 +12,11 @@ import java.util.Optional;
 
 /**
  * DAO pour les notes.
- * Utilisé par NoteController (back-end).
  */
 public class NoteDAO {
 
     /**
      * Toutes les notes d'un module donné, avec étudiant chargé.
-     * Utilisé par le professeur pour afficher le tableau de notes.
      */
     public List<NoteEntity> findByModule(Long moduleId) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
@@ -38,7 +36,6 @@ public class NoteDAO {
 
     /**
      * Toutes les notes d'un étudiant pour un module donné.
-     * Utilisé par l'étudiant pour afficher ses notes.
      */
     public List<NoteEntity> findByEtudiantAndModule(Long etudiantId, Long moduleId) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
@@ -77,7 +74,6 @@ public class NoteDAO {
 
     /**
      * Cherche une note existante par étudiant, module et intitulé.
-     * Permet de détecter si une note existe déjà avant d'en créer une nouvelle.
      */
     public Optional<NoteEntity> findByEtudiantModuleIntitule(Long etudiantId, Long moduleId, String intitule) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
@@ -99,9 +95,7 @@ public class NoteDAO {
     }
 
     /**
-     * Crée ou met à jour une note (upsert).
-     * Si une note existe déjà pour cet étudiant/module/intitulé, on la met à jour.
-     * Sinon on en crée une nouvelle.
+     * Crée ou met à jour une note.
      */
     public NoteEntity sauvegarderNote(Long etudiantId, Long moduleId,
                                       String intitule, float valeur, float coefficient) {
@@ -151,7 +145,6 @@ public class NoteDAO {
 
     /**
      * Supprime toutes les notes d'un intitulé donné pour un module.
-     * Utilisé quand le prof supprime un contrôle entier.
      */
     public void supprimerControle(Long moduleId, String intitule) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();

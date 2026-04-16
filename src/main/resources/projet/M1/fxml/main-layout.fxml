@@ -6,7 +6,7 @@
 <?import javafx.scene.shape.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="projet.M1.ui.MainLayoutController"
+            fx:controller="projet.M1.ui.MainLayoutUI"
             prefWidth="1280" prefHeight="768">
 
     <!-- ================================================================

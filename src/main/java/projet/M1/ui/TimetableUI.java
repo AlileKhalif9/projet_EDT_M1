@@ -32,57 +32,46 @@ import java.util.Objects;
 
 /**
  * Controller de la page EDT.
- * Passe par EmploiDuTempsController / SalleController / GroupeController (back-end) —
+ * Passe par EmploiDuTempsController / SalleController / GroupeController
  * jamais les DAOs directement.
  */
-public class TimetableController {
+public class TimetableUI {
 
-    // -------------------------------------------------------------------------
     //  Constantes de mise en page
-    // -------------------------------------------------------------------------
-
-    private static final int    HEURE_DEBUT    = 8;
-    private static final int    HEURE_FIN      = 19;
-    private static final int    NB_HEURES      = HEURE_FIN - HEURE_DEBUT;
-    private static final double PX_PAR_HEURE   = 80.0;
+    private static final int HEURE_DEBUT = 8;
+    private static final int HEURE_FIN = 19;
+    private static final int NB_HEURES = HEURE_FIN - HEURE_DEBUT;
+    private static final double PX_PAR_HEURE = 80.0;
     private static final double HAUTEUR_HEADER = 44.0;
-    private static final double LARGEUR_HEURE  = 64.0;
+    private static final double LARGEUR_HEURE = 64.0;
 
     private static final String[] JOURS = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"};
     private static final DateTimeFormatter FMT_JOUR =
             DateTimeFormatter.ofPattern("d MMM", Locale.FRENCH);
 
-    // -------------------------------------------------------------------------
     //  Composants FXML
-    // -------------------------------------------------------------------------
-
-    @FXML private Label            labelSemaine;
-    @FXML private Button           btnPrecedent;
-    @FXML private Button           btnSuivant;
-    @FXML private Button           btnAujourdHui;
-    @FXML private Button           btnAjouterCours;
-    @FXML private ToggleButton     tabMonEDT;
-    @FXML private ToggleButton     tabTiers;
-    @FXML private ToggleButton     tabSalle;
-    @FXML private HBox             selectorBar;
+    @FXML private Label labelSemaine;
+    @FXML private Button btnPrecedent;
+    @FXML private Button btnSuivant;
+    @FXML private Button btnAujourdHui;
+    @FXML private Button btnAjouterCours;
+    @FXML private ToggleButton tabMonEDT;
+    @FXML private ToggleButton tabTiers;
+    @FXML private ToggleButton tabSalle;
+    @FXML private HBox selectorBar;
     @FXML private ComboBox<String> comboSelector;
-    @FXML private ScrollPane       scrollPane;
-    @FXML private HBox             gridContainer;
-    @FXML private StackPane        loadingPane;
+    @FXML private ScrollPane scrollPane;
+    @FXML private HBox gridContainer;
+    @FXML private StackPane  loadingPane;
 
-    // -------------------------------------------------------------------------
     //  Back-end controllers
-    // -------------------------------------------------------------------------
-
     private final EmploiDuTempsController edtController =
             new EmploiDuTempsController(new CoursDAO());
     private final SalleController  salleController  = new SalleController(new SalleDAO());
     private final GroupeController groupeController = new GroupeController(new GroupeDAO());
 
-    // -------------------------------------------------------------------------
-    //  État interne
-    // -------------------------------------------------------------------------
 
+    //  État interne
     private LocalDate currentMonday;
 
     private final java.util.Map<Integer, List<CoursDisplay>> coursParJour = new java.util.HashMap<>();
@@ -92,19 +81,17 @@ public class TimetableController {
 
     private List<SalleEntity> allSalles = List.of();
 
-    // -------------------------------------------------------------------------
-    //  Initialisation
-    // -------------------------------------------------------------------------
 
+    //  Initialisation
     @FXML
     public void initialize() {
         currentMonday = LocalDate.now().with(DayOfWeek.MONDAY);
 
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
         boolean isGestionnaire = u != null && u.getRole() == Role.GESTIONNAIRE_PLANNING;
-        boolean isInvite       = u != null && u.getRole() == Role.INVITE;
+        boolean isInvite = u != null && u.getRole() == Role.INVITE;
 
-        // US14 — bouton "Ajouter un cours" visible uniquement pour le gestionnaire
+        // bouton "Ajouter un cours" visible uniquement pour le gestionnaire
         btnAjouterCours.setVisible(isGestionnaire);
         btnAjouterCours.setManaged(isGestionnaire);
 
@@ -148,12 +135,9 @@ public class TimetableController {
         }
     }
 
-    // -------------------------------------------------------------------------
     //  Navigation semaines
-    // -------------------------------------------------------------------------
-
-    @FXML private void onPrecedent()  { currentMonday = currentMonday.minusWeeks(1); refresh(); }
-    @FXML private void onSuivant()    { currentMonday = currentMonday.plusWeeks(1);  refresh(); }
+    @FXML private void onPrecedent() { currentMonday = currentMonday.minusWeeks(1); refresh(); }
+    @FXML private void onSuivant() { currentMonday = currentMonday.plusWeeks(1);  refresh(); }
     @FXML private void onAujourdHui() { currentMonday = LocalDate.now().with(DayOfWeek.MONDAY); refresh(); }
 
     private void refresh() {
@@ -170,10 +154,8 @@ public class TimetableController {
                 + currentMonday.getYear());
     }
 
-    // -------------------------------------------------------------------------
-    //  Onglets
-    // -------------------------------------------------------------------------
 
+    //  Onglets
     @FXML private void onTabMonEDT() {
         currentTab = TabMode.MON_EDT;
         hideSelectorBar();
@@ -218,10 +200,8 @@ public class TimetableController {
         comboSelector.getItems().clear();
     }
 
-    // -------------------------------------------------------------------------
-    //  Construction de la grille
-    // -------------------------------------------------------------------------
 
+    //  Construction de la grille
     private void buildGrid() {
         gridContainer.getChildren().clear();
         gridContainer.setSpacing(0);
@@ -255,7 +235,7 @@ public class TimetableController {
         VBox col = new VBox();
         col.getStyleClass().add("day-column");
         LocalDate date = currentMonday.plusDays(dayIndex);
-        Label header   = new Label(JOURS[dayIndex] + " " + date.format(FMT_JOUR));
+        Label header = new Label(JOURS[dayIndex] + " " + date.format(FMT_JOUR));
         header.getStyleClass().add("day-header");
         header.setPrefHeight(HAUTEUR_HEADER);
         header.setMaxWidth(Double.MAX_VALUE);
@@ -291,15 +271,13 @@ public class TimetableController {
         return grid;
     }
 
-    // -------------------------------------------------------------------------
-    //  Chargement des cours
-    // -------------------------------------------------------------------------
 
+    //  Chargement des cours
     private void loadCours() {
-        UserEntity u  = SessionManager.getInstance().getUtilisateurConnecte();
-        TabMode tab   = currentTab;
+        UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
+        TabMode tab = currentTab;
         LocalDate monday = currentMonday;
-        String sel    = comboSelector.getValue();
+        String sel = comboSelector.getValue();
 
         for (int i = 0; i < 5; i++) {
             Pane p = findCoursPane(i);
@@ -323,9 +301,9 @@ public class TimetableController {
             try {
                 cours = switch (tab) {
                     case MON_EDT -> toDisplayList(edtController.getEmploiDuTempsConnecte(u, monday));
-                    case TIERS   -> sel == null ? List.of()
+                    case TIERS -> sel == null ? List.of()
                             : toDisplayList(edtController.getEmploiDuTempsGroupe(sel, monday));
-                    case SALLE   -> sel == null ? List.of()
+                    case SALLE -> sel == null ? List.of()
                             : allSalles.stream()
                             .filter(s -> s.getNom().equals(sel))
                             .findFirst()
@@ -369,7 +347,7 @@ public class TimetableController {
         int n = jourCours.size();
         if (n == 0) return;
 
-        int[] colonne    = new int[n];
+        int[] colonne = new int[n];
         int[] nbColonnes = new int[n];
 
         for (int i = 0; i < n; i++) {
@@ -388,12 +366,12 @@ public class TimetableController {
         }
 
         for (int i = 0; i < n; i++) {
-            CoursDisplay c  = jourCours.get(i);
-            final int col   = colonne[i];
+            CoursDisplay c = jourCours.get(i);
+            final int col = colonne[i];
             final int total = Math.max(nbColonnes[i], 1);
 
-            VBox block  = buildCoursBlock(c);
-            double top    = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
+            VBox block = buildCoursBlock(c);
+            double top = minutesFromStart(c.heureDebut()) / 60.0 * PX_PAR_HEURE;
             double height = minutesFromStart(c.heureFin())   / 60.0 * PX_PAR_HEURE - top - 2;
             block.setLayoutY(top);
             block.setPrefHeight(height);
@@ -427,10 +405,8 @@ public class TimetableController {
                 .toList();
     }
 
-    // -------------------------------------------------------------------------
-    //  Construction du bloc visuel
-    // -------------------------------------------------------------------------
 
+    //  Construction du bloc visuel
     private VBox buildCoursBlock(CoursDisplay c) {
         VBox block = new VBox(3);
         block.getStyleClass().add("cours-block");
@@ -462,7 +438,7 @@ public class TimetableController {
             l.getStyleClass().add("cours-block-detail");
             block.getChildren().add(l);
         }
-        if (c.nomProf()   != null) {
+        if (c.nomProf() != null) {
             Label l = new Label("\uD83D\uDC64 " + c.nomProf());
             l.getStyleClass().add("cours-block-detail");
             block.getChildren().add(l);
@@ -475,7 +451,7 @@ public class TimetableController {
 
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
 
-        // US13 — Professeur sur son EDT : toggle annulation/réactivation (pas l'invité)
+        // Professeur sur son EDT : toggle annulation/réactivation (pas l'invité)
         if (u != null && u.getRole() == Role.PROFESSEUR && currentTab == TabMode.MON_EDT) {
             block.setStyle(block.getStyle() + "-fx-cursor: hand;");
             if (type == TypeCours.ANNULE) {
@@ -486,7 +462,7 @@ public class TimetableController {
             }
         }
 
-        // US15 — Gestionnaire : modifier au clic
+        // Gestionnaire : modifier au clic
         if (u != null && u.getRole() == Role.GESTIONNAIRE_PLANNING && type != TypeCours.ANNULE) {
             block.setStyle(block.getStyle() + "-fx-cursor: hand;");
             block.setOnMouseClicked(e -> onModifierCours(c, block));
@@ -495,10 +471,8 @@ public class TimetableController {
         return block;
     }
 
-    // -------------------------------------------------------------------------
-    //  US13 — Annuler / Réactiver un cours (professeur)
-    // -------------------------------------------------------------------------
 
+    // Annuler / Réactiver un cours (professeur)
     private void onAnnulerCours(CoursDisplay c, VBox block, Label badge, TypeCours typeOrigine) {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Annuler le cours");
@@ -510,7 +484,7 @@ public class TimetableController {
                         + "\n\nVous pourrez réactiver ce cours en recliquant dessus.");
 
         ButtonType btnAnnuler = new ButtonType("Annuler le cours", ButtonBar.ButtonData.OK_DONE);
-        ButtonType btnGarder  = new ButtonType("Garder",           ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType btnGarder = new ButtonType("Garder", ButtonBar.ButtonData.CANCEL_CLOSE);
         confirm.getButtonTypes().setAll(btnAnnuler, btnGarder);
 
         confirm.showAndWait().ifPresent(result -> {
@@ -563,10 +537,8 @@ public class TimetableController {
         });
     }
 
-    // -------------------------------------------------------------------------
-    //  Helpers visuels annulation
-    // -------------------------------------------------------------------------
 
+    //  Helpers visuels annulation
     private void appliquerStyleNormal(VBox block, TypeCours type) {
         block.setStyle(
                 "-fx-background-color: " + type.getCouleurFond() + ";"
@@ -591,10 +563,8 @@ public class TimetableController {
                         + "-fx-background-radius: 4; -fx-padding: 1 5 1 5;");
     }
 
-    // -------------------------------------------------------------------------
-    //  US14 — Ajouter un cours (gestionnaire)
-    // -------------------------------------------------------------------------
 
+    //  US14 — Ajouter un cours (gestionnaire)
     @FXML
     private void onAjouterCours() {
         Dialog<ButtonType> dialog = new Dialog<>();
@@ -612,32 +582,32 @@ public class TimetableController {
         dialog.getDialogPane().getStylesheets().add(
                 getClass().getResource("/projet/M1/css/main.css").toExternalForm());
 
-        TextField        fieldNom    = (TextField)        form.getUserData();
+        TextField fieldNom = (TextField) form.getUserData();
         ComboBox<String> comboType   = (ComboBox<String>) lookup(form, 1);
-        DatePicker       datePicker  = (DatePicker)       lookup(form, 2);
+        DatePicker datePicker  = (DatePicker) lookup(form, 2);
         ComboBox<String> comboDebut  = (ComboBox<String>) lookup(form, 3);
-        ComboBox<String> comboFin    = (ComboBox<String>) lookup(form, 4);
+        ComboBox<String> comboFin  = (ComboBox<String>) lookup(form, 4);
         ComboBox<String> comboSalle  = (ComboBox<String>) lookup(form, 5);
         ComboBox<String> comboGroupe = (ComboBox<String>) lookup(form, 6);
-        ComboBox<String> comboProf   = (ComboBox<String>) lookup(form, 7);
+        ComboBox<String> comboProf  = (ComboBox<String>) lookup(form, 7);
 
         dialog.showAndWait().ifPresent(result -> {
             if (result != btnValider) return;
 
-            String nom      = fieldNom.getText().trim();
-            String type     = comboType.getValue();
-            LocalDate date  = datePicker.getValue();
+            String nom = fieldNom.getText().trim();
+            String type = comboType.getValue();
+            LocalDate date = datePicker.getValue();
             String debutStr = comboDebut.getValue();
-            String finStr   = comboFin.getValue();
-            String salle    = comboSalle.getValue();
-            String groupe   = comboGroupe.getValue();
+            String finStr = comboFin.getValue();
+            String salle = comboSalle.getValue();
+            String groupe = comboGroupe.getValue();
             String profNom  = comboProf.getValue();
 
             if (!validerChamps(nom, type, date, debutStr, finStr, salle, groupe, profNom)) return;
 
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
             LocalTime debut = LocalTime.parse(debutStr, fmt);
-            LocalTime fin   = LocalTime.parse(finStr,   fmt);
+            LocalTime fin = LocalTime.parse(finStr, fmt);
             if (!validerHeures(debut, fin)) return;
 
             @SuppressWarnings("unchecked")
@@ -662,10 +632,8 @@ public class TimetableController {
         });
     }
 
-    // -------------------------------------------------------------------------
-    //  US15 — Modifier un cours (gestionnaire)
-    // -------------------------------------------------------------------------
 
+    // Modifier un cours (gestionnaire)
     private void onModifierCours(CoursDisplay c, VBox block) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Modifier le cours");
@@ -679,32 +647,32 @@ public class TimetableController {
         dialog.getDialogPane().getStylesheets().add(
                 getClass().getResource("/projet/M1/css/main.css").toExternalForm());
 
-        TextField        fieldNom    = (TextField)        form.getUserData();
-        ComboBox<String> comboType   = (ComboBox<String>) lookup(form, 1);
-        DatePicker       datePicker  = (DatePicker)       lookup(form, 2);
-        ComboBox<String> comboDebut  = (ComboBox<String>) lookup(form, 3);
-        ComboBox<String> comboFin    = (ComboBox<String>) lookup(form, 4);
-        ComboBox<String> comboSalle  = (ComboBox<String>) lookup(form, 5);
+        TextField fieldNom = (TextField)  form.getUserData();
+        ComboBox<String> comboType = (ComboBox<String>) lookup(form, 1);
+        DatePicker datePicker  = (DatePicker) lookup(form, 2);
+        ComboBox<String> comboDebut = (ComboBox<String>) lookup(form, 3);
+        ComboBox<String> comboFin = (ComboBox<String>) lookup(form, 4);
+        ComboBox<String> comboSalle = (ComboBox<String>) lookup(form, 5);
         ComboBox<String> comboGroupe = (ComboBox<String>) lookup(form, 6);
-        ComboBox<String> comboProf   = (ComboBox<String>) lookup(form, 7);
+        ComboBox<String> comboProf = (ComboBox<String>) lookup(form, 7);
 
         dialog.showAndWait().ifPresent(result -> {
             if (result != btnValider) return;
 
-            String nom      = fieldNom.getText().trim();
-            String type     = comboType.getValue();
+            String nom = fieldNom.getText().trim();
+            String type = comboType.getValue();
             LocalDate date  = datePicker.getValue();
             String debutStr = comboDebut.getValue();
-            String finStr   = comboFin.getValue();
-            String salle    = comboSalle.getValue();
-            String groupe   = comboGroupe.getValue();
+            String finStr = comboFin.getValue();
+            String salle = comboSalle.getValue();
+            String groupe = comboGroupe.getValue();
             String profNom  = comboProf.getValue();
 
             if (!validerChamps(nom, type, date, debutStr, finStr, salle, groupe, profNom)) return;
 
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
             LocalTime debut = LocalTime.parse(debutStr, fmt);
-            LocalTime fin   = LocalTime.parse(finStr,   fmt);
+            LocalTime fin = LocalTime.parse(finStr,   fmt);
             if (!validerHeures(debut, fin)) return;
 
             CoursEntity saved;
@@ -729,15 +697,8 @@ public class TimetableController {
         });
     }
 
-    // -------------------------------------------------------------------------
-    //  Formulaire partagé ajouter/modifier
-    // -------------------------------------------------------------------------
 
-    /**
-     * Construit le formulaire ajouter/modifier.
-     * @param prefill              cours à pré-remplir (null = formulaire vide)
-     * @param groupePreselectionne groupe à pré-sélectionner quand prefill est null
-     */
+    //  Formulaire partagé ajouter/modifier
     private GridPane buildFormulaireCours(CoursDisplay prefill, String groupePreselectionne) {
         GridPane form = new GridPane();
         form.setHgap(12);
@@ -773,14 +734,14 @@ public class TimetableController {
         comboFin.setPromptText("Heure fin");
         comboFin.setPrefWidth(120);
 
-        // Salle — obligatoire
+        // Salle : obligatoire
         ComboBox<String> comboSalle = new ComboBox<>();
         try { salleController.getAllSalles().forEach(s -> comboSalle.getItems().add(s.getNom())); }
         catch (Exception ignored) {}
         comboSalle.setValue(prefill != null ? prefill.nomSalle() : null);
         comboSalle.setPromptText("Choisir une salle");
 
-        // Groupe — obligatoire
+        // Groupe : obligatoire
         ComboBox<String> comboGroupe = new ComboBox<>();
         try { groupeController.getAllGroupes().forEach(g -> comboGroupe.getItems().add(g.getNom())); }
         catch (Exception ignored) {}
@@ -791,8 +752,7 @@ public class TimetableController {
         }
         comboGroupe.setPromptText("Choisir un groupe");
 
-        // Professeur — obligatoire, liste tous les profs
-        // La map nom→id est stockée dans les properties pour récupérer l'id à la validation
+        // Professeur : obligatoire, liste tous les profs
         ComboBox<String> comboProf = new ComboBox<>();
         comboProf.setPromptText("Choisir un professeur");
         java.util.Map<String, Long> profNomToId = new java.util.HashMap<>();
@@ -806,15 +766,30 @@ public class TimetableController {
         comboProf.setValue(prefill != null ? prefill.nomProf() : null);
         comboProf.getProperties().put("profNomToId", profNomToId);
 
-        // Labels — * sur tous les champs obligatoires
-        form.add(new Label("Nom du cours *"), 0, 0); form.add(fieldNom,    1, 0);
-        form.add(new Label("Type *"),          0, 1); form.add(comboType,   1, 1);
-        form.add(new Label("Date *"),          0, 2); form.add(datePicker,  1, 2);
-        form.add(new Label("Heure début *"),   0, 3); form.add(comboDebut,  1, 3);
-        form.add(new Label("Heure fin *"),     0, 4); form.add(comboFin,    1, 4);
-        form.add(new Label("Salle *"),         0, 5); form.add(comboSalle,  1, 5);
-        form.add(new Label("Groupe *"),        0, 6); form.add(comboGroupe, 1, 6);
-        form.add(new Label("Professeur *"),    0, 7); form.add(comboProf,   1, 7);
+        // Labels : sur tous les champs obligatoires
+        form.add(new Label("Nom du cours *"), 0, 0);
+        form.add(fieldNom, 1, 0);
+
+        form.add(new Label("Type *"), 0, 1);
+        form.add(comboType, 1, 1);
+
+        form.add(new Label("Date *"), 0, 2);
+        form.add(datePicker, 1, 2);
+
+        form.add(new Label("Heure début *"), 0, 3);
+        form.add(comboDebut, 1, 3);
+
+        form.add(new Label("Heure fin *"), 0, 4);
+        form.add(comboFin, 1, 4);
+
+        form.add(new Label("Salle *"), 0, 5);
+        form.add(comboSalle, 1, 5);
+
+        form.add(new Label("Groupe *"), 0, 6);
+        form.add(comboGroupe, 1, 6);
+
+        form.add(new Label("Professeur *"),0, 7);
+        form.add(comboProf, 1, 7);
 
         form.getChildren().stream()
                 .filter(n -> n instanceof Label)
@@ -832,10 +807,8 @@ public class TimetableController {
                 .orElseThrow(() -> new IllegalStateException("Composant introuvable ligne " + row));
     }
 
-    // -------------------------------------------------------------------------
-    //  Helpers affichage temporaire
-    // -------------------------------------------------------------------------
 
+    //  Helpers affichage temporaire
     private boolean afficherCoursTemporaire(CoursDisplay c) {
         LocalDate vendredi = currentMonday.plusDays(4);
         if (c.jour().isBefore(currentMonday) || c.jour().isAfter(vendredi)) {
@@ -872,10 +845,8 @@ public class TimetableController {
         renderDay(dayIndex);
     }
 
-    // -------------------------------------------------------------------------
-    //  Validation formulaire
-    // -------------------------------------------------------------------------
 
+    //  Validation formulaire
     private boolean validerChamps(String nom, String type, LocalDate date,
                                   String debutStr, String finStr,
                                   String salle, String groupe, String profNom) {
@@ -900,16 +871,14 @@ public class TimetableController {
         return true;
     }
 
-    // -------------------------------------------------------------------------
-    //  Helpers généraux
-    // -------------------------------------------------------------------------
 
+    //  Helpers généraux
     private String buildTooltip(CoursDisplay c) {
-        return (c.nom()       != null ? c.nom()       + "\n" : "")
+        return (c.nom() != null ? c.nom() + "\n" : "")
                 + (c.typeCours() != null ? "Type : " + c.typeCours().getLibelle() + "\n" : "")
                 + "Horaire : " + c.heureDebut() + " – " + c.heureFin() + "\n"
                 + (c.nomSalle()  != null ? "Salle : "  + c.nomSalle()  + "\n" : "")
-                + (c.nomGroupe() != null ? "Groupe : " + c.nomGroupe()         : "");
+                + (c.nomGroupe() != null ? "Groupe : " + c.nomGroupe()  : "");
     }
 
     private List<String> buildTimeSlots() {

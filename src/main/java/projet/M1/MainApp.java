@@ -9,7 +9,6 @@ import projet.M1.ui.SceneManager;
 /**
  * Point d'entrée JavaFX — c'est ce fichier qui lance l'appli.
  * Pour lancer : mvn javafx:run (ou run directement depuis l'IDE).
- * J'ai pas touché à Main.java, il est toujours là.
  */
 public class MainApp extends Application {
 

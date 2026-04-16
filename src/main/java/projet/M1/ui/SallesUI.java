@@ -22,11 +22,10 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * UC9/US18 — Consulter les salles (Gestionnaire + Professeur).
+ * Consulter les salles (Gestionnaire + Professeur).
  * Filtres : nom, capacité min, équipement.
- * Clic sur une salle → dialog avec équipements + EDT hebdomadaire de la salle.
  */
-public class SallesController {
+public class SallesUI {
 
     @FXML private TextField fieldRecherche;
     @FXML private TextField fieldCapaciteMin;
@@ -34,8 +33,8 @@ public class SallesController {
     @FXML private ProgressIndicator loadingIndicator;
     @FXML private VBox sallesContainer;
 
-    private final SalleController          salleController = new SalleController(new SalleDAO());
-    private final EmploiDuTempsController  edtController   = new EmploiDuTempsController(new CoursDAO());
+    private final SalleController salleController = new SalleController(new SalleDAO());
+    private final EmploiDuTempsController edtController = new EmploiDuTempsController(new CoursDAO());
 
     private List<SalleEntity> toutesLesSalles = List.of();
 
@@ -173,7 +172,7 @@ public class SallesController {
 
         VBox edtPanel = buildEdtPanel(s, LocalDate.now().with(DayOfWeek.MONDAY));
 
-        // US19 — Bouton "Modifier les équipements" visible uniquement pour le gestionnaire
+        // Bouton "Modifier les équipements" visible uniquement pour le gestionnaire
         UserEntity moi = SessionManager.getInstance().getUtilisateurConnecte();
         if (moi != null && moi.getRole() == Role.GESTIONNAIRE_PLANNING) {
             Button btnModifEquip = new Button("Modifier les équipements");
@@ -189,9 +188,7 @@ public class SallesController {
     }
 
     /**
-     * US19 — Dialog pour modifier la liste des équipements d'une salle.
-     * Ouvre une TextArea pré-remplie (un équipement par ligne).
-     * À la validation, persiste en BDD et rafraîchit equipList dans le dialog parent.
+     * Dialog pour modifier la liste des équipements d'une salle.
      */
     private void ouvrirDialogModifierEquipements(SalleEntity salle, VBox equipList) {
         List<String> actuel;

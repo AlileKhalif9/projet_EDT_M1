@@ -8,11 +8,6 @@ import java.util.logging.Logger;
 
 /**
  * Back-end : inscription d'un nouvel utilisateur.
- *
- * Vérifie que le login n'existe pas déjà, crée le UserEntity
- * et le persiste via UserDAO.
- *
- * Le front appellera inscrireUtilisateur() — jamais UserDAO directement.
  */
 public class Service_Inscription {
 

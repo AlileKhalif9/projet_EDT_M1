@@ -8,7 +8,6 @@ import java.util.logging.Logger;
 
 /**
  * Back-end : authentification.
- * Le front (LoginController) appelle connecter() — jamais UserDAO directement.
  */
 public class AuthController {
 

@@ -26,13 +26,9 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 /**
- * Controller de la page "Demandes de modification".
- * Passe par les back-end controllers — jamais les DAOs directement.
- *
- * Mode PROFESSEUR   → formulaire 3 étapes (US6–9)
- * Mode GESTIONNAIRE → liste PENDING avec Approuver / Rejeter / EDT croisés (US10–12)
+ * Passe par les back-end controllers : jamais les DAOs directement.
  */
-public class ModificationRequestController {
+public class ModificationRequestUI {
 
     private static final List<String> RAISONS = List.of(
             "Conflit avec une réunion de département",
@@ -54,30 +50,24 @@ public class ModificationRequestController {
     private static final DateTimeFormatter FMT_TIME  = DateTimeFormatter.ofPattern("HH'h'mm");
     private static final DateTimeFormatter FMT_PARSE = DateTimeFormatter.ofPattern("HH:mm");
 
-    // -------------------------------------------------------------------------
-    //  Composants FXML
-    // -------------------------------------------------------------------------
 
-    @FXML private Label  labelTitle;
-    @FXML private Label  labelSubtitle;
+    @FXML private Label labelTitle;
+    @FXML private Label labelSubtitle;
     @FXML private Button btnNouvellesDemande;
-    @FXML private VBox   formPanel;
-    @FXML private VBox   requestsContainer;
+    @FXML private VBox formPanel;
+    @FXML private VBox requestsContainer;
 
-    @FXML private DatePicker        datePickerActuel;
-    @FXML private ComboBox<String>  comboHeureActuelle;
-    @FXML private Label             labelCoursFound;
+    @FXML private DatePicker datePickerActuel;
+    @FXML private ComboBox<String> comboHeureActuelle;
+    @FXML private Label labelCoursFound;
 
-    @FXML private DatePicker            datePickerNouveau;
-    @FXML private ComboBox<String>      comboHeureDebutNouveau;
-    @FXML private ComboBox<String>      comboHeureFinNouveau;
+    @FXML private DatePicker datePickerNouveau;
+    @FXML private ComboBox<String> comboHeureDebutNouveau;
+    @FXML private ComboBox<String> comboHeureFinNouveau;
     @FXML private ComboBox<SalleEntity> comboSalle;
 
     @FXML private ComboBox<String> comboRaison;
 
-    // -------------------------------------------------------------------------
-    //  Back-end controllers (jamais de DAO directement dans le front)
-    // -------------------------------------------------------------------------
 
     private final DemandeModificationController demandeController =
             new DemandeModificationController(new DemandeDAO(), new CoursDAO());
@@ -86,12 +76,8 @@ public class ModificationRequestController {
     private final SalleController   salleController   = new SalleController(new SalleDAO());
     private final HoraireController horaireController = new HoraireController(new HoraireDAO());
 
-    /** Cours identifié à l'étape 1 — null si introuvable. */
+    /** Cours identifié à l'étape 1 : null si introuvable. */
     private CoursEntity coursSelectionne = null;
-
-    // -------------------------------------------------------------------------
-    //  Initialisation
-    // -------------------------------------------------------------------------
 
     @FXML
     public void initialize() {
@@ -133,10 +119,7 @@ public class ModificationRequestController {
         comboRaison.getItems().setAll(RAISONS);
     }
 
-    // -------------------------------------------------------------------------
     //  Étape 1 — recherche du cours via EmploiDuTempsController
-    // -------------------------------------------------------------------------
-
     private void searchCours(UserEntity u) {
         coursSelectionne = null;
         LocalDate date     = datePickerActuel.getValue();
@@ -184,17 +167,14 @@ public class ModificationRequestController {
         labelCoursFound.setText(text);
         labelCoursFound.getStyleClass().setAll(
                 switch (state) {
-                    case "ok"    -> "cours-found-ok";
+                    case "ok" -> "cours-found-ok";
                     case "error" -> "cours-found-error";
-                    default      -> "cours-found-idle";
+                    default -> "cours-found-idle";
                 }
         );
     }
 
-    // -------------------------------------------------------------------------
     //  Formulaire prof
-    // -------------------------------------------------------------------------
-
     @FXML
     private void onToggleForm() {
         boolean visible = formPanel.isVisible();
@@ -222,11 +202,11 @@ public class ModificationRequestController {
         }
 
         LocalDate nouvelleDate = datePickerNouveau.getValue();
-        LocalTime heureDebut   = LocalTime.parse(comboHeureDebutNouveau.getValue(), FMT_PARSE);
-        LocalTime heureFin     = LocalTime.parse(comboHeureFinNouveau.getValue(),   FMT_PARSE);
+        LocalTime heureDebut = LocalTime.parse(comboHeureDebutNouveau.getValue(), FMT_PARSE);
+        LocalTime heureFin = LocalTime.parse(comboHeureFinNouveau.getValue(), FMT_PARSE);
 
         if (!heureFin.isAfter(heureDebut)) {
-            showAlert(Alert.AlertType.WARNING, "Horaire invalide",
+            showAlert(Alert.AlertType.WARNING,"Horaire invalide",
                     "L'heure de fin doit être strictement après l'heure de début.");
             return;
         }
@@ -275,10 +255,8 @@ public class ModificationRequestController {
         comboRaison.getSelectionModel().clearSelection();
     }
 
-    // -------------------------------------------------------------------------
-    //  Liste des demandes via DemandeModificationController
-    // -------------------------------------------------------------------------
 
+    //  Liste des demandes via DemandeModificationController
     private void buildRequestCards(boolean isGestionnaire, UserEntity u) {
         requestsContainer.getChildren().clear();
         try {
@@ -370,7 +348,7 @@ public class ModificationRequestController {
             btnReject.getStyleClass().add("btn-reject");
             btnReject.setOnAction(e -> onRejeter(d.getId(), nomCours, card));
 
-            // US11 — EDT croisés
+            // EDT croisés
             Button btnEdtCroise = new Button("Voir les EDT croisés");
             btnEdtCroise.getStyleClass().add("btn-edt-croise");
 
@@ -416,24 +394,21 @@ public class ModificationRequestController {
 
     private Label buildStatusBadge(StatutDemande statut) {
         String texte = switch (statut) {
-            case PENDING  -> "En attente";
+            case PENDING -> "En attente";
             case ACCEPTED -> "Approuvée";
-            case REFUSED  -> "Rejetée";
+            case REFUSED -> "Rejetée";
         };
         String styleClass = switch (statut) {
             case ACCEPTED -> "status-approuvee";
-            case REFUSED  -> "status-rejetee";
-            default       -> "status-attente";
+            case REFUSED -> "status-rejetee";
+            default -> "status-attente";
         };
         Label badge = new Label(texte);
         badge.getStyleClass().addAll("status-badge", styleClass);
         return badge;
     }
 
-    // -------------------------------------------------------------------------
     //  Actions gestionnaire via DemandeModificationController
-    // -------------------------------------------------------------------------
-
     private void onApprouver(Long id, String nomCours, VBox card) {
         try {
             demandeController.approuverDemande(id);
@@ -456,10 +431,7 @@ public class ModificationRequestController {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  US11 — EDT croisés (prof + groupe) pour la semaine de la demande
-    // -------------------------------------------------------------------------
-
+    // EDT croisés (prof + groupe) pour la semaine de la demande
     private void toggleEdtCroise(CoursModificationRequestEntity d, VBox panel, Button btn) {
         boolean wasVisible = panel.isVisible();
         if (wasVisible) {
@@ -501,8 +473,8 @@ public class ModificationRequestController {
                         ? edtController.getEmploiDuTempsGroupe(nomGroupe, semaine)
                         : List.of();
 
-                String nomProf    = prof != null ? prof.getPrenom() + " " + prof.getNom() : "Professeur inconnu";
-                String nomGroupe2 = nomGroupe != null ? nomGroupe : "Groupe inconnu";
+                String nomProf = (prof != null ? prof.getPrenom() + " " + prof.getNom() : "Professeur inconnu");
+                String nomGroupe2 = (nomGroupe != null ? nomGroupe : "Groupe inconnu");
 
                 Platform.runLater(() -> {
                     buildEdtCroisePanel(panel, semaine, nomProf, coursProfList, nomGroupe2, coursGroupeList);
@@ -533,9 +505,9 @@ public class ModificationRequestController {
 
         HBox grilles = new HBox(16);
 
-        VBox colProf   = buildEdtMiniGrid(nomProf,   coursProfList);
+        VBox colProf = buildEdtMiniGrid(nomProf,   coursProfList);
         VBox colGroupe = buildEdtMiniGrid(nomGroupe, coursGroupeList);
-        HBox.setHgrow(colProf,   Priority.ALWAYS);
+        HBox.setHgrow(colProf, Priority.ALWAYS);
         HBox.setHgrow(colGroupe, Priority.ALWAYS);
         colProf.setMaxWidth(Double.MAX_VALUE);
         colGroupe.setMaxWidth(Double.MAX_VALUE);
@@ -568,7 +540,7 @@ public class ModificationRequestController {
             row.getStyleClass().add("edt-croise-row");
             row.setAlignment(Pos.CENTER_LEFT);
 
-            String jour  = h.getJour().format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.FRENCH));
+            String jour = h.getJour().format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.FRENCH));
             String heure = h.getHeureDebut().format(FMT_TIME) + " – " + h.getHeureFin().format(FMT_TIME);
 
             Label nomLabel = new Label(c.getNom() != null ? c.getNom() : "—");
@@ -586,10 +558,7 @@ public class ModificationRequestController {
         return col;
     }
 
-    // -------------------------------------------------------------------------
     //  Helper
-    // -------------------------------------------------------------------------
-
     private void showAlert(Alert.AlertType type, String title, String content) {
         Alert alert = new Alert(type);
         alert.setTitle(title);

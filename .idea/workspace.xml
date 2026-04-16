@@ -6,12 +6,49 @@
   <component name="ChangeListManager">
     <list default="true" id="c8e6b128-748e-466d-ae8c-b44faf5488e4" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/DataCache.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/DataCache.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/CoursDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/CoursDAO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/DashboardController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/DashboardController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/MainLayoutController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/MainLayoutController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/NotesController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/NotesController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/DemandeDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/DemandeDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/GroupeDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/GroupeDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/HoraireDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/HoraireDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/ModuleDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/ModuleDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/NoteDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/NoteDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/SalleDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/SalleDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/UserDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/dao/UserDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/CoursEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/CoursEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/UserEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/BDD/entity/UserEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/MainApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/MainApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/DemandeModificationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/DemandeModificationController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/EmploiDuTempsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/EmploiDuTempsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/GroupeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/GroupeController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/HoraireController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/HoraireController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/NoteController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/NoteController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/SalleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/SalleController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/Service_Inscription.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/controller/Service_Inscription.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/dao/JpaCoursDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/controller/dao/JpaUtilisateurDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/model/planning/TypeCours.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/model/planning/TypeCours.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/session/SessionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/session/SessionManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/CoursDisplay.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/CoursDisplay.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/DashboardController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/DashboardUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/GroupesController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/GroupesUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/LoginUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/MainLayoutController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/MainLayoutUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/ModificationRequestController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/ModificationRequestUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/NotesController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/NotesUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/SallesController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/SallesUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/SceneManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/SceneManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/TimetableController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/TimetableUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/projet/M1/ui/View.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/projet/M1/ui/View.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/dashboard.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/dashboard.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/groupes.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/groupes.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/login.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/login.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/main-layout.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/main-layout.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/modification-request.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/modification-request.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/notes.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/notes.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/salles.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/salles.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/timetable.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/projet/M1/fxml/timetable.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

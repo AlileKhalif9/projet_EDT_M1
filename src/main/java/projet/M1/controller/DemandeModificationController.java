@@ -9,8 +9,6 @@ import java.util.logging.Logger;
 
 /**
  * Back-end : demandes de modification.
- * Le front (ModificationRequestController) appelle ces méthodes —
- * jamais DemandeDAO ni CoursDAO directement.
  */
 public class DemandeModificationController {
 
@@ -25,7 +23,7 @@ public class DemandeModificationController {
         this.coursDAO   = coursDAO;
     }
 
-    /** Soumet une demande de modification (rôle PROFESSEUR). */
+    /** Soumet une demande de modification. */
     public void soumettreDemande(CoursEntity cours, HoraireEntity nouveauCreneau,
                                  SalleEntity nouvelleSalle, String raison, UserEntity professeur) {
         CoursModificationRequestEntity demande = new CoursModificationRequestEntity();

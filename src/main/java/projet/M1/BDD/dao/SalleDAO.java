@@ -13,14 +13,11 @@ import java.util.Optional;
 
 /**
  * DAO pour les salles.
- * Utilise JOIN FETCH pour charger liste_materiel en une seule requête,
- * évitant les LazyInitializationException après fermeture de l'EntityManager.
  */
 public class SalleDAO {
 
     /**
      * Toutes les salles avec leur matériel chargé, triées par nom.
-     * Le DISTINCT évite les doublons causés par le JOIN FETCH.
      */
     public List<SalleEntity> findAll() {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
@@ -37,7 +34,7 @@ public class SalleDAO {
     }
 
     /**
-     * UC10/US19 — Met à jour la liste des équipements d'une salle en BDD.
+     * Met à jour la liste des équipements d'une salle en BDD.
      */
     public void modifierEquipements(Long salleId, List<String> equipements) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();

@@ -8,7 +8,6 @@ import java.util.List;
 
 /**
  * Back-end : gestion des salles.
- * Utilise le DataCache — pas de requête réseau si les données sont déjà chargées.
  */
 public class SalleController {
 
@@ -25,7 +24,7 @@ public class SalleController {
     }
 
     /**
-     * UC10/US19 — Modifie les équipements d'une salle en BDD.
+     * Modifie les équipements d'une salle en BDD.
      * Met aussi à jour l'objet en mémoire pour refléter le changement immédiatement.
      */
     public void modifierEquipements(Long salleId, List<String> equipements) {

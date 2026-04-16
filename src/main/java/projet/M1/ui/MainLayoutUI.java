@@ -22,20 +22,20 @@ import java.io.IOException;
  * Intégration BDD : utilise UserEntity (via SessionManager) au lieu du modèle Utilisateur.
  * Les vérifications de rôle passent par UserEntity.getRole() (enum Role).
  */
-public class MainLayoutController {
+public class MainLayoutUI {
 
-    @FXML private VBox      sidebarNav;
-    @FXML private Button    btnDashboard;
-    @FXML private Button    btnTimetable;
-    @FXML private Button    btnRoomSelection;
-    @FXML private Button    btnGroupes;
-    @FXML private Button    btnSalles;
-    @FXML private Button    btnNotes;
-    @FXML private Circle    avatarCircle;
-    @FXML private Label     labelAvatarInitials;
-    @FXML private Label     labelUserName;
-    @FXML private Label     labelUserRole;
-    @FXML private Button    btnLogout;
+    @FXML private VBox sidebarNav;
+    @FXML private Button btnDashboard;
+    @FXML private Button btnTimetable;
+    @FXML private Button btnRoomSelection;
+    @FXML private Button btnGroupes;
+    @FXML private Button btnSalles;
+    @FXML private Button btnNotes;
+    @FXML private Circle avatarCircle;
+    @FXML private Label labelAvatarInitials;
+    @FXML private Label labelUserName;
+    @FXML private Label labelUserRole;
+    @FXML private Button btnLogout;
     @FXML private StackPane contentArea;
 
     private View activeView;
@@ -65,10 +65,10 @@ public class MainLayoutController {
         btnRoomSelection.setVisible(canRequest);
         btnRoomSelection.setManaged(canRequest);
 
-        boolean isGestionnaire  = u.getRole() == Role.GESTIONNAIRE_PLANNING;
-        boolean isProfOrGest    = isGestionnaire || u.getRole() == Role.PROFESSEUR;
-        boolean isProfOrEtu     = u.getRole() == Role.PROFESSEUR || u.getRole() == Role.ETUDIANT;
-        boolean canSeeSalles    = isProfOrGest;
+        boolean isGestionnaire = u.getRole() == Role.GESTIONNAIRE_PLANNING;
+        boolean isProfOrGest = (isGestionnaire || u.getRole() == Role.PROFESSEUR);
+        boolean isProfOrEtu = (u.getRole() == Role.PROFESSEUR || u.getRole() == Role.ETUDIANT);
+        boolean canSeeSalles = isProfOrGest;
         btnGroupes.setVisible(isGestionnaire);
         btnGroupes.setManaged(isGestionnaire);
         btnSalles.setVisible(canSeeSalles);
@@ -92,12 +92,12 @@ public class MainLayoutController {
         }
     }
 
-    @FXML private void onDashboard()     { navigateTo(View.DASHBOARD); }
-    @FXML private void onTimetable()     { navigateTo(View.TIMETABLE); }
+    @FXML private void onDashboard() { navigateTo(View.DASHBOARD); }
+    @FXML private void onTimetable() { navigateTo(View.TIMETABLE); }
     @FXML private void onRoomSelection() { navigateTo(View.MODIFICATION_REQUEST); }
-    @FXML private void onGroupes()       { navigateTo(View.GROUPES); }
-    @FXML private void onSalles()        { navigateTo(View.SALLES); }
-    @FXML private void onNotes()         { navigateTo(View.NOTES); }
+    @FXML private void onGroupes() { navigateTo(View.GROUPES); }
+    @FXML private void onSalles() { navigateTo(View.SALLES); }
+    @FXML private void onNotes() { navigateTo(View.NOTES); }
 
     @FXML
     private void onLogout() {
@@ -113,38 +113,38 @@ public class MainLayoutController {
         btnSalles.getStyleClass().remove("sidebar-nav-item-active");
         btnNotes.getStyleClass().remove("sidebar-nav-item-active");
         switch (view) {
-            case DASHBOARD            -> btnDashboard.getStyleClass().add("sidebar-nav-item-active");
-            case TIMETABLE            -> btnTimetable.getStyleClass().add("sidebar-nav-item-active");
+            case DASHBOARD -> btnDashboard.getStyleClass().add("sidebar-nav-item-active");
+            case TIMETABLE -> btnTimetable.getStyleClass().add("sidebar-nav-item-active");
             case MODIFICATION_REQUEST -> btnRoomSelection.getStyleClass().add("sidebar-nav-item-active");
-            case GROUPES              -> btnGroupes.getStyleClass().add("sidebar-nav-item-active");
-            case SALLES               -> btnSalles.getStyleClass().add("sidebar-nav-item-active");
-            case NOTES                -> btnNotes.getStyleClass().add("sidebar-nav-item-active");
+            case GROUPES -> btnGroupes.getStyleClass().add("sidebar-nav-item-active");
+            case SALLES -> btnSalles.getStyleClass().add("sidebar-nav-item-active");
+            case NOTES -> btnNotes.getStyleClass().add("sidebar-nav-item-active");
         }
     }
 
     // "Jean Martin" → "JM"
     private String initiales(UserEntity u) {
         String p = u.getPrenom() != null ? u.getPrenom() : "";
-        String n = u.getNom()    != null ? u.getNom()    : "";
+        String n = u.getNom() != null ? u.getNom()    : "";
         return (p.isEmpty() ? "" : String.valueOf(p.charAt(0)).toUpperCase())
                 + (n.isEmpty() ? "" : String.valueOf(n.charAt(0)).toUpperCase());
     }
 
     private String roleLabel(UserEntity u) {
         return switch (u.getRole()) {
-            case ETUDIANT              -> "Étudiant";
-            case PROFESSEUR            -> "Professeur";
+            case ETUDIANT -> "Étudiant";
+            case PROFESSEUR -> "Professeur";
             case GESTIONNAIRE_PLANNING -> "Gestionnaire";
-            case INVITE                -> "Invité";
+            case INVITE -> "Invité";
         };
     }
 
     private String roleStyleClass(UserEntity u) {
         return switch (u.getRole()) {
-            case ETUDIANT              -> "badge-role-etudiant";
-            case PROFESSEUR            -> "badge-role-prof";
+            case ETUDIANT -> "badge-role-etudiant";
+            case PROFESSEUR -> "badge-role-prof";
             case GESTIONNAIRE_PLANNING -> "badge-role-gest";
-            case INVITE                -> "badge-role-invite";
+            case INVITE -> "badge-role-invite";
         };
     }
 }

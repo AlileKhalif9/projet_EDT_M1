@@ -12,9 +12,6 @@ import java.util.Optional;
 
 /**
  * DAO pour les demandes de modification de cours.
- *
- * Côté professeur : soumettre, annuler, consulter ses propres demandes.
- * Côté gestionnaire : consulter toutes les demandes en attente, approuver, rejeter.
  */
 public class DemandeDAO {
 
@@ -33,7 +30,7 @@ public class DemandeDAO {
         }
     }
 
-    /** Toutes les demandes ayant un statut donné (ex: PENDING pour le gestionnaire). */
+    /** Toutes les demandes ayant un statut donné */
     public List<CoursModificationRequestEntity> findByStatut(StatutDemande statut) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
@@ -59,8 +56,7 @@ public class DemandeDAO {
     }
 
     /**
-     * Persiste une nouvelle demande (statut PENDING).
-     * Appelé par ModificationRequestController.onSubmit().
+     * Persiste une nouvelle demande
      */
     public CoursModificationRequestEntity save(CoursModificationRequestEntity demande) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
@@ -79,8 +75,7 @@ public class DemandeDAO {
     }
 
     /**
-     * Met à jour le statut d'une demande (ACCEPTED ou REFUSED).
-     * Appelé par ModificationRequestController.onApprouver() / onRejeter().
+     * Met à jour le statut d'une demande
      */
     public void updateStatut(Long id, StatutDemande statut) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
@@ -99,8 +94,7 @@ public class DemandeDAO {
     }
 
     /**
-     * Supprime une demande (annulation côté professeur).
-     * Possible uniquement si la demande est encore PENDING.
+     * Supprime une demande
      */
     public void delete(Long id) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();

@@ -13,14 +13,6 @@ import java.util.List;
 
 /**
  * Back-end : emploi du temps.
- * Le front (TimetableController, DashboardController) appelle ces méthodes —
- * jamais CoursDAO directement.
- *
- * Rôles et leur EDT :
- *   ETUDIANT              → ses cours uniquement (findByEtudiantAndSemaine)
- *   PROFESSEUR            → ses cours uniquement (findByProfesseurAndSemaine)
- *   INVITE                → ses cours uniquement, comme un professeur (findByProfesseurAndSemaine)
- *   GESTIONNAIRE_PLANNING → tous les cours de la semaine (findAllBySemaine)
  */
 public class EmploiDuTempsController {
 
@@ -32,8 +24,8 @@ public class EmploiDuTempsController {
 
     public List<CoursEntity> getEmploiDuTempsConnecte(UserEntity u, LocalDate semaine) {
         return switch (u.getRole()) {
-            case ETUDIANT              -> coursDAO.findByEtudiantAndSemaine(u, semaine);
-            case PROFESSEUR, INVITE    -> coursDAO.findByProfesseurAndSemaine(u, semaine);
+            case ETUDIANT -> coursDAO.findByEtudiantAndSemaine(u, semaine);
+            case PROFESSEUR, INVITE -> coursDAO.findByProfesseurAndSemaine(u, semaine);
             case GESTIONNAIRE_PLANNING -> coursDAO.findAllBySemaine(semaine);
         };
     }
@@ -47,8 +39,7 @@ public class EmploiDuTempsController {
     }
 
     /**
-     * US13 — Annule un cours (rôle PROFESSEUR).
-     * Retourne le typeCours d'origine pour permettre la réactivation.
+     * Annule un cours (rôle PROFESSEUR).
      */
     public String annulerCours(Long coursId) {
         if (coursId == null) throw new IllegalArgumentException("Ce cours n'a pas d'identifiant BDD.");
@@ -64,8 +55,7 @@ public class EmploiDuTempsController {
     }
 
     /**
-     * US14 — Crée un nouveau cours en BDD (rôle GESTIONNAIRE).
-     * profId obligatoire — le prof doit enseigner le module correspondant au nom du cours.
+     * Crée un nouveau cours en BDD (rôle GESTIONNAIRE).
      */
     public CoursEntity ajouterCours(String nom, String typeCours,
                                     LocalDate jour, LocalTime heureDebut, LocalTime heureFin,
@@ -74,7 +64,7 @@ public class EmploiDuTempsController {
     }
 
     /**
-     * US15 — Modifie un cours existant en BDD (rôle GESTIONNAIRE).
+     * Modifie un cours existant en BDD (rôle GESTIONNAIRE).
      */
     public CoursEntity modifierCours(Long coursId, String nom, String typeCours,
                                      LocalDate jour, LocalTime heureDebut, LocalTime heureFin,
@@ -83,7 +73,7 @@ public class EmploiDuTempsController {
         return coursDAO.modifierCours(coursId, nom, typeCours, jour, heureDebut, heureFin, nomSalle, nomGroupe);
     }
 
-    /** Retourne tous les professeurs (pour le sélecteur de tiers dans TimetableController). */
+    /** Retourne tous les professeurs (pour le sélecteur de tiers dans TimetableUI). */
     public List<UserEntity> getProfesseurs() {
         return new UserDAO().findByRole(Role.PROFESSEUR);
     }

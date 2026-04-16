@@ -6,7 +6,7 @@
 <?import javafx.scene.text.*?>
 
 <StackPane xmlns:fx="http://javafx.com/fxml"
-           fx:controller="projet.M1.ui.LoginController"
+           fx:controller="projet.M1.ui.LoginUI"
            styleClass="login-root"
            prefWidth="900" prefHeight="600">
 
@@ -61,17 +61,6 @@
                 </Button>
             </VBox>
 
-            <!-- Comptes de démo -->
-            <VBox styleClass="demo-box" spacing="6">
-                <VBox.margin><Insets top="20"/></VBox.margin>
-                <Label text="Comptes de démonstration" styleClass="demo-title"/>
-                <Label text="Étudiant     →  etudiant1 / etudiant123"     styleClass="demo-item"/>
-                <Label text="Étudiant     →  etudiant2 / etudiant123"     styleClass="demo-item"/>
-                <Label text="Professeur   →  profmartin / prof123"        styleClass="demo-item"/>
-                <Label text="Professeur   →  profdupont / prof123"        styleClass="demo-item"/>
-                <Label text="Gestionnaire →  gestionnaire / gest123"      styleClass="demo-item"/>
-                <Label text="Invité       →  invite / invite123"          styleClass="demo-item"/>
-            </VBox>
 
         </VBox>
     </VBox>

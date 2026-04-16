@@ -11,7 +11,6 @@ import java.util.List;
 
 /**
  * Back-end : gestion des groupes d'étudiants.
- * Utilise le DataCache — pas de requête réseau si les données sont déjà chargées.
  */
 public class GroupeController {
 
@@ -27,7 +26,7 @@ public class GroupeController {
         return groupeDAO.findAll();
     }
 
-    /** UC8/US17 — Crée et persiste un nouveau groupe vide. */
+    /** Crée et persiste un nouveau groupe vide. */
     public GroupeEtudiantEntity creerGroupe(String nom) {
         if (nom == null || nom.isBlank())
             throw new IllegalArgumentException("Le nom du groupe ne peut pas être vide.");
@@ -36,7 +35,7 @@ public class GroupeController {
         return g;
     }
 
-    /** UC8/US17 — Renomme un groupe existant en BDD. */
+    /** Renomme un groupe existant en BDD. */
     public void renommerGroupe(Long groupeId, String nom) {
         if (nom == null || nom.isBlank())
             throw new IllegalArgumentException("Le nom du groupe ne peut pas être vide.");
@@ -44,19 +43,19 @@ public class GroupeController {
         DataCache.getInstance().invalidateGroupes();
     }
 
-    /** UC8/US17 — Affecte un étudiant à un groupe. */
+    /** Affecte un étudiant à un groupe. */
     public void ajouterMembre(Long groupeId, Long etudiantId) {
         groupeDAO.addMembre(groupeId, etudiantId);
         DataCache.getInstance().invalidateGroupes();
     }
 
-    /** UC8/US17 — Retire un étudiant de son groupe. */
+    /** Retire un étudiant de son groupe. */
     public void retirerMembre(Long etudiantId) {
         groupeDAO.removeMembre(etudiantId);
         DataCache.getInstance().invalidateGroupes();
     }
 
-    /** Retourne tous les étudiants (pour le picker d'ajout de membre). */
+    /** Retourne tous les étudiants . */
     public List<UserEntity> getEtudiants() {
         return new UserDAO().findByRole(Role.ETUDIANT);
     }
