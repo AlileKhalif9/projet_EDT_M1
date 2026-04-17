@@ -12,12 +12,12 @@ import projet.M1.session.SessionManager;
 
 import java.util.Optional;
 
-public class LoginController {
+public class LoginUI {
 
-    @FXML private TextField     loginField;
+    @FXML private TextField loginField;
     @FXML private PasswordField passwordField;
-    @FXML private Label         errorLabel;
-    @FXML private Button        loginButton;
+    @FXML private Label errorLabel;
+    @FXML private Button loginButton;
 
     // Passe par le back-end AuthController, pas directement par UserDAO
     private final AuthController authController = new AuthController(new UserDAO());
@@ -31,7 +31,7 @@ public class LoginController {
 
     @FXML
     private void handleLogin() {
-        String login    = loginField.getText().trim();
+        String login = loginField.getText().trim();
         String password = passwordField.getText();
 
         if (login.isEmpty() || password.isEmpty()) {

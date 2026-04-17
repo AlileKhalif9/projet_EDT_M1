@@ -6,7 +6,7 @@
 <ScrollPane fitToWidth="true" fitToHeight="false"
             style="-fx-background-color: #F8FAFC; -fx-background: #F8FAFC; -fx-border-color: transparent;"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="projet.M1.ui.NotesController">
+            fx:controller="projet.M1.ui.NotesUI">
 
     <VBox styleClass="page-container" spacing="24">
 

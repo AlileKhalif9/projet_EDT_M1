@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class ModuleDAO {
 
-    /** Modules enseignés par un professeur (via table professeur_module). */
+    /** Modules enseignés par un professeur. */
     public List<ModuleEntity> findByProfesseur(Long profId) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
@@ -28,7 +28,7 @@ public class ModuleDAO {
         }
     }
 
-    /** Modules suivis par un étudiant (via table etudiant_module). */
+    /** Modules suivis par un étudiant. */
     public List<ModuleEntity> findByEtudiant(Long etudiantId) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
@@ -59,7 +59,7 @@ public class ModuleDAO {
     }
 
     /**
-     * Promotions auxquelles un professeur est rattaché (via table professeur_promotion).
+     * Promotions auxquelles un professeur est rattaché .
      */
     public List<PromotionEntity> findPromotionsByProfesseur(Long profId) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
@@ -118,7 +118,7 @@ public class ModuleDAO {
         }
     }
 
-    /** Vérifie si un professeur enseigne un module donné (par nom exact). */
+    /** Vérifie si un professeur enseigne un module donné . */
     public boolean profEnseigneModule(Long profId, String nomModule) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {
@@ -135,7 +135,7 @@ public class ModuleDAO {
         }
     }
 
-    /** Retourne tous les professeurs rattachés à un module (par nom exact). */
+    /** Retourne tous les professeurs rattachés à un module . */
     public List<UserEntity> getProfsForModule(String nomModule) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {

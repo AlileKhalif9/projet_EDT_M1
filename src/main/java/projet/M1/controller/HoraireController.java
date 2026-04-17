@@ -8,7 +8,6 @@ import java.time.LocalTime;
 
 /**
  * Back-end : gestion des horaires.
- * Le front appelle findOrCreate() — jamais HoraireDAO directement.
  */
 public class HoraireController {
 

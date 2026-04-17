@@ -14,18 +14,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * UC8/US16+17 — Consulter et gérer les groupes (Gestionnaire).
+ * Consulter et gérer les groupes (Gestionnaire).
  * Filtres : nom, taille.
- * Clic → dialog avec membres + modifier nom + ajouter/retirer membres.
- * Bouton "+ Nouveau groupe" pour créer un groupe (front uniquement).
  */
-public class GroupesController {
+public class GroupesUI {
 
-    @FXML private TextField          fieldRecherche;
-    @FXML private ComboBox<String>   comboFiltreTaille;
-    @FXML private ProgressIndicator  loadingIndicator;
-    @FXML private VBox               groupesContainer;
-    @FXML private Button             btnNouveauGroupe;
+    @FXML private TextField fieldRecherche;
+    @FXML private ComboBox<String> comboFiltreTaille;
+    @FXML private ProgressIndicator loadingIndicator;
+    @FXML private VBox groupesContainer;
+    @FXML private Button btnNouveauGroupe;
 
     private final GroupeController groupeController = new GroupeController(new GroupeDAO());
 
@@ -167,10 +165,21 @@ public class GroupesController {
 
         HBox headerRow = new HBox();
         headerRow.getStyleClass().add("groupe-tableau-header");
-        Label hNom   = new Label("Nom");    hNom.setPrefWidth(200);   hNom.getStyleClass().add("groupe-col-header");
-        Label hLogin = new Label("Login");  hLogin.setPrefWidth(140); hLogin.getStyleClass().add("groupe-col-header");
-        Label hRole  = new Label("Rôle");   hRole.setPrefWidth(100);  hRole.getStyleClass().add("groupe-col-header");
-        Label hAct   = new Label("");       hAct.setPrefWidth(74);
+        Label hNom = new Label("Nom");
+        hNom.setPrefWidth(200);
+        hNom.getStyleClass().add("groupe-col-header");
+
+        Label hLogin = new Label("Login");
+        hLogin.setPrefWidth(140);
+        hLogin.getStyleClass().add("groupe-col-header");
+
+        Label hRole = new Label("Rôle");
+        hRole.setPrefWidth(100);
+        hRole.getStyleClass().add("groupe-col-header");
+
+        Label hAct = new Label("");
+        hAct.setPrefWidth(74);
+
         headerRow.getChildren().addAll(hNom, hLogin, hRole, hAct);
         tableau.getChildren().add(headerRow);
 

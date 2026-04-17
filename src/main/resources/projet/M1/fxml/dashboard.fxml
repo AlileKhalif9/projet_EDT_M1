@@ -9,7 +9,7 @@
             styleClass="content-area"
             style="-fx-background-color: #F8FAFC; -fx-border-color: transparent;"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="projet.M1.ui.DashboardController">
+            fx:controller="projet.M1.ui.DashboardUI">
 
     <VBox styleClass="page-container" spacing="28">
 

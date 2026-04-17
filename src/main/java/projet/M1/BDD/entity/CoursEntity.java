@@ -11,7 +11,7 @@ public class CoursEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Nom du cours (ex: "Algorithmique", "Base de données")
+    // Nom du cours
     // Ajouté lors de l'intégration front-back pour affichage dans la grille EDT
     private String nom;
 

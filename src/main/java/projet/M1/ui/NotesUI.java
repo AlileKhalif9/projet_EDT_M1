@@ -18,35 +18,33 @@ import projet.M1.session.SessionManager;
 import java.util.*;
 
 /**
- * UC11 — Professeur : consulter les notes (sélection promotion → module).
- * UC12 — Étudiant   : consulter ses propres notes (sélection module).
- * UC13 — Professeur : ajouter / modifier les notes.
+ * Professeur : consulter les notes.
+ * Étudiant : consulter ses propres notes .
+ * Professeur : ajouter / modifier les notes.
  */
-public class NotesController {
+public class NotesUI {
 
-    @FXML private Label             labelTitle;
-    @FXML private Label             labelSubtitle;
-    @FXML private HBox              selectorBarProf;
-    @FXML private ComboBox<String>  comboPromotion;
-    @FXML private ComboBox<String>  comboModuleProf;
-    @FXML private HBox              selectorBarEtu;
-    @FXML private ComboBox<String>  comboModuleEtu;
+    @FXML private Label labelTitle;
+    @FXML private Label labelSubtitle;
+    @FXML private HBox selectorBarProf;
+    @FXML private ComboBox<String> comboPromotion;
+    @FXML private ComboBox<String> comboModuleProf;
+    @FXML private HBox selectorBarEtu;
+    @FXML private ComboBox<String> comboModuleEtu;
     @FXML private ProgressIndicator loadingIndicator;
-    @FXML private VBox              notesContainer;
+    @FXML private VBox notesContainer;
 
     private final NoteController noteController =
             new NoteController(new NoteDAO(), new ModuleDAO());
 
     private final Map<String, PromotionEntity> promotionMap = new LinkedHashMap<>();
-    private final Map<String, ModuleEntity>    moduleMap    = new LinkedHashMap<>();
+    private final Map<String, ModuleEntity> moduleMap = new LinkedHashMap<>();
 
-    private PromotionEntity  promotionCourante;
+    private PromotionEntity promotionCourante;
     private List<UserEntity> etudiantsCourants = new ArrayList<>();
 
-    // -------------------------------------------------------------------------
-    //  Initialisation
-    // -------------------------------------------------------------------------
 
+    //  Initialisation
     @FXML
     public void initialize() {
         UserEntity u = SessionManager.getInstance().getUtilisateurConnecte();
@@ -67,10 +65,8 @@ public class NotesController {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  Professeur — chargement promotions
-    // -------------------------------------------------------------------------
 
+    //  Professeur : chargement promotions
     private void chargerPromotions(UserEntity u) {
         Thread t = new Thread(() -> {
             List<PromotionEntity> promotions;
@@ -187,10 +183,8 @@ public class NotesController {
         t.start();
     }
 
-    // -------------------------------------------------------------------------
-    //  Étudiant — chargement modules
-    // -------------------------------------------------------------------------
 
+    //  Étudiant : chargement modules
     private void chargerModulesEtudiant(UserEntity u) {
         Thread t = new Thread(() -> {
             List<ModuleEntity> modules;
@@ -260,10 +254,8 @@ public class NotesController {
         t.start();
     }
 
-    // -------------------------------------------------------------------------
-    //  UC11 — Tableau professeur
-    // -------------------------------------------------------------------------
 
+    //  Tableau professeur
     private void afficherTableauProfesseur(ModuleEntity module,
                                            PromotionEntity promo,
                                            List<UserEntity> etudiants,
@@ -353,10 +345,8 @@ public class NotesController {
         notesContainer.getChildren().add(grid);
     }
 
-    // -------------------------------------------------------------------------
-    //  UC12 — Tableau étudiant
-    // -------------------------------------------------------------------------
 
+    // Tableau étudiant
     private void afficherTableauEtudiant(ModuleEntity module,
                                          List<NoteEntity> mesNotes,
                                          List<NoteEntity> toutesNotes) {
@@ -416,10 +406,8 @@ public class NotesController {
         notesContainer.getChildren().add(grid);
     }
 
-    // -------------------------------------------------------------------------
-    //  Helpers tableau
-    // -------------------------------------------------------------------------
 
+    //  Helpers tableau
     private GridPane buildGridBase(List<String> intitules, boolean withMoyenne) {
         GridPane grid = new GridPane();
         grid.setHgap(4);
@@ -450,10 +438,8 @@ public class NotesController {
         return grid;
     }
 
-    // -------------------------------------------------------------------------
-    //  UC13 — Dialog saisie note individuelle
-    // -------------------------------------------------------------------------
 
+    // Dialog saisie note individuelle
     private void ouvrirDialogSaisirNote(ModuleEntity module, UserEntity etu,
                                         String intitule, NoteEntity noteExistante,
                                         Label cellLbl, UserEntity prof, PromotionEntity promo) {
@@ -480,7 +466,7 @@ public class NotesController {
         fieldCoeff.setPromptText("Coefficient");
 
         form.add(new Label("Note (0–20) *"), 0, 0); form.add(fieldNote,  1, 0);
-        form.add(new Label("Coefficient *"),  0, 1); form.add(fieldCoeff, 1, 1);
+        form.add(new Label("Coefficient *"), 0, 1); form.add(fieldCoeff, 1, 1);
         form.getChildren().stream().filter(n -> n instanceof Label)
                 .forEach(n -> ((Label) n).getStyleClass().add("form-label"));
 
@@ -490,7 +476,7 @@ public class NotesController {
             if (result != btnValider) return;
             try {
                 float valeur = Float.parseFloat(fieldNote.getText().trim().replace(",", "."));
-                float coeff  = Float.parseFloat(fieldCoeff.getText().trim().replace(",", "."));
+                float coeff = Float.parseFloat(fieldCoeff.getText().trim().replace(",", "."));
                 noteController.sauvegarderNote(etu.getId(), module.getId(), intitule, valeur, coeff);
                 cellLbl.setText(String.format("%.1f", valeur));
                 onModuleProfSelectionne(prof, promo);
@@ -506,10 +492,7 @@ public class NotesController {
         });
     }
 
-    // -------------------------------------------------------------------------
-    //  UC13 — Dialog ajout contrôle complet
-    // -------------------------------------------------------------------------
-
+    // Dialog ajout contrôle complet
     private void ouvrirDialogAjouterControle(ModuleEntity module,
                                              PromotionEntity promo,
                                              List<UserEntity> etudiants,

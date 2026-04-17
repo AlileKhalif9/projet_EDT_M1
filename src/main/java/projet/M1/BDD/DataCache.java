@@ -9,13 +9,12 @@ import java.util.List;
 
 /**
  * Cache en mémoire pour les données statiques (salles, groupes).
- * Chargé une seule fois au démarrage — pas de requête réseau à chaque navigation.
  */
 public class DataCache {
 
     private static DataCache instance;
 
-    private List<SalleEntity>          salles  = List.of();
+    private List<SalleEntity> salles  = List.of();
     private List<GroupeEtudiantEntity> groupes = List.of();
 
     private DataCache() {}
@@ -31,9 +30,9 @@ public class DataCache {
         try { groupes = new GroupeDAO().findAll(); } catch (Exception ignored) {}
     }
 
-    public List<SalleEntity>          getSalles()  { return salles;  }
+    public List<SalleEntity> getSalles()  { return salles;  }
     public List<GroupeEtudiantEntity> getGroupes() { return groupes; }
 
-    /** Invalide le cache groupes — prochain appel ira en BDD. */
+    /** Invalide le cache groupes . */
     public void invalidateGroupes() { groupes = List.of(); }
 }

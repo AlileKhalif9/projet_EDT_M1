@@ -14,12 +14,12 @@ import java.time.LocalTime;
  * Cela évite de passer des entités JPA directement aux controllers JavaFX.
  */
 public record CoursDisplay(
-        Long      id,
-        String    nom,
+        Long id,
+        String nom,
         TypeCours typeCours,
-        String    nomGroupe,
-        String    nomProf,
-        String    nomSalle,
+        String nomGroupe,
+        String nomProf,
+        String nomSalle,
         LocalDate jour,
         LocalTime heureDebut,
         LocalTime heureFin
@@ -27,15 +27,6 @@ public record CoursDisplay(
 
     /**
      * Convertit un CoursEntity (BDD) en CoursDisplay (UI).
-     *
-     * - nom        : CoursEntity.getNom()
-     * - typeCours  : TypeCours.fromString(CoursEntity.getTypeCours())
-     * - nomGroupe  : groupe du premier étudiant de la liste (s'il existe)
-     * - nomProf    : prénom + nom du premier professeur (s'il existe)
-     * - nomSalle   : SalleEntity.getNom()
-     * - jour/heures : HoraireEntity
-     *
-     * Retourne null si le CoursEntity n'a pas d'horaire (données incomplètes).
      */
     public static CoursDisplay fromEntity(CoursEntity c) {
         if (c == null || c.getHoraire() == null) return null;

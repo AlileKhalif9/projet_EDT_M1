@@ -139,10 +139,7 @@ public class CoursDAO {
         }
     }
 
-    /**
-     * US13 — Annule un cours : passe son typeCours à "ANNULE" en BDD.
-     * Retourne le typeCours précédent pour permettre une réactivation ultérieure.
-     */
+
     public String annulerCours(Long coursId) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -163,7 +160,7 @@ public class CoursDAO {
     }
 
     /**
-     * Réactive un cours annulé : restaure son typeCours d'origine en BDD.
+     * Réactive un cours annulé
      */
     public void reactiverCours(Long coursId, String typeCours) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
@@ -182,8 +179,7 @@ public class CoursDAO {
     }
 
     /**
-     * US14 — Crée un nouveau cours en BDD.
-     * Le profId est obligatoire — le prof est rattaché à list_professeur du cours.
+     * Crée un nouveau cours en BDD.
      */
     public CoursEntity ajouterCours(String nom, String typeCours,
                                     java.time.LocalDate jour,
@@ -239,7 +235,7 @@ public class CoursDAO {
             em.persist(cours);
 
             // Rattacher aussi le professeur au module correspondant (professeur_module)
-            // pour que les notes du prof soient accessibles dans NotesController.
+            // pour que les notes du prof soient accessibles dans NotesUI.
             if (profEntity != null) {
                 List<ModuleEntity> modules = em.createQuery(
                                 "SELECT m FROM ModuleEntity m WHERE m.nom = :nom",
@@ -269,9 +265,6 @@ public class CoursDAO {
         }
     }
 
-    /**
-     * US15 — Modifie un cours existant en BDD.
-     */
     public CoursEntity modifierCours(Long coursId, String nom, String typeCours,
                                      java.time.LocalDate jour,
                                      java.time.LocalTime heureDebut,

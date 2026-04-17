@@ -11,7 +11,6 @@ import java.util.List;
 
 /**
  * DAO pour les horaires.
- * Utilisé pour remplir la ComboBox "Nouveau créneau" dans ModificationRequestController.
  */
 public class HoraireDAO {
 
@@ -30,8 +29,6 @@ public class HoraireDAO {
 
     /**
      * Cherche un horaire existant par date + heures.
-     * Si aucun ne correspond, en crée un nouveau et le persiste.
-     * Utilisé lors de la soumission d'une demande de modification.
      */
     public HoraireEntity findOrCreate(LocalDate jour, LocalTime heureDebut, LocalTime heureFin) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
@@ -65,7 +62,7 @@ public class HoraireDAO {
         }
     }
 
-    /** Horaires disponibles à une date donnée (utile pour la sélection de nouveau créneau). */
+    /** Horaires disponibles à une date donnée  */
     public List<HoraireEntity> findByJour(LocalDate jour) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {

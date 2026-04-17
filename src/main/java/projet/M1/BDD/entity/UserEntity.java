@@ -11,7 +11,7 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Attributs communs — Utilisateur
+    // Attributs communs : Utilisateur
     private String nom;
     private String prenom;
     private int age;

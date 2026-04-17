@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="projet.M1.ui.TimetableController"
+      fx:controller="projet.M1.ui.TimetableUI"
       styleClass="timetable-container"
       spacing="16">
 
@@ -100,7 +100,7 @@
                 VBox.vgrow="ALWAYS"
                 style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: #E5E7EB; -fx-border-radius: 10; -fx-background-radius: 10;">
 
-        <!-- gridContainer est rempli dynamiquement par TimetableController -->
+        <!-- gridContainer est rempli dynamiquement par TimetableUI -->
         <HBox fx:id="gridContainer"
               spacing="0"
               style="-fx-background-color: white; -fx-background-radius: 10;"/>

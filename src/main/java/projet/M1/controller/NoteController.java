@@ -12,21 +12,16 @@ import java.util.stream.Collectors;
 
 /**
  * Back-end : gestion des notes.
- * Le front (NotesController) appelle ces méthodes — jamais NoteDAO directement.
  */
 public class NoteController {
 
-    private final NoteDAO   noteDAO;
+    private final NoteDAO noteDAO;
     private final ModuleDAO moduleDAO;
 
     public NoteController(NoteDAO noteDAO, ModuleDAO moduleDAO) {
-        this.noteDAO   = noteDAO;
+        this.noteDAO = noteDAO;
         this.moduleDAO = moduleDAO;
     }
-
-    // -------------------------------------------------------------------------
-    //  UC11 — Professeur : sélection par promotion
-    // -------------------------------------------------------------------------
 
     /** Promotions auxquelles le professeur est rattaché. */
     public List<projet.M1.BDD.entity.PromotionEntity> getPromotionsProfesseur(Long profId) {
@@ -42,10 +37,6 @@ public class NoteController {
     public List<UserEntity> getEtudiantsDuModuleEtPromotion(Long moduleId, Long promotionId) {
         return moduleDAO.findEtudiantsByModuleAndPromotion(moduleId, promotionId);
     }
-
-    // -------------------------------------------------------------------------
-    //  UC11 — Professeur : consulter les notes d'un module
-    // -------------------------------------------------------------------------
 
     /** Modules enseignés par le professeur connecté. */
     public List<ModuleEntity> getModulesProfesseur(Long profId) {
@@ -73,7 +64,6 @@ public class NoteController {
 
     /**
      * Liste distincte des intitulés de contrôles pour un module (pour les colonnes du tableau).
-     * Ex: ["DS1", "DS2", "Examen final"]
      */
     public List<String> getIntitulesControles(Long moduleId) {
         return noteDAO.findByModule(moduleId).stream()
@@ -83,9 +73,6 @@ public class NoteController {
                 .toList();
     }
 
-    // -------------------------------------------------------------------------
-    //  UC12 — Étudiant : consulter ses notes
-    // -------------------------------------------------------------------------
 
     /** Modules suivis par l'étudiant connecté. */
     public List<ModuleEntity> getModulesEtudiant(Long etudiantId) {
@@ -97,7 +84,7 @@ public class NoteController {
         return noteDAO.findByEtudiantAndModule(etudiantId, moduleId);
     }
 
-    /** Toutes les notes d'un module (tous étudiants) — pour calculer la moyenne de classe. */
+    /** Toutes les notes d'un module (tous étudiants) : pour calculer la moyenne de classe. */
     public List<NoteEntity> getNotesModule(Long moduleId) {
         return noteDAO.findByModule(moduleId);
     }
@@ -106,10 +93,6 @@ public class NoteController {
     public List<NoteEntity> getToutesNotesEtudiant(Long etudiantId) {
         return noteDAO.findByEtudiant(etudiantId);
     }
-
-    // -------------------------------------------------------------------------
-    //  UC13 — Professeur : sauvegarder une note
-    // -------------------------------------------------------------------------
 
     /**
      * Crée ou met à jour une note pour un étudiant, un module et un intitulé donnés.
@@ -133,10 +116,6 @@ public class NoteController {
         noteDAO.supprimerControle(moduleId, intitule);
     }
 
-    // -------------------------------------------------------------------------
-    //  Calcul des moyennes
-    // -------------------------------------------------------------------------
-
     /**
      * Moyenne pondérée d'un étudiant pour une liste de notes.
      * Retourne -1 si la liste est vide.
@@ -146,7 +125,7 @@ public class NoteController {
         float somme = 0f;
         float totalCoeff = 0f;
         for (NoteEntity n : notes) {
-            somme      += n.getValeur() * n.getCoefficient();
+            somme += n.getValeur() * n.getCoefficient();
             totalCoeff += n.getCoefficient();
         }
         return totalCoeff == 0 ? -1f : somme / totalCoeff;

@@ -10,13 +10,11 @@ import java.util.Optional;
 
 /**
  * DAO pour les utilisateurs.
- * Remplace MockUtilisateurDAO — toutes les requêtes vont désormais en base PostgreSQL.
  */
 public class UserDAO {
 
     /**
      * Authentification : cherche un utilisateur par login + mot de passe.
-     * Retourne Optional.empty() si les identifiants sont incorrects.
      */
     public Optional<UserEntity> findByLoginAndMotDePasse(String login, String motDePasse) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
@@ -33,7 +31,7 @@ public class UserDAO {
         }
     }
 
-    /** Récupère tous les utilisateurs ayant un rôle donné (ex: PROFESSEUR). */
+    /** Récupère tous les utilisateurs ayant un rôle donné. */
     public List<UserEntity> findByRole(Role role) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         try {

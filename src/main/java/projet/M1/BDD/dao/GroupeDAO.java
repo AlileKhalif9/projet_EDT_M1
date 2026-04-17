@@ -10,14 +10,11 @@ import java.util.List;
 
 /**
  * DAO pour les groupes d'étudiants.
- * Utilise JOIN FETCH pour charger les étudiants de chaque groupe en une seule requête,
- * évitant les LazyInitializationException après fermeture de l'EntityManager.
  */
 public class GroupeDAO {
 
     /**
      * Tous les groupes avec leurs étudiants chargés, triés par nom.
-     * Le DISTINCT évite les doublons causés par le JOIN FETCH.
      */
     public List<GroupeEtudiantEntity> findAll() {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
@@ -33,7 +30,7 @@ public class GroupeDAO {
         }
     }
 
-    /** UC8/US17 — Crée et persiste un nouveau groupe vide. */
+    /** Crée et persiste un nouveau groupe vide. */
     public GroupeEtudiantEntity save(String nom) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -52,7 +49,7 @@ public class GroupeDAO {
         }
     }
 
-    /** UC8/US17 — Renomme un groupe existant. */
+    /** Renomme un groupe existant. */
     public void updateNom(Long groupeId, String nom) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -70,8 +67,7 @@ public class GroupeDAO {
     }
 
     /**
-     * UC8/US17 — Affecte un étudiant à un groupe (met à jour user.groupe en BDD).
-     * Un étudiant ne peut appartenir qu'à un seul groupe à la fois.
+     *  Affecte un étudiant à un groupe
      */
     public void addMembre(Long groupeId, Long etudiantId) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
@@ -90,7 +86,7 @@ public class GroupeDAO {
         }
     }
 
-    /** UC8/US17 — Retire un étudiant de son groupe (user.groupe → null). */
+    /** Retire un étudiant de son groupe. */
     public void removeMembre(Long etudiantId) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         EntityTransaction tx = em.getTransaction();
